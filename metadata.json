@@ -1,0 +1,6 @@
+{
+  "name": "Verisme Masterclasses & Lyric Atelier",
+  "description": "Specialized music education, somatic ear training, French lyric diction, and vocal-piano coaching by an experienced international opera singer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
