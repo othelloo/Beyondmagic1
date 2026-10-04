@@ -144,9 +144,9 @@ function portraitUploadPlugin(): Plugin {
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ command }) => {
   return {
-    base: './',
+    base: command === 'build' ? './' : '/',
     plugins: [react(), tailwindcss(), portraitUploadPlugin()],
     resolve: {
       alias: {
