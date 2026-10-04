@@ -1,6 +1,8 @@
 import { PhotoItem, VideoItem } from '../types';
 import { PHOTOS_COLLECTION, VIDEOS_COLLECTION } from './content';
 import { INITIAL_ARCHIVE_PHOTOS } from './uploadedPhotos';
+import { PERMANENT_PORTRAIT } from './currentPortrait';
+import { BUNDLED_GALLERY_PHOTOS } from './bundledGallery';
 
 const STORAGE_KEY_VIDEOS = 'verisme_custom_videos_v5';
 const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v9';
@@ -9,7 +11,7 @@ const STORAGE_KEY_PORTRAIT = 'verisme_custom_portrait_v2';
 const MEDIA_CHANGE_EVENT = 'verisme_media_changed';
 
 export function getStoredPortrait(): string {
-  if (typeof window === 'undefined') return '/images/portrait.jpg';
+  if (typeof window === 'undefined') return PERMANENT_PORTRAIT || '/images/portrait.jpg';
   try {
     const saved = localStorage.getItem(STORAGE_KEY_PORTRAIT);
     if (saved && !saved.includes('portrait_placeholder.svg')) {
@@ -18,7 +20,7 @@ export function getStoredPortrait(): string {
   } catch (e) {
     console.warn('Failed to read custom portrait', e);
   }
-  return '/images/portrait.jpg';
+  return PERMANENT_PORTRAIT || '/images/portrait.jpg';
 }
 
 export async function savePortrait(dataUrl: string): Promise<void> {
@@ -78,19 +80,24 @@ export function deleteCustomVideo(id: string): void {
 }
 
 export function getStoredPhotos(): PhotoItem[] {
-  if (typeof window === 'undefined') return INITIAL_ARCHIVE_PHOTOS;
+  if (typeof window === 'undefined') {
+    return BUNDLED_GALLERY_PHOTOS;
+  }
   try {
     const saved = localStorage.getItem(STORAGE_KEY_PHOTOS);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        const hasDataUrls = parsed.some((p: PhotoItem) => p.image && p.image.startsWith('data:image'));
+        if (hasDataUrls) {
+          return parsed;
+        }
       }
     }
   } catch (e) {
     console.warn('Failed to read custom photos from localStorage', e);
   }
-  return INITIAL_ARCHIVE_PHOTOS;
+  return BUNDLED_GALLERY_PHOTOS;
 }
 
 export function savePhotos(photos: PhotoItem[]): void {

@@ -1,74 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getStoredPhotos, onMediaChange, addCustomPhotosBatch, deleteCustomPhoto, savePhotos } from '../data/mediaStore';
+import { createPortal } from 'react-dom';
+import { getStoredPhotos, onMediaChange, savePhotos } from '../data/mediaStore';
 import { PhotoItem } from '../types';
-import { X, ZoomIn, ChevronLeft, ChevronRight, Camera, Sparkles, MapPin, Calendar, Upload, Check, Loader2, Plus, Trash2, Eye, Zap, Image as ImageIcon, Images, ArrowRight, Maximize2 } from 'lucide-react';
+import { X, ZoomIn, ChevronLeft, ChevronRight, Camera, Images, Loader2, Upload, Lock, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { resolveAssetUrl } from '../utils/assetPath';
 
-function parsePhotoMetadata(filename: string, category: 'production' | 'behind_the_scenes'): Partial<PhotoItem> {
-  const lower = filename.toLowerCase();
-  
-  if (lower.includes('traviata')) {
-    const hasYoncheva = lower.includes('yoncheva');
-    const photoCredit = lower.includes('uhlig') ? ' · Photo: Bernd Uhlig' : '';
-    return {
-      title: hasYoncheva ? 'La Traviata (with Sonya Yoncheva)' : 'La Traviata (Alfredo Germont)',
-      role: 'Alfredo Germont',
-      venueOrContext: `Staatsoper Berlin / Schiller Theater${photoCredit}`,
-      year: '2015',
-      caption: 'Singing Alfredo Germont in Giuseppe Verdi’s La Traviata.'
-    };
-  }
-
-  if (lower.includes('werther')) {
-    const credit = lower.includes('jung') ? ' · Photo: Matthias Jung' : '';
-    return {
-      title: 'Werther (Massenet)',
-      role: 'Werther',
-      venueOrContext: `Opera Stage${credit}`,
-      year: '2016',
-      caption: 'Singing the title role of Werther in Jules Massenet’s lyric drama.'
-    };
-  }
-
-  if (lower.includes('faust')) {
-    return {
-      title: 'Faust (Gounod)',
-      role: 'Faust',
-      venueOrContext: 'Opera Stage France',
-      year: '2018',
-      caption: 'Singing Faust in Charles Gounod’s masterpiece.'
-    };
-  }
-
-  if (lower.includes('shelleyjackson') || lower.includes('jackson')) {
-    return {
-      title: 'Opera Stage Duo (with Shelley Jackson)',
-      role: 'Leading Tenor',
-      venueOrContext: 'Opera Production',
-      year: '2017',
-      caption: 'Stage scene with soprano Shelley Jackson.'
-    };
-  }
-
-  // General clean title from filename
-  const cleanName = filename
-    .replace(/\.[^/.]+$/, '')
-    .replace(/[-_]+/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .slice(0, 45);
-
-  return {
-    title: category === 'production' ? `Onstage: ${cleanName}` : cleanName,
-    role: category === 'production' ? 'Opera Stage' : 'Behind the Scenes',
-    venueOrContext: category === 'production' ? 'Live Opera Production' : 'Rehearsal & Stage Life',
-    year: 'Stage Archive',
-    caption: 'Stage and performance archive photograph.'
-  };
-}
-
 export const PhotoGallery: React.FC = () => {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const isDe = language === 'de';
 
   const [photos, setPhotos] = useState<PhotoItem[]>(getStoredPhotos());
@@ -77,10 +16,13 @@ export const PhotoGallery: React.FC = () => {
   const [isFullGalleryOpen, setIsFullGalleryOpen] = useState<boolean>(false);
   const [isInlineExpanded, setIsInlineExpanded] = useState<boolean>(false);
 
-  // Batch upload state
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  // Owner Setup / Lock State (Locked by default for clean presentation)
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('verisme_gallery_locked') !== 'false';
+  });
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
-  const [justAddedCount, setJustAddedCount] = useState<number>(0);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   useEffect(() => {
     // Also fetch server gallery photos directly to guarantee all uploaded pictures appear
@@ -88,16 +30,8 @@ export const PhotoGallery: React.FC = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
-          setPhotos((prev) => {
-            const existingUrls = new Set(prev.map((p) => p.image));
-            const newServerPhotos = data.photos.filter((p: PhotoItem) => !existingUrls.has(p.image));
-            if (newServerPhotos.length > 0) {
-              const merged = [...prev, ...newServerPhotos];
-              savePhotos(merged);
-              return merged;
-            }
-            return prev;
-          });
+          setPhotos(data.photos);
+          savePhotos(data.photos);
         }
       })
       .catch((e) => console.log('Server gallery fetch optional', e));
@@ -108,33 +42,23 @@ export const PhotoGallery: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  // Photos that have valid image paths
-  const displayPhotos = photos.filter((p) => Boolean(p.image));
+  const handleOwnerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-  // Preview photos: Show 12 initially, or all if expanded
-  const curatedPreviews = isInlineExpanded ? displayPhotos : displayPhotos.slice(0, 12);
+    setUploadProgress({ current: 0, total: files.length });
+    setUploadStatus(isDe ? `Lade ${files.length} Fotos auf den Server...` : `Saving ${files.length} photos to server...`);
 
-  const handleFiles = async (files: FileList | File[]) => {
-    const fileList = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    if (fileList.length === 0) return;
+    let uploadedCount = 0;
+    const uploadedPhotosList: PhotoItem[] = [];
 
-    setIsProcessing(true);
-    setUploadProgress({ current: 0, total: fileList.length });
-
-    const newItems: PhotoItem[] = [];
-
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      setUploadProgress({ current: i + 1, total: fileList.length });
-
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       await new Promise<void>((resolve) => {
         const reader = new FileReader();
-        reader.onload = async (e) => {
-          const dataUrl = e.target?.result as string;
+        reader.onload = async (ev) => {
+          const dataUrl = ev.target?.result as string;
           if (dataUrl) {
-            let finalUrl = dataUrl;
-
-            // Save to server
             try {
               const res = await fetch('/api/upload-gallery-photo', {
                 method: 'POST',
@@ -146,64 +70,78 @@ export const PhotoGallery: React.FC = () => {
                 })
               });
               if (res.ok) {
-                const json = await res.json();
-                if (json.url) {
-                  finalUrl = json.url;
-                }
+                uploadedCount++;
+                uploadedPhotosList.push({
+                  id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                  title: '',
+                  category: 'production',
+                  image: `/images/onstage/${file.name}`,
+                  caption: '',
+                  venueOrContext: '',
+                  year: ''
+                });
               }
             } catch (err) {
-              console.log('Server file write optional:', err);
+              console.error('Upload failed for', file.name, err);
             }
-
-            const item: PhotoItem = {
-              id: `photo-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}`,
-              title: '',
-              category: 'production',
-              image: finalUrl,
-              caption: '',
-              venueOrContext: '',
-              year: ''
-            };
-
-            newItems.push(item);
           }
+          setUploadProgress({ current: i + 1, total: files.length });
           resolve();
         };
         reader.readAsDataURL(file);
       });
     }
 
-    if (newItems.length > 0) {
-      addCustomPhotosBatch(newItems);
-      setPhotos((prev) => [...newItems, ...prev]);
-      setJustAddedCount(newItems.length);
-      setTimeout(() => setJustAddedCount(0), 4000);
-    }
-
-    setIsProcessing(false);
-    setUploadProgress(null);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(e.dataTransfer.files);
-    }
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(e.target.files);
+    if (uploadedPhotosList.length > 0) {
+      // Re-fetch gallery photos from server
+      const res = await fetch('/api/gallery-photos');
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.photos)) {
+        setPhotos(data.photos);
+        savePhotos(data.photos);
+      } else {
+        setPhotos(uploadedPhotosList);
+        savePhotos(uploadedPhotosList);
+      }
+      setUploadStatus(
+        isDe
+          ? `✓ ${uploadedCount} Fotos dauerhaft gespeichert! Klicken Sie auf 'Sperren', um den Upload-Bereich auszublenden.`
+          : `✓ ${uploadedCount} photos permanently saved! Click 'Lock / Hide' to remove the uploader.`
+      );
     }
   };
+
+  // Photos that have valid image paths
+  const displayPhotos = photos.filter((p) => Boolean(p.image));
+
+  // Preview photos: Show 12 initially, or all if expanded
+  const curatedPreviews = isInlineExpanded ? displayPhotos : displayPhotos.slice(0, 12);
+
+  // Preserve scroll position so user never loses their place on the page
+  const savedScrollY = React.useRef<number>(0);
 
   const openLightbox = (photo: PhotoItem) => {
+    savedScrollY.current = window.scrollY;
     setLightboxPhoto(photo);
-    setLightboxLoading(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeLightbox = () => {
     setLightboxPhoto(null);
+    document.body.style.overflow = '';
+    window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
+  };
+
+  const openFullGallery = () => {
+    savedScrollY.current = window.scrollY;
+    setIsFullGalleryOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeFullGallery = () => {
+    setIsFullGalleryOpen(false);
+    document.body.style.overflow = '';
+    window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
   };
 
   const handleNext = () => {
@@ -211,7 +149,6 @@ export const PhotoGallery: React.FC = () => {
     const currentIndex = displayPhotos.findIndex((p) => p.id === lightboxPhoto.id);
     const nextIndex = (currentIndex + 1) % displayPhotos.length;
     setLightboxPhoto(displayPhotos[nextIndex]);
-    setLightboxLoading(true);
   };
 
   const handlePrev = () => {
@@ -219,8 +156,22 @@ export const PhotoGallery: React.FC = () => {
     const currentIndex = displayPhotos.findIndex((p) => p.id === lightboxPhoto.id);
     const prevIndex = (currentIndex - 1 + displayPhotos.length) % displayPhotos.length;
     setLightboxPhoto(displayPhotos[prevIndex]);
-    setLightboxLoading(true);
   };
+
+  // Keyboard navigation for Lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (lightboxPhoto) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') handleNext();
+        if (e.key === 'ArrowLeft') handlePrev();
+      } else if (isFullGalleryOpen && e.key === 'Escape') {
+        closeFullGallery();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxPhoto, isFullGalleryOpen]);
 
   // Pure, clean photo card: ZERO descriptions, ZERO overlays on the picture
   const renderPhotoCard = (photo: PhotoItem) => {
@@ -233,7 +184,7 @@ export const PhotoGallery: React.FC = () => {
         <div className="w-full h-full overflow-hidden bg-black relative">
           <img
             src={resolveAssetUrl(photo.image)}
-            alt=""
+            alt={photo.title || 'Abdellah Lasri'}
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
@@ -254,6 +205,52 @@ export const PhotoGallery: React.FC = () => {
   return (
     <div className="mb-20">
       
+      {/* OWNER SETUP BOX (Visible only when not locked) */}
+      {!isLocked && (
+        <div className="mb-8 p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[#c49750]/60 bg-gradient-to-r from-[#121622] to-[#0d0f17] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl">
+          <div className="space-y-1">
+            <div className="text-xs uppercase tracking-wider font-mono text-[#c49750] font-semibold flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              <span>{isDe ? 'Eigentümer-Setup: Galerie-Fotos synchronisieren' : 'Owner Setup: Sync Gallery Photos'}</span>
+            </div>
+            <p className="text-xs text-[#cfcac0]">
+              {isDe
+                ? 'Wählen Sie Ihre 39 Originalfotos von Ihrem Computer aus. Sie werden direkt als permanente Dateien auf dem Server gespeichert.'
+                : 'Select your 39 original photos from your computer. They will be saved directly as permanent files in the repository.'}
+            </p>
+            {uploadStatus && (
+              <p className="text-xs text-[#c49750] font-mono mt-1 font-medium">{uploadStatus}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <label className="px-5 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg cursor-pointer transition-all flex items-center gap-2 shadow-lg active:scale-95">
+              <Upload className="w-4 h-4 text-black" />
+              <span>{uploadProgress ? `${uploadProgress.current}/${uploadProgress.total}...` : (isDe ? 'Alle 39 Fotos auswählen' : 'Select All 39 Photos')}</span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleOwnerUpload}
+              />
+            </label>
+
+            <button
+              onClick={() => {
+                setIsLocked(true);
+                localStorage.setItem('verisme_gallery_locked', 'true');
+              }}
+              className="px-3.5 py-2.5 bg-[#1b202e] hover:bg-[#252b3d] text-[#c49750] hover:text-[#d8a85c] text-xs font-mono rounded-lg border border-[#c49750]/40 transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Lock and hide uploader permanently for public visitors"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>{isDe ? 'Sperren & Ausblenden' : 'Lock & Hide'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4 border-b border-[#21242d] pb-6">
         <div>
@@ -269,20 +266,21 @@ export const PhotoGallery: React.FC = () => {
           </p>
         </div>
 
-        {/* Upload & Gallery Action */}
+        {/* Gallery Action */}
         <div className="flex items-center gap-3">
-          <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] transition-all cursor-pointer shadow-md active:scale-95">
-            <Upload className="w-3.5 h-3.5 text-black" />
-            <span>{isDe ? 'Fotos hinzufügen' : 'Select Photos to Add'}</span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileInput}
-            />
-          </label>
-
+          {isLocked && (
+            <button
+              onClick={() => {
+                setIsLocked(false);
+                localStorage.removeItem('verisme_gallery_locked');
+              }}
+              className="text-[11px] font-mono text-[#777367] hover:text-[#c49750] transition-colors flex items-center gap-1 cursor-pointer mr-2"
+              title="Manage photos"
+            >
+              <Lock className="w-3 h-3 text-[#c49750]/60" />
+              <span>{isDe ? 'Fotos verwalten' : 'Manage Photos'}</span>
+            </button>
+          )}
           {displayPhotos.length > 6 && (
             <button
               onClick={() => setIsFullGalleryOpen(true)}
@@ -295,50 +293,18 @@ export const PhotoGallery: React.FC = () => {
         </div>
       </div>
 
-      {/* Batch Upload / Drop Notification */}
-      {isProcessing && uploadProgress && (
-        <div className="mb-6 p-4 rounded-xl bg-[#141720] border border-[#c49750]/30 flex items-center justify-center gap-3 text-xs text-[#c49750]">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Adding photo {uploadProgress.current} of {uploadProgress.total}...</span>
-        </div>
-      )}
-
-      {justAddedCount > 0 && (
-        <div className="mb-6 p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center gap-2 text-xs text-emerald-300">
-          <Check className="w-4 h-4 text-emerald-400" />
-          <span>Added {justAddedCount} photos to the gallery!</span>
-        </div>
-      )}
-
-      {/* IF NO PHOTOS HAVE BEEN ADDED YET: Elegant Dropzone Banner */}
+      {/* IF NO PHOTOS: Elegant Empty Notice */}
       {displayPhotos.length === 0 ? (
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          className="p-12 rounded-2xl border-2 border-dashed border-[#c49750]/30 hover:border-[#c49750] bg-gradient-to-br from-[#12151d] to-[#0a0c10] text-center transition-all flex flex-col items-center justify-center space-y-4"
-        >
-          <div className="w-16 h-16 rounded-full bg-[#1b202a] text-[#c49750] flex items-center justify-center border border-[#c49750]/30 shadow-lg">
-            <Camera className="w-8 h-8" />
+        <div className="p-12 rounded-2xl border border-[#272b35] bg-gradient-to-br from-[#12151d] to-[#0a0c10] text-center flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-[#1b202a] text-[#c49750] flex items-center justify-center border border-[#c49750]/30 shadow-lg">
+            <Camera className="w-6 h-6" />
           </div>
-          <div>
-            <h4 className="text-xl font-serif text-white font-medium mb-1">
-              Add Your Photos Here
-            </h4>
-            <p className="text-xs text-[#9a968b] max-w-md mx-auto leading-relaxed">
-              Drag and drop your photos directly onto this space, or select them from your computer.
-            </p>
-          </div>
-          <label className="inline-flex items-center gap-2 px-6 py-3 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg cursor-pointer transition-all shadow-md active:scale-95">
-            <Upload className="w-4 h-4 text-black" />
-            <span>Select Photos From Computer</span>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileInput}
-            />
-          </label>
+          <h4 className="text-lg font-serif text-white font-medium">
+            {isDe ? 'Fotografien folgen in Kürze' : 'Photographs Coming Soon'}
+          </h4>
+          <p className="text-xs text-[#9a968b] max-w-md mx-auto leading-relaxed">
+            {isDe ? 'Neue Aufnahmen von Produktionen und Meisterkursen werden in Kürze kuratiert.' : 'Selected captures from international productions and masterclasses.'}
+          </p>
         </div>
       ) : (
         /* CURATED PREVIEW OF REAL PHOTOS (NO TEXT OVERLAY) */
@@ -360,7 +326,7 @@ export const PhotoGallery: React.FC = () => {
                 </span>
               </button>
               <button
-                onClick={() => setIsFullGalleryOpen(true)}
+                onClick={openFullGallery}
                 className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#a09c91] hover:text-[#c49750] border-b border-[#a09c91]/30 hover:border-[#c49750] pb-1 cursor-pointer transition-colors"
               >
                 <span>{isDe ? `Vollbild-Galerie öffnen (${displayPhotos.length}) →` : `Open Full-Screen Grid (${displayPhotos.length}) →`}</span>
@@ -371,12 +337,12 @@ export const PhotoGallery: React.FC = () => {
       )}
 
       {/* FULL-SCREEN PHOTO ARCHIVE MODAL (NO TEXT OVERLAYS) */}
-      {isFullGalleryOpen && (
+      {isFullGalleryOpen && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200"
-          onClick={() => setIsFullGalleryOpen(false)}
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200"
+          onClick={closeFullGallery}
         >
           <div
             className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 sm:p-6 overflow-hidden"
@@ -386,25 +352,13 @@ export const PhotoGallery: React.FC = () => {
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
               <div>
                 <h3 className="text-2xl font-serif text-white font-normal">
-                  Photos ({displayPhotos.length})
+                  Photographs ({displayPhotos.length})
                 </h3>
               </div>
 
               <div className="flex items-center gap-3">
-                <label className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] transition-all cursor-pointer">
-                  <Plus className="w-3.5 h-3.5 text-black" />
-                  <span>Add More</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileInput}
-                  />
-                </label>
-
                 <button
-                  onClick={() => setIsFullGalleryOpen(false)}
+                  onClick={closeFullGallery}
                   className="p-2 rounded-lg bg-[#1a1e28] text-[#a09c91] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                   aria-label="Close Gallery"
                 >
@@ -421,89 +375,74 @@ export const PhotoGallery: React.FC = () => {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Lightbox Modal: PURE, CLEAN FULL-SCREEN PHOTO VIEW (NO TEXT OVERLAY) */}
-      {lightboxPhoto && (
+      {/* Lightbox Modal: DEAD-CENTERED, ATTACHED TO BODY, ZERO JUMP */}
+      {lightboxPhoto && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-lg flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150 overflow-hidden select-none"
           onClick={closeLightbox}
         >
+          {/* Top Controls Bar */}
+          <div className="absolute top-4 right-4 z-40 flex items-center gap-3">
+            <span className="text-xs font-mono text-[#cfcac0] bg-black/60 px-3 py-1.5 rounded-full border border-white/15 backdrop-blur-md">
+              {displayPhotos.findIndex((p) => p.id === lightboxPhoto.id) + 1} / {displayPhotos.length}
+            </span>
+            <button
+              onClick={closeLightbox}
+              className="p-2.5 rounded-full bg-black/70 hover:bg-white/20 text-white transition-colors cursor-pointer border border-white/20 shadow-lg"
+              aria-label="Close Lightbox"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Prev Button */}
+          {displayPhotos.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrev();
+              }}
+              className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-40 p-3 sm:p-4 rounded-full bg-black/70 hover:bg-[#c49750] text-white hover:text-black transition-all cursor-pointer backdrop-blur-md shadow-2xl border border-white/15 active:scale-95"
+              aria-label="Previous Photo"
+            >
+              <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+            </button>
+          )}
+
+          {/* Next Button */}
+          {displayPhotos.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-40 p-3 sm:p-4 rounded-full bg-black/70 hover:bg-[#c49750] text-white hover:text-black transition-all cursor-pointer backdrop-blur-md shadow-2xl border border-white/15 active:scale-95"
+              aria-label="Next Photo"
+            >
+              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+            </button>
+          )}
+
+          {/* Centered Image Container — perfectly centered vertically and horizontally */}
           <div
-            className="relative max-w-6xl w-full max-h-[95vh] flex flex-col bg-transparent overflow-hidden"
+            className="relative max-w-[92vw] max-h-[90vh] flex items-center justify-center pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top Close Bar */}
-            <div className="flex items-center justify-end px-4 py-2">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    deleteCustomPhoto(lightboxPhoto.id);
-                    setPhotos(prev => prev.filter(p => p.id !== lightboxPhoto.id));
-                    closeLightbox();
-                  }}
-                  className="p-1.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer text-xs flex items-center gap-1 font-mono"
-                  title="Remove photo"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="hidden sm:inline text-xs">Delete</span>
-                </button>
-                <button
-                  onClick={closeLightbox}
-                  className="p-2 rounded-full bg-black/60 hover:bg-white/20 text-white transition-colors cursor-pointer"
-                  aria-label="Close Lightbox"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Center Image Container with Previous & Next Arrows */}
-            <div className="relative flex-1 flex items-center justify-center overflow-hidden min-h-[400px] max-h-[85vh]">
-              {lightboxLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-20 space-y-2">
-                  <Loader2 className="w-8 h-8 text-[#c49750] animate-spin" />
-                </div>
-              )}
-
-              <img
-                src={resolveAssetUrl(lightboxPhoto.image)}
-                alt=""
-                className={`max-h-[85vh] w-auto max-w-full object-contain mx-auto transition-opacity duration-300 select-none ${
-                  lightboxLoading ? 'opacity-0' : 'opacity-100'
-                }`}
-                referrerPolicy="no-referrer"
-                onLoad={() => setLightboxLoading(false)}
-              />
-
-              {/* Prev Button */}
-              {displayPhotos.length > 1 && (
-                <button
-                  onClick={handlePrev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-[#c49750] text-white hover:text-black transition-colors cursor-pointer backdrop-blur-md"
-                  aria-label="Previous Photo"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-              )}
-
-              {/* Next Button */}
-              {displayPhotos.length > 1 && (
-                <button
-                  onClick={handleNext}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-[#c49750] text-white hover:text-black transition-colors cursor-pointer backdrop-blur-md"
-                  aria-label="Next Photo"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              )}
-            </div>
-
+            <img
+              src={resolveAssetUrl(lightboxPhoto.image)}
+              alt=""
+              className="max-h-[88vh] max-w-[90vw] w-auto h-auto object-contain block mx-auto rounded shadow-2xl transition-opacity duration-200"
+              referrerPolicy="no-referrer"
+            />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

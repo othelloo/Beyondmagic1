@@ -12,9 +12,29 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
+  const [activeSection, setActiveSection] = useState<string>('');
+
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 30);
+      setScrolled(window.scrollY > 20);
+
+      // Simple active section detection
+      const sections = ['the-method', 'audiences', 'specializations', 'biography', 'gallery'];
+      const scrollPos = window.scrollY + 140;
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            setActiveSection('#' + id);
+            return;
+          }
+        }
+      }
+      if (window.scrollY < 200) {
+        setActiveSection('');
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -28,34 +48,52 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
     { name: t.nav.media, href: '#gallery' },
   ];
 
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    if (href === '#' || !href) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.querySelector(href);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-3.5 shadow-2xl'
-          : 'bg-transparent py-5 border-b border-white/5'
-      }`}
+      className="fixed top-0 left-0 right-0 z-40 bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-3.5 shadow-2xl transition-all duration-300"
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Zone 1: Single text wordmark */}
+        {/* Zone 1: Single text wordmark that scrolls to top */}
         <a
           href="#"
-          className="text-xl md:text-2xl font-serif tracking-[0.18em] text-[#f2eee9] uppercase hover:text-[#d4af37] transition-colors"
+          onClick={(e) => handleNavClick(e, '#')}
+          className="text-xl md:text-2xl font-serif tracking-[0.18em] text-[#f2eee9] uppercase hover:text-[#d4af37] transition-colors cursor-pointer"
+          title="Back to Top"
         >
           Vérisme Atelier
         </a>
 
         {/* Zone 2: 4-6 clean text navigation links */}
         <nav className="hidden lg:flex items-center gap-7 text-sm font-medium tracking-wide text-[#b3b0a6]">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="hover:text-[#f2eee9] transition-colors relative py-1 hover:border-b hover:border-[#c49750]"
-            >
-              {link.name}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.href;
+            return (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                className={`transition-colors relative py-1 hover:text-[#f2eee9] ${
+                  isActive
+                    ? 'text-[#c49750] border-b-2 border-[#c49750] font-semibold'
+                    : 'text-[#b3b0a6] hover:border-b hover:border-[#c49750]/50'
+                }`}
+              >
+                {link.name}
+              </a>
+            );
+          })}
           {/* Spirituality link - indicated as in-progress / coming soon */}
           <button
             onClick={onOpenSpirituality}
@@ -122,8 +160,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-[#cfccc3] hover:text-[#d4af37] py-2 border-b border-white/5 transition-colors"
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, link.href);
+                }}
+                className="text-[#cfccc3] hover:text-[#d4af37] py-2 border-b border-white/5 transition-colors cursor-pointer"
               >
                 {link.name}
               </a>

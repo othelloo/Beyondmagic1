@@ -22,10 +22,8 @@ function portraitUploadPlugin(): Plugin {
                 fs.mkdirSync(publicDir, { recursive: true });
                 fs.writeFileSync(path.join(publicDir, 'portrait.jpg'), buffer);
 
-                const assetsDir = path.resolve(__dirname, 'src/assets/images');
-                fs.mkdirSync(assetsDir, { recursive: true });
-                fs.writeFileSync(path.join(assetsDir, 'opera_singer_verisme_portrait_1790685727901.jpg'), buffer);
-                fs.writeFileSync(path.join(assetsDir, 'user_portrait.jpg'), buffer);
+                const currentTs = path.resolve(__dirname, 'src/data/currentPortrait.ts');
+                fs.writeFileSync(currentTs, `export const PERMANENT_PORTRAIT: string = ${JSON.stringify(body.image)};\n`);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true, path: '/images/portrait.jpg' }));
@@ -58,16 +56,66 @@ function portraitUploadPlugin(): Plugin {
                 const targetDir = path.resolve(__dirname, `public/images/${category}`);
                 fs.mkdirSync(targetDir, { recursive: true });
 
+                const rawName = body.filename;
+                fs.writeFileSync(path.join(targetDir, rawName), buffer);
                 const safeName = body.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-                fs.writeFileSync(path.join(targetDir, safeName), buffer);
+                if (safeName !== rawName) {
+                  fs.writeFileSync(path.join(targetDir, safeName), buffer);
+                }
 
-                const url = `/images/${category}/${safeName}`;
+                const url = `/images/${category}/${rawName}`;
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, url, filename: safeName }));
+                res.end(JSON.stringify({ success: true, url, filename: rawName }));
                 return;
               }
               res.writeHead(400, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: 'Missing image or filename' }));
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
+
+      // API to sync all gallery photos from client localStorage into physical files
+      server.middlewares.use('/api/sync-gallery-photos', (req, res) => {
+        if (req.method === 'POST') {
+          const chunks: Buffer[] = [];
+          req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          req.on('end', () => {
+            try {
+              const body = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+              if (Array.isArray(body.photos) && body.photos.length > 0) {
+                const targetDir = path.resolve(__dirname, 'public/images/onstage');
+                fs.mkdirSync(targetDir, { recursive: true });
+
+                const processedPhotos = body.photos.map((photo: any, index: number) => {
+                  if (photo.image && typeof photo.image === 'string' && photo.image.startsWith('data:image')) {
+                    const base64Data = photo.image.replace(/^data:image\/\w+;base64,/, '');
+                    const buffer = Buffer.from(base64Data, 'base64');
+                    const filename = `gallery_photo_${index}_${Date.now()}.jpg`;
+                    fs.writeFileSync(path.join(targetDir, filename), buffer);
+                    return {
+                      ...photo,
+                      image: `/images/onstage/${filename}`
+                    };
+                  }
+                  return photo;
+                });
+
+                const bundlePath = path.resolve(__dirname, 'src/data/bundledGallery.ts');
+                fs.writeFileSync(bundlePath, `import { PhotoItem } from '../types';\n\nexport const BUNDLED_GALLERY_PHOTOS: PhotoItem[] = ${JSON.stringify(processedPhotos, null, 2)};\n`);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true, count: processedPhotos.length }));
+                return;
+              }
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, count: 0 }));
             } catch (err: any) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ error: err.message }));

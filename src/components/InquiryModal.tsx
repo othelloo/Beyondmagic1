@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, Send, Mail, ExternalLink } from 'lucide-react';
 import { saveInquiry } from '../data/inquiryStore';
 import { useLanguage } from '../context/LanguageContext';
@@ -85,11 +86,11 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
     `Name: ${name}\nEmail: ${email}\nRole: ${discipline}\nTopic: ${selectedTopic}\nAudio Link: ${audioLink}\n\nMessage:\n${message}`
   )}`;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -297,6 +298,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

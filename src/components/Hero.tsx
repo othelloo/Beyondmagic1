@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowDown, Play, Camera, Check } from 'lucide-react';
-import { getStoredPortrait, savePortrait, onMediaChange } from '../data/mediaStore';
+import { ArrowDown, Play } from 'lucide-react';
+import { getStoredPortrait, onMediaChange } from '../data/mediaStore';
 import { useLanguage } from '../context/LanguageContext';
 import { resolveAssetUrl } from '../utils/assetPath';
 
@@ -17,8 +17,6 @@ export const Hero: React.FC<HeroProps> = ({
 }) => {
   const { t } = useLanguage();
   const [portraitSrc, setPortraitSrc] = useState<string>(getStoredPortrait());
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [justUploaded, setJustUploaded] = useState<boolean>(false);
 
   useEffect(() => {
     const unsub = onMediaChange(() => {
@@ -26,34 +24,6 @@ export const Hero: React.FC<HeroProps> = ({
     });
     return unsub;
   }, []);
-
-  const handleFile = (file: File) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setPortraitSrc(dataUrl);
-        await savePortrait(dataUrl);
-        setIsUploading(false);
-        setJustUploaded(true);
-        setTimeout(() => setJustUploaded(false), 4000);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleFile(file);
-  };
 
   return (
     <section className="relative min-h-[90vh] flex items-center pt-28 pb-16 px-6 overflow-hidden">
@@ -65,34 +35,7 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Left Column: Visual Frame (Picture on the Left) */}
         <div className="lg:col-span-5 xl:col-span-5 flex flex-col items-center lg:items-start order-1">
           <div className="w-full max-w-lg lg:max-w-none">
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              className="relative group rounded-2xl overflow-hidden border border-[#272b35] bg-[#121419] shadow-2xl transition-all duration-300"
-            >
-              {/* Photo Upload Overlay Button */}
-              <label className="absolute top-3.5 right-3.5 z-30 cursor-pointer bg-black/85 hover:bg-black text-[11px] font-medium text-[#c49750] hover:text-white px-3.5 py-1.5 rounded-full border border-[#c49750]/60 backdrop-blur-md flex items-center gap-1.5 transition-all shadow-xl hover:scale-105 active:scale-95">
-                {justUploaded ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-green-400" />
-                    <span className="text-green-300">{t.hero.photoUpdated}</span>
-                  </>
-                ) : isUploading ? (
-                  <span className="text-[#e2ded5]">{t.hero.processing}</span>
-                ) : (
-                  <>
-                    <Camera className="w-3.5 h-3.5 text-[#c49750]" />
-                    <span>{t.hero.uploadPhoto}</span>
-                  </>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileInputChange}
-                />
-              </label>
-
+            <div className="relative group rounded-2xl overflow-hidden border border-[#272b35] bg-[#121419] shadow-2xl transition-all duration-300">
               {/* Uncropped Photo: Exact 630 / 454 Proportion */}
               <div className="relative overflow-hidden bg-[#0c0e12]">
                 <img

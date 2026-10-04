@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { getStoredVideos, onMediaChange } from '../data/mediaStore';
 import { SINGER_PORTRAIT_IMAGE } from '../data/content';
 import { VideoItem } from '../types';
@@ -18,6 +19,29 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
   const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos());
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'opera' | 'composition' | 'teaching'>('all');
   const [activeModalVideo, setActiveModalVideo] = useState<VideoItem | null>(null);
+  const savedScrollY = React.useRef<number>(0);
+
+  const openVideoModal = (video: VideoItem) => {
+    savedScrollY.current = window.scrollY;
+    setActiveModalVideo(video);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeVideoModal = () => {
+    setActiveModalVideo(null);
+    document.body.style.overflow = '';
+    window.scrollTo({ top: savedScrollY.current, behavior: 'instant' });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeModalVideo && e.key === 'Escape') {
+        closeVideoModal();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeModalVideo]);
 
   useEffect(() => {
     const unsubscribe = onMediaChange(() => {
@@ -81,7 +105,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
           return (
             <div
               key={video.id}
-              onClick={() => setActiveModalVideo(video)}
+              onClick={() => openVideoModal(video)}
               className="group rounded-xl overflow-hidden bg-[#12151c] border border-[#222630] cursor-pointer hover:border-[#c49750]/60 transition-all duration-300 flex flex-col justify-between shadow-lg"
             >
               <div>
@@ -136,13 +160,13 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
         })}
       </div>
 
-      {/* Video Player Modal */}
-      {activeModalVideo && (
+      {/* Video Player Modal: Centered with Scroll Lock */}
+      {activeModalVideo && typeof document !== 'undefined' && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
-          onClick={() => setActiveModalVideo(null)}
+          className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200 overflow-hidden"
+          onClick={closeVideoModal}
         >
           <div
             className="relative max-w-4xl w-full bg-[#11141b] rounded-2xl overflow-hidden border border-[#272b36] shadow-2xl flex flex-col"
@@ -152,12 +176,12 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
             <div className="flex items-center justify-between px-6 py-4 bg-[#0c0e13] border-b border-white/10">
               <div className="flex items-center gap-2">
                 <Youtube className="w-4 h-4 text-red-500" />
-                <span className="text-xs font-mono uppercase tracking-wider text-[#dedacf]">
+                <span className="text-xs font-mono uppercase tracking-wider text-[#dedacf] truncate max-w-[280px] sm:max-w-md">
                   {activeModalVideo.title}
                 </span>
               </div>
               <button
-                onClick={() => setActiveModalVideo(null)}
+                onClick={closeVideoModal}
                 className="p-1 rounded text-[#9c978b] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="Close screening modal"
               >
@@ -212,7 +236,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
               <button
                 onClick={() => {
                   const topic = `Question about video: ${activeModalVideo.title}`;
-                  setActiveModalVideo(null);
+                  closeVideoModal();
                   onOpenInquiry(topic);
                 }}
                 className="shrink-0 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all cursor-pointer"
@@ -221,7 +245,8 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
