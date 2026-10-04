@@ -3,6 +3,7 @@ import { getStoredPhotos, onMediaChange, addCustomPhotosBatch, deleteCustomPhoto
 import { PhotoItem } from '../types';
 import { X, ZoomIn, ChevronLeft, ChevronRight, Camera, Sparkles, MapPin, Calendar, Upload, Check, Loader2, Plus, Trash2, Eye, Zap, Image as ImageIcon, Images, ArrowRight, Maximize2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 
 function parsePhotoMetadata(filename: string, category: 'production' | 'behind_the_scenes'): Partial<PhotoItem> {
   const lower = filename.toLowerCase();
@@ -231,7 +232,7 @@ export const PhotoGallery: React.FC = () => {
       >
         <div className="w-full h-full overflow-hidden bg-black relative">
           <img
-            src={photo.image}
+            src={resolveAssetUrl(photo.image)}
             alt=""
             loading="lazy"
             decoding="async"
@@ -469,7 +470,7 @@ export const PhotoGallery: React.FC = () => {
               )}
 
               <img
-                src={lightboxPhoto.image}
+                src={resolveAssetUrl(lightboxPhoto.image)}
                 alt=""
                 className={`max-h-[85vh] w-auto max-w-full object-contain mx-auto transition-opacity duration-300 select-none ${
                   lightboxLoading ? 'opacity-0' : 'opacity-100'

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Award, Music2, Globe, Quote, ArrowDown } from 'lucide-react';
 import { getStoredPortrait, onMediaChange } from '../data/mediaStore';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 
 interface BiographyProps {
   onScrollToGallery: () => void;
@@ -45,14 +46,14 @@ export const Biography: React.FC<BiographyProps> = ({ onScrollToGallery, onOpenI
             <div className="rounded-xl overflow-hidden border border-[#272b35] bg-[#12141a] shadow-2xl">
               <div className="relative overflow-hidden bg-[#0c0e12]">
                 <img
-                  src="/images/biography.jpg"
+                  src={resolveAssetUrl('/images/biography.jpg')}
                   alt="Abdellah Lasri"
                   className="w-full h-auto block object-cover filter contrast-[1.02]"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (!target.src.endsWith('/images/onstage/17175992_10208450693811600_463692066_o.jpg')) {
-                      target.src = '/images/onstage/17175992_10208450693811600_463692066_o.jpg';
+                    if (!target.src.includes('17175992_10208450693811600_463692066_o.jpg')) {
+                      target.src = resolveAssetUrl('/images/onstage/17175992_10208450693811600_463692066_o.jpg');
                     }
                   }}
                 />

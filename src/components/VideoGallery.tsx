@@ -5,6 +5,7 @@ import { VideoItem } from '../types';
 import { Play, Film, X, Volume2, Youtube } from 'lucide-react';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 
 interface VideoGalleryProps {
   onOpenInquiry: (topic?: string) => void;
@@ -87,7 +88,7 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
                 {/* Thumbnail Container */}
                 <div className="relative aspect-video overflow-hidden bg-black">
                   <img
-                    src={thumb}
+                    src={resolveAssetUrl(thumb)}
                     alt={video.title}
                     className="w-full h-full object-cover filter brightness-90 group-hover:scale-105 transition-transform duration-500"
                     referrerPolicy="no-referrer"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowDown, Play, Camera, Check } from 'lucide-react';
 import { getStoredPortrait, savePortrait, onMediaChange } from '../data/mediaStore';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 
 interface HeroProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -95,15 +96,15 @@ export const Hero: React.FC<HeroProps> = ({
               {/* Uncropped Photo: Exact 630 / 454 Proportion */}
               <div className="relative overflow-hidden bg-[#0c0e12]">
                 <img
-                  src={portraitSrc || '/images/portrait.jpg'}
+                  src={resolveAssetUrl(portraitSrc || '/images/portrait.jpg')}
                   alt="Abdellah Lasri"
                   className="w-full h-auto block object-cover filter contrast-[1.02] group-hover:scale-[1.01] transition-transform duration-700"
                   style={{ aspectRatio: '630 / 454' }}
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (!target.src.endsWith('/images/portrait.jpg')) {
-                      target.src = '/images/portrait.jpg';
+                    if (!target.src.endsWith('/portrait.jpg')) {
+                      target.src = resolveAssetUrl('/images/portrait.jpg');
                     }
                   }}
                 />

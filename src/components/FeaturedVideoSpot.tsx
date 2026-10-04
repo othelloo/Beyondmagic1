@@ -5,6 +5,7 @@ import { SINGER_PORTRAIT_IMAGE } from '../data/content';
 import { VideoItem } from '../types';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 
 interface FeaturedVideoSpotProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -114,7 +115,7 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
                 <>
                   {/* Thumbnail */}
                   <img
-                    src={thumbnailSrc}
+                    src={resolveAssetUrl(thumbnailSrc)}
                     alt={activeVideo.title}
                     className="w-full h-full object-cover filter brightness-[0.7] group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
