@@ -4,12 +4,16 @@ import { SINGER_PORTRAIT_IMAGE } from '../data/content';
 import { VideoItem } from '../types';
 import { Play, Film, X, Volume2, Youtube } from 'lucide-react';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
+import { useLanguage } from '../context/LanguageContext';
 
 interface VideoGalleryProps {
   onOpenInquiry: (topic?: string) => void;
 }
 
 export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => {
+  const { language } = useLanguage();
+  const isDe = language === 'de';
+
   const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos());
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'opera' | 'composition' | 'teaching'>('all');
   const [activeModalVideo, setActiveModalVideo] = useState<VideoItem | null>(null);
@@ -36,22 +40,22 @@ export const VideoGallery: React.FC<VideoGalleryProps> = ({ onOpenInquiry }) => 
         <div>
           <div className="text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-1 flex items-center gap-2">
             <Film className="w-3.5 h-3.5" />
-            <span>Video Library</span>
+            <span>{isDe ? 'Videothek' : 'Video Library'}</span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-serif text-[#f4f2ec] font-normal">
-            Video Archive & Repertoire
+            {isDe ? 'Video-Archiv & Repertoire' : 'Video Archive & Repertoire'}
           </h3>
           <p className="text-xs sm:text-sm text-[#8c887d] mt-1">
-            Performances from European opera stages, live French recitals, and my own musical compositions.
+            {isDe ? 'Aufführungen von europäischen Opernbühnen, französische Liederabende und eigene Kompositionen.' : 'Performances from European opera stages, live French recitals, and my own musical compositions.'}
           </p>
         </div>
 
         {/* Filter Pills / Buttons (Functional interactive controls) */}
         <div className="flex flex-wrap items-center gap-1.5 bg-[#12141a] p-1.5 rounded-lg border border-[#22252e]">
           {[
-            { id: 'all', label: 'All Recordings' },
-            { id: 'opera', label: 'Singing in Opera & Recitals' },
-            { id: 'composition', label: 'My Own Music' }
+            { id: 'all', label: isDe ? 'Alle Aufnahmen' : 'All Recordings' },
+            { id: 'opera', label: isDe ? 'Operngesang & Liederabende' : 'Singing in Opera & Recitals' },
+            { id: 'composition', label: isDe ? 'Eigene Kompositionen' : 'My Own Music' }
           ].map((cat) => (
             <button
               key={cat.id}

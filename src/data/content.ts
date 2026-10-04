@@ -1,9 +1,9 @@
 import { PhotoItem, VideoItem, CourseDetail } from '../types';
 
-export const HERO_PERFORMANCE_IMAGE = '/src/assets/images/opera_hero_performance_1790680283852.jpg';
+export const HERO_PERFORMANCE_IMAGE = '/images/portrait.jpg';
 export const SINGER_PORTRAIT_IMAGE = '/images/portrait.jpg';
-export const REHEARSAL_IMAGE = '/src/assets/images/rehearsal_behind_scenes_1790680310364.jpg';
-export const PRODUCTION_STAGE_IMAGE = '/src/assets/images/opera_production_stage_1790680324315.jpg';
+export const REHEARSAL_IMAGE = '/images/portrait.jpg';
+export const PRODUCTION_STAGE_IMAGE = '/images/portrait.jpg';
 
 export const PHOTOS_COLLECTION: PhotoItem[] = [
   {
@@ -445,19 +445,19 @@ export const SPECIALIZED_COURSES: CourseDetail[] = [
     title: 'French Coaching for Opera Singers',
     subtitle: 'Sing in French with natural clarity, confidence, and vocal freedom',
     audience: 'Opera singers, voice students, and performers preparing French roles or auditions',
-    format: '1-on-1 Sessions (60 to 90 min) in Paris or online',
-    description: 'Many singers find French intimidating because of silent letters, nasal sounds, and subtle vowels. But French doesn’t have to feel like a trap. I help you understand how French sounds work in your mouth, so you can sing with beautiful words without losing vocal power.',
+    format: '1-on-1 Sessions (60 to 90 min) in NRW, Germany, Berlin, or online',
+    description: 'Many singers find French intimidating because of silent letters, nasal sounds, and subtle vowels. But French doesn’t have to feel like a trap. I help you understand how French sounds work in your mouth, so you can sing with authentic diction without sacrificing resonance and power.',
     syllabus: [
-      'The simple rules of French vowels and how to keep them open and ringing',
+      'The simple rules of French vowels, how to keep them open and ringing, and to what extent we can modify them to sustain an operatic voice while remaining authentically "French"',
+      'How to replicate a word you just heard—and why doing so by ear alone does not work every time',
+      'Understand the existing rules so you rely less on dictionaries and coaches',
       'When to connect words together (liaisons) and when not to',
-      'The silent "e" in singing: how to breathe naturally and keep the rhythm flowing',
-      'How to make French words feel as natural to speak and sing as your own language',
-      'Role study for auditions and productions (Faust, Carmen, Werther, and more)'
+      'Role study for auditions and productions'
     ],
     takeaways: [
       'Sing French with clear pronunciation that French audiences immediately understand',
       'Never lose your vocal resonance or squeeze your throat on French vowels',
-      'Feel confident and comfortable walking into any French audition'
+      'Feel confident and autonomous walking into any French audition'
     ]
   },
   {
@@ -465,17 +465,18 @@ export const SPECIALIZED_COURSES: CourseDetail[] = [
     title: 'French Songs (Mélodie) for Singers & Pianists',
     subtitle: 'Learn how to interpret French poetry and music together as a team',
     audience: 'Singers, collaborative pianists, or singer-pianist duos',
-    format: 'Duo sessions (90 min) & masterclasses',
-    description: 'French Mélodie is the French version of classical art songs (by Fauré, Debussy, Poulenc, Ravel). Unlike grand opera, it is intimate, full of subtle colors, and tells a personal poetic story. I work with singers and pianists together so you listen and breathe as one person.',
+    format: 'Duo sessions (90 min) & masterclasses in NRW, Berlin, or online',
+    description: 'French Mélodie is intimate, full of subtle colors, and tells a personal poetic story. I work with singers and pianists together so you listen and breathe as one entity.',
     syllabus: [
       'Understanding the poem first: what the words mean and where the emotion lives',
+      'Understanding the different periods, the life of the composers, and the deep link between poetry and music',
       'How the piano and voice fit together: creating colors and listening to each other',
       'Freedom with timing: how to be expressive without losing the pulse of the song',
       'Exploring the great French song repertoire from early romantic songs to modern classics'
     ],
     takeaways: [
       'A true musical connection where singer and pianist breathe together',
-      'Natural storytelling that touches the audience without being overdramatic',
+      'Understanding the different periods, the life of the composers, and the deep link between poetry and music',
       'A solid repertoire ready for recitals and competitions'
     ]
   },
@@ -485,9 +486,9 @@ export const SPECIALIZED_COURSES: CourseDetail[] = [
     subtitle: 'A single, deep workshop to make you completely autonomous for life',
     audience: 'Singers of all levels, vocal teachers, and choral singers',
     format: 'One-Time Comprehensive Intensive (One full day or two half-day sessions)',
-    description: 'Unlike regular weekly coaching, this is a one-time course designed to give you everything you need so you never have to depend on a coach or dictionary again. We look at how speech physically works in the body, how the International Phonetic Alphabet (IPA) works, why our mother tongue makes us "deaf" to certain foreign sounds, and how to tweak vowels on stage so your voice carries.',
+    description: 'Unlike regular weekly coaching, this is a one-time course designed to give you everything you need so you never have to depend on a coach or dictionary again. We look at speech mechanics, International Phonetic Alphabet (IPA), and how to tweak vowels on stage so your voice carries.',
     syllabus: [
-      'The physical anatomy of speech: how your tongue, soft palate, and throat shape sounds',
+      'Build a precise vocabulary that will help you receive and communicate knowledge more accurately',
       'The International Phonetic Alphabet (IPA): a simple guide to reading and pronouncing any sound symbol',
       'The "mother tongue filter": why our native language makes us miss foreign sounds, and how to train your ear to hear them',
       'The exact rules of French pronunciation—and their exceptions—explained simply',

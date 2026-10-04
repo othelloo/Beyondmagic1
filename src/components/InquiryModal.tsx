@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Send, Mail, ExternalLink } from 'lucide-react';
 import { saveInquiry } from '../data/inquiryStore';
+import { useLanguage } from '../context/LanguageContext';
 
 interface InquiryModalProps {
   isOpen: boolean;
@@ -13,6 +14,9 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
   onClose,
   defaultTopic = 'General Lesson Inquiry'
 }) => {
+  const { language, t } = useLanguage();
+  const isDe = language === 'de';
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [discipline, setDiscipline] = useState<'singer' | 'producer' | 'student' | 'listener'>('singer');
@@ -95,7 +99,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
         {/* Top Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0d0f14]">
           <span className="text-xs uppercase font-mono tracking-widest text-[#c49750]">
-            Get in Touch / Lesson Inquiry
+            {isDe ? 'Kontakt aufnehmen / Unterrichtsanfrage' : 'Get in Touch / Lesson Inquiry'}
           </span>
           <button
             onClick={onClose}
@@ -113,17 +117,19 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
             </div>
             <div>
               <h3 className="text-2xl font-serif text-white mb-2">
-                Thank you, {name}!
+                {isDe ? `Vielen Dank, ${name}!` : `Thank you, ${name}!`}
               </h3>
               <p className="text-xs text-[#a09c91] leading-relaxed max-w-md mx-auto">
-                Your message regarding <span className="text-[#c49750]">{selectedTopic}</span> has been logged and sent. I will review it and reply directly to your email within 48 hours.
+                {isDe
+                  ? `Ihre Nachricht bezüglich ${selectedTopic} wurde übermittelt. Ich werde mich innerhalb von 48 Stunden persönlich bei Ihnen melden.`
+                  : `Your message regarding ${selectedTopic} has been logged and sent. I will review it and reply directly to your email within 48 hours.`}
               </p>
             </div>
             
             <div className="p-3 rounded-lg bg-[#181c26] border border-[#2b303f] max-w-sm mx-auto text-left flex items-start gap-3">
               <Mail className="w-4 h-4 text-[#c49750] shrink-0 mt-0.5" />
               <div className="text-[11px] text-[#9a968a]">
-                <span>Want to follow up directly? You can also email </span>
+                <span>{isDe ? 'Direkte E-Mail: ' : 'Want to follow up directly? You can also email '}</span>
                 <a href={mailtoHref} className="text-[#c49750] underline hover:text-white">
                   beeyondmagic@protonmail.com
                 </a>
@@ -135,7 +141,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                 onClick={handleReset}
                 className="px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all cursor-pointer"
               >
-                Close
+                {isDe ? 'Schließen' : 'Close'}
               </button>
             </div>
           </div>
@@ -150,24 +156,24 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
             <input type="hidden" name="form-name" value="inquiries" />
             <div>
               <h3 className="text-2xl font-serif text-[#f2eee9] font-normal mb-1">
-                Book a Lesson or Ask a Question
+                {isDe ? 'Unterrichtsstunde buchen oder Frage stellen' : 'Book a Lesson or Ask a Question'}
               </h3>
               <p className="text-xs text-[#8c887d]">
-                Lessons available in Paris or online.
+                {t.hero.locationAvailability}
               </p>
             </div>
 
             {/* Discipline Selector */}
             <div>
               <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1.5">
-                I am a:
+                {isDe ? 'Ich bin:' : 'I am a:'}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
-                  { id: 'singer', label: 'Singer' },
-                  { id: 'producer', label: 'Producer' },
-                  { id: 'student', label: 'Music Student' },
-                  { id: 'listener', label: 'Music Lover' }
+                  { id: 'singer', label: isDe ? 'Sänger/in' : 'Singer' },
+                  { id: 'producer', label: isDe ? 'Produzent/in' : 'Producer' },
+                  { id: 'student', label: isDe ? 'Gesangsstudent/in' : 'Music Student' },
+                  { id: 'listener', label: isDe ? 'Musikliebhaber/in' : 'Music Lover' }
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -189,28 +195,28 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1">
-                  Your Name *
+                  {isDe ? 'Ihr Name *' : 'Your Name *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your full name"
+                  placeholder={isDe ? 'Vollständiger Name' : 'Your full name'}
                   className="w-full px-3.5 py-2.5 bg-[#0b0c10] border border-[#272a34] rounded text-xs text-[#f2eee9] focus:outline-none focus:border-[#c49750]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1">
-                  Email Address *
+                  {isDe ? 'E-Mail-Adresse *' : 'Email Address *'}
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  placeholder="name@example.com"
                   className="w-full px-3.5 py-2.5 bg-[#0b0c10] border border-[#272a34] rounded text-xs text-[#f2eee9] focus:outline-none focus:border-[#c49750]"
                 />
               </div>
@@ -219,27 +225,41 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
             {/* Topic Selection */}
             <div>
               <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1">
-                What are you interested in?
+                {isDe ? 'Woran haben Sie Interesse?' : 'What are you interested in?'}
               </label>
               <select
                 value={selectedTopic}
                 onChange={(e) => setSelectedTopic(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-[#0b0c10] border border-[#272a34] rounded text-xs text-[#dedacf] focus:outline-none focus:border-[#c49750]"
               >
-                <option value="The Method: Ear Education & Learning Fast">The Method: Ear Education & Learning Fast</option>
-                <option value="The Anatomy of Speech & French Rules (One-Time Intensive)">The Anatomy of Speech & French Rules (One-Time Intensive)</option>
-                <option value="French Coaching for Opera Singers">French Coaching for Opera Singers</option>
-                <option value="French Songs (Mélodie) for Singers & Pianists">French Songs (Mélodie) for Singers & Pianists</option>
-                <option value="Producer Lessons: Chords & Harmony (FL Studio / Ableton)">Producer Lessons: Chords & Harmony (FL Studio / Ableton)</option>
-                <option value="Listening Sessions for Music Lovers">Listening Sessions for Music Lovers</option>
-                <option value="General Question / Other">General Question / Other</option>
+                <option value="The Method: Ear Education & Learning Fast">
+                  {isDe ? 'Die Methode: Gehörbildung & Schnelles Lernen' : 'The Method: Ear Education & Learning Fast'}
+                </option>
+                <option value="The Anatomy of Speech & French Rules (One-Time Intensive)">
+                  {isDe ? 'Anatomie der Sprache & Französische Regeln (Intensivkurs)' : 'The Anatomy of Speech & French Rules (One-Time Intensive)'}
+                </option>
+                <option value="French Coaching for Opera Singers">
+                  {isDe ? 'Französisches Coaching für Opernsänger' : 'French Coaching for Opera Singers'}
+                </option>
+                <option value="French Songs (Mélodie) for Singers & Pianists">
+                  {isDe ? 'Französische Lieder (Mélodie) für Sänger & Pianisten' : 'French Songs (Mélodie) for Singers & Pianists'}
+                </option>
+                <option value="Producer Lessons: Chords & Harmony (FL Studio / Ableton)">
+                  {isDe ? 'Produzenten-Coaching: Akkorde & Harmonie (Ableton / FL Studio)' : 'Producer Lessons: Chords & Harmony (FL Studio / Ableton)'}
+                </option>
+                <option value="Listening Sessions for Music Lovers">
+                  {isDe ? 'Hör-Sessions für Musikliebhaber' : 'Listening Sessions for Music Lovers'}
+                </option>
+                <option value="General Question / Other">
+                  {isDe ? 'Allgemeine Frage / Sonstiges' : 'General Question / Other'}
+                </option>
               </select>
             </div>
 
             {/* Optional link */}
             <div>
               <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1">
-                Optional: Link to your music or singing (SoundCloud, YouTube, Drive...)
+                {isDe ? 'Optional: Link zu Musik oder Aufnahme (YouTube, SoundCloud, Drive...)' : 'Optional: Link to your music or singing (SoundCloud, YouTube, Drive...)'}
               </label>
               <input
                 type="url"
@@ -253,13 +273,13 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
             {/* Message */}
             <div>
               <label className="block text-xs uppercase font-mono tracking-wider text-[#a09c91] mb-1">
-                Your Message
+                {isDe ? 'Ihre Nachricht' : 'Your Message'}
               </label>
               <textarea
                 rows={3}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell me a bit about your current level and what you want to achieve..."
+                placeholder={isDe ? 'Erzählen Sie kurz von Ihren Zielen, Ihrem Stimmfach oder Ihren Fragen...' : 'Tell me a bit about your current level and what you want to achieve...'}
                 className="w-full px-3.5 py-2.5 bg-[#0b0c10] border border-[#272a34] rounded text-xs text-[#f2eee9] focus:outline-none focus:border-[#c49750] resize-none"
               />
             </div>
@@ -271,7 +291,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                 className="w-full py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send Message</span>
+                <span>{isDe ? 'Nachricht senden' : 'Send Message'}</span>
               </button>
             </div>
           </form>

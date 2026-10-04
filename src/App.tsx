@@ -10,8 +10,10 @@ import { MediaSection } from './components/MediaSection';
 import { SpiritualityExperience } from './components/SpiritualityExperience';
 import { InquiryModal } from './components/InquiryModal';
 import { Footer } from './components/Footer';
+import { LanguageProvider } from './context/LanguageContext';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
 
-export default function App() {
+function MainApp() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [inquiryTopic, setInquiryTopic] = useState('General Masterclass Consultation');
   const [spiritualityActive, setSpiritualityActive] = useState(false);
@@ -87,6 +89,9 @@ export default function App() {
         />
       </div>
 
+      {/* Floating Flag Switcher in the bottom corner */}
+      <LanguageSwitcher />
+
       {/* Interactive Inquiries / Audition Modal */}
       <InquiryModal
         isOpen={inquiryOpen}
@@ -102,4 +107,13 @@ export default function App() {
     </>
   );
 }
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <MainApp />
+    </LanguageProvider>
+  );
+}
+
 

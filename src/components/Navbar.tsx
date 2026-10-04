@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Music, Sparkles } from 'lucide-react';
+import { Menu, X, Sparkles } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -9,6 +10,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpirituality }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,11 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
   }, []);
 
   const navLinks = [
-    { name: 'The Method', href: '#the-method' },
-    { name: 'Who It’s For', href: '#audiences' },
-    { name: 'French Coaching', href: '#specializations' },
-    { name: 'About Me', href: '#biography' },
-    { name: 'Photos & Videos', href: '#gallery' },
+    { name: t.nav.method, href: '#the-method' },
+    { name: t.nav.audiences, href: '#audiences' },
+    { name: t.nav.french, href: '#specializations' },
+    { name: t.nav.about, href: '#biography' },
+    { name: t.nav.media, href: '#gallery' },
   ];
 
   return (
@@ -58,20 +60,48 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
           <button
             onClick={onOpenSpirituality}
             className="flex items-center gap-1.5 text-xs text-[#d4af37]/80 hover:text-[#d4af37] transition-colors py-1 cursor-pointer"
-            title="Spirituality through Music — In Progress / Coming Soon"
+            title="Spirituality through Music"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-            <span className="font-normal italic">Spirituality (Soon)</span>
+            <span className="font-normal italic">{t.nav.spirituality}</span>
           </button>
         </nav>
 
-        {/* Zone 3: Primary action & mobile trigger */}
-        <div className="flex items-center gap-4">
+        {/* Zone 3: Language switcher & Primary action & mobile trigger */}
+        <div className="flex items-center gap-3 md:gap-4">
+          {/* Flag Switcher in Navbar */}
+          <div className="flex items-center bg-[#151821] border border-[#272b35] rounded-full p-0.5 text-xs">
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-2 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer ${
+                language === 'en'
+                  ? 'bg-[#c49750] text-black font-semibold shadow-sm'
+                  : 'text-[#9c988e] hover:text-white'
+              }`}
+              title="English"
+            >
+              <span>🇬🇧</span>
+              <span className="hidden sm:inline text-[11px]">EN</span>
+            </button>
+            <button
+              onClick={() => setLanguage('de')}
+              className={`px-2 py-1 rounded-full flex items-center gap-1 transition-all cursor-pointer ${
+                language === 'de'
+                  ? 'bg-[#c49750] text-black font-semibold shadow-sm'
+                  : 'text-[#9c988e] hover:text-white'
+              }`}
+              title="Deutsch"
+            >
+              <span>🇩🇪</span>
+              <span className="hidden sm:inline text-[11px]">DE</span>
+            </button>
+          </div>
+
           <button
             onClick={() => onOpenInquiry()}
             className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all duration-200 shadow-sm cursor-pointer whitespace-nowrap"
           >
-            Contact / Book
+            {t.nav.contact}
           </button>
 
           <button
@@ -106,9 +136,26 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
               className="flex items-center gap-2 text-[#d4af37] py-2 text-left text-sm italic"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Spirituality Through Music (Coming Soon)</span>
+              <span>{t.nav.spirituality}</span>
             </button>
-            <div className="pt-3">
+            <div className="pt-3 flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1 text-sm text-[#a09c91]">
+                <span>Language / Sprache:</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`px-3 py-1 rounded text-xs ${language === 'en' ? 'bg-[#c49750] text-black font-semibold' : 'bg-[#1b1e26] text-[#b8b5ab]'}`}
+                  >
+                    🇬🇧 English
+                  </button>
+                  <button
+                    onClick={() => setLanguage('de')}
+                    className={`px-3 py-1 rounded text-xs ${language === 'de' ? 'bg-[#c49750] text-black font-semibold' : 'bg-[#1b1e26] text-[#b8b5ab]'}`}
+                  >
+                    🇩🇪 Deutsch
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -116,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
                 }}
                 className="w-full text-center py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] rounded"
               >
-                Contact / Book
+                {t.nav.contact}
               </button>
             </div>
           </div>

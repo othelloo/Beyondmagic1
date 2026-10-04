@@ -78,6 +78,68 @@ function portraitUploadPlugin(): Plugin {
           res.end();
         }
       });
+
+      // Serve static images directly from public/images
+      server.middlewares.use('/images', (req, res, next) => {
+        try {
+          const reqPath = decodeURIComponent(req.url || '');
+          const filePath = path.resolve(__dirname, 'public/images', reqPath.replace(/^\//, ''));
+          if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            const ext = path.extname(filePath).toLowerCase();
+            const mimeTypes: Record<string, string> = {
+              '.jpg': 'image/jpeg',
+              '.jpeg': 'image/jpeg',
+              '.png': 'image/png',
+              '.webp': 'image/webp',
+              '.svg': 'image/svg+xml',
+              '.gif': 'image/gif'
+            };
+            res.writeHead(200, {
+              'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+              'Cache-Control': 'public, max-age=3600'
+            });
+            fs.createReadStream(filePath).pipe(res);
+            return;
+          }
+        } catch (e) {
+          console.error('Error serving static image:', e);
+        }
+        next();
+      });
+
+      // API to list all uploaded gallery photos
+      server.middlewares.use('/api/gallery-photos', (req, res) => {
+        if (req.method === 'GET') {
+          try {
+            const dir = path.resolve(__dirname, 'public/images/onstage');
+            if (fs.existsSync(dir)) {
+              const files = fs.readdirSync(dir);
+              const photos = files
+                .filter(f => /\.(jpe?g|png|webp|gif)$/i.test(f))
+                .map((f, i) => ({
+                  id: `photo-${i}-${f}`,
+                  title: '',
+                  category: 'production',
+                  image: `/images/onstage/${f}`,
+                  caption: '',
+                  venueOrContext: '',
+                  year: ''
+                }));
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, photos }));
+              return;
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, photos: [] }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
     }
   };
 }

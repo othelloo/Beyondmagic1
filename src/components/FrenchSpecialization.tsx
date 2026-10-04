@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { SPECIALIZED_COURSES } from '../data/content';
 import { Check, ShieldCheck, BookOpen } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface FrenchSpecializationProps {
   onOpenInquiry: (topic: string) => void;
 }
 
 export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOpenInquiry }) => {
+  const { language, t } = useLanguage();
+  const isDe = language === 'de';
   const [activeCourseId, setActiveCourseId] = useState<string>('anatomy-ipa-intensive');
 
   const activeCourse = SPECIALIZED_COURSES.find((c) => c.id === activeCourseId) || SPECIALIZED_COURSES[2];
@@ -16,19 +19,17 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-14">
+        <div className="max-w-3xl mb-12">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-3">
-            <span>Specialized Teaching</span>
-            <span aria-hidden="true" className="opacity-40">·</span>
-            <span>Singing in French</span>
+            <span>{t.french.badge}</span>
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-serif text-[#fbf9f5] font-normal leading-tight mb-4">
-            French Diction, French Songs & The One-Time Intensive
+            {t.french.title}
           </h2>
 
           <p className="text-base text-[#b8b5ab] font-light leading-relaxed">
-            French has a reputation for being hard to sing because of silent letters, liaisons, and subtle vowels. I specialize in this field and teach you how to make French feel natural, open, and effortless on stage.
+            {t.french.subtitle}
           </p>
         </div>
 
@@ -49,7 +50,9 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-[#c49750]">
-                    {isOneTime ? '★ ONE-TIME WORKSHOP' : 'ONGOING COACHING'}
+                    {isOneTime
+                      ? (isDe ? '★ EINMALIGER WORKSHOP' : '★ ONE-TIME WORKSHOP')
+                      : (isDe ? 'FORTLAUFENDES COACHING' : 'ONGOING COACHING')}
                   </span>
                 </div>
                 <div className="text-sm font-serif font-medium line-clamp-1">{course.title}</div>
@@ -84,7 +87,7 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
                 {/* Who it is for */}
                 <div className="p-4 bg-[#181b24] rounded-xl border border-[#252936] mb-6">
                   <div className="text-xs uppercase tracking-wider text-[#8e8b80] mb-1 font-mono">
-                    Who this is for:
+                    {isDe ? 'Für wen dieser Kurs gedacht ist:' : 'Who this is for:'}
                   </div>
                   <div className="text-xs sm:text-sm text-[#dedacf]">
                     {activeCourse.audience}
@@ -94,7 +97,7 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
                 {/* Practical takeaways */}
                 <div>
                   <div className="text-xs uppercase tracking-wider text-[#8e8b80] mb-2.5 font-semibold">
-                    What you will take away:
+                    {isDe ? 'Ihre konkreten Ergebnisse:' : 'What you will take away:'}
                   </div>
                   <div className="space-y-2">
                     {activeCourse.takeaways.map((takeaway, idx) => (
@@ -113,7 +116,7 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
               <div>
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
                   <span className="text-xs font-mono text-[#c49750] uppercase tracking-wider">
-                    Topics covered
+                    {isDe ? 'Behandelte Themen' : 'Topics covered'}
                   </span>
                   <BookOpen className="w-4 h-4 text-[#c49750]" />
                 </div>
@@ -134,10 +137,12 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
                   <div className="p-4 bg-[#1a1714] border border-[#c49750]/30 rounded-lg mb-6">
                     <div className="flex items-center gap-2 text-xs font-semibold text-[#c49750] uppercase tracking-wider mb-1">
                       <ShieldCheck className="w-4 h-4 text-[#c49750]" />
-                      <span>Become completely independent</span>
+                      <span>{isDe ? 'Vollständige Selbstständigkeit' : 'Become completely independent'}</span>
                     </div>
                     <p className="text-xs text-[#c2bcb0] leading-relaxed">
-                      The goal of this one-time intensive is to prepare singers to be autonomous, so you rely less on coaches or pronunciation dictionaries in the future.
+                      {isDe
+                        ? 'Ziel dieses Intensivkurses ist es, Sie unabhängig zu machen, sodass Sie in Zukunft weder auf ständige Coaches noch auf Lautschrift-Wörterbücher angewiesen sind.'
+                        : 'The goal of this one-time intensive is to prepare singers to be autonomous, so you rely less on coaches or pronunciation dictionaries in the future.'}
                     </p>
                   </div>
                 )}
@@ -149,10 +154,10 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
                   onClick={() => onOpenInquiry(`Course: ${activeCourse.title}`)}
                   className="w-full py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all shadow-md cursor-pointer"
                 >
-                  Ask About This Course / Apply
+                  {isDe ? 'Zu diesem Kurs anfragen / Buchen' : 'Ask About This Course / Apply'}
                 </button>
                 <div className="text-center text-[11px] text-[#7d796e] mt-2">
-                  Available in Paris or online
+                  {t.hero.locationAvailability}
                 </div>
               </div>
 

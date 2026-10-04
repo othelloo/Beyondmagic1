@@ -1,9 +1,10 @@
 import { PhotoItem, VideoItem } from '../types';
 import { PHOTOS_COLLECTION, VIDEOS_COLLECTION } from './content';
+import { INITIAL_ARCHIVE_PHOTOS } from './uploadedPhotos';
 
 const STORAGE_KEY_VIDEOS = 'verisme_custom_videos_v5';
-const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v6';
-const STORAGE_KEY_PORTRAIT = 'verisme_custom_portrait_v1';
+const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v9';
+const STORAGE_KEY_PORTRAIT = 'verisme_custom_portrait_v2';
 
 const MEDIA_CHANGE_EVENT = 'verisme_media_changed';
 
@@ -11,7 +12,9 @@ export function getStoredPortrait(): string {
   if (typeof window === 'undefined') return '/images/portrait.jpg';
   try {
     const saved = localStorage.getItem(STORAGE_KEY_PORTRAIT);
-    if (saved) return saved;
+    if (saved && !saved.includes('portrait_placeholder.svg')) {
+      return saved;
+    }
   } catch (e) {
     console.warn('Failed to read custom portrait', e);
   }
@@ -75,36 +78,29 @@ export function deleteCustomVideo(id: string): void {
 }
 
 export function getStoredPhotos(): PhotoItem[] {
-  if (typeof window === 'undefined') return PHOTOS_COLLECTION;
+  if (typeof window === 'undefined') return INITIAL_ARCHIVE_PHOTOS;
   try {
     const saved = localStorage.getItem(STORAGE_KEY_PHOTOS);
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const defaultIds = new Set(PHOTOS_COLLECTION.map(p => p.id));
-        const customOnly = parsed.filter((p: PhotoItem) => !defaultIds.has(p.id));
-        return [...PHOTOS_COLLECTION, ...customOnly];
+        return parsed;
       }
     }
   } catch (e) {
     console.warn('Failed to read custom photos from localStorage', e);
   }
-  return PHOTOS_COLLECTION;
+  return INITIAL_ARCHIVE_PHOTOS;
 }
 
 export function savePhotos(photos: PhotoItem[]): void {
   if (typeof window === 'undefined') return;
   try {
-    // Only store metadata without massive base64 if possible
-    const sanitized = photos.map(p => {
-      // If image is a huge data: URL, keep it, but warn
-      return p;
-    });
-    localStorage.setItem(STORAGE_KEY_PHOTOS, JSON.stringify(sanitized));
-    window.dispatchEvent(new CustomEvent(MEDIA_CHANGE_EVENT));
+    localStorage.setItem(STORAGE_KEY_PHOTOS, JSON.stringify(photos));
   } catch (e) {
-    console.warn('Failed to save photos to localStorage', e);
+    console.warn('Failed to save photos to localStorage (quota exceeded)', e);
   }
+  window.dispatchEvent(new CustomEvent(MEDIA_CHANGE_EVENT));
 }
 
 export function addCustomPhoto(newPhoto: PhotoItem): void {

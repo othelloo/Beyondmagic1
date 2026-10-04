@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Check, RotateCcw, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SpiritualityExperienceProps {
   isActive: boolean;
@@ -12,6 +13,9 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
   isActive,
   onClose
 }) => {
+  const { language } = useLanguage();
+  const isDe = language === 'de';
+
   const [phase, setPhase] = useState<Phase>('negative');
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
@@ -281,14 +285,14 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
                 }}
               >
                 <span className="text-xs font-mono uppercase tracking-[0.35em] text-[#d4af37] mb-2 drop-shadow">
-                  The Simple Question
+                  {isDe ? 'Die Einfache Frage' : 'The Simple Question'}
                 </span>
                 <h1 className="text-5xl sm:text-7xl font-serif font-light text-white tracking-tight drop-shadow-[0_4px_30px_rgba(255,255,255,0.7)]">
-                  who are you?
+                  {isDe ? 'wer bist du?' : 'who are you?'}
                 </h1>
                 <div className="w-20 h-[1.5px] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent my-3.5" />
                 <p className="text-xs sm:text-sm font-serif italic text-[#dedacf] max-w-xs font-light drop-shadow">
-                  Beyond the notes, the technique, and the persona.
+                  {isDe ? 'Jenseits der Noten, der Technik und der Persona.' : 'Beyond the notes, the technique, and the persona.'}
                 </p>
               </div>
             )}
@@ -303,56 +307,76 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#d4af37]" />
                 <span className="text-xs uppercase font-mono tracking-widest text-[#d4af37]">
-                  Spirituality Through Music (Coming Soon)
+                  {isDe ? 'Spiritualität durch Musik (Demnächst)' : 'Spirituality Through Music (Coming Soon)'}
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-white/50">In Progress</span>
+              <span className="text-[11px] font-mono text-white/50">{isDe ? 'In Arbeit' : 'In Progress'}</span>
             </div>
 
             <div className="space-y-4 text-xs sm:text-sm text-[#c8c4b7] font-light leading-relaxed">
               <div className="p-4 bg-white/[0.04] border-l-2 border-[#d4af37] rounded-r-lg">
                 <p className="text-sm font-serif italic text-white">
-                  &ldquo;In my music lessons, we ask: <span className="text-[#d4af37]">How does this music affect me?</span>
-                  <br />
-                  Here, we ask the deeper question: <span className="text-[#d4af37]">Why does it affect me that way?</span>&rdquo;
+                  {isDe ? (
+                    <>
+                      &ldquo;Im Musikunterricht lautet die Frage: <span className="text-[#d4af37]">Wie berührt mich diese Musik?</span>
+                      <br />
+                      Hier stellen wir die tiefere Frage: <span className="text-[#d4af37]">Warum berührt sie mich genau so?</span>&rdquo;
+                    </>
+                  ) : (
+                    <>
+                      &ldquo;In my music lessons, we ask: <span className="text-[#d4af37]">How does this music affect me?</span>
+                      <br />
+                      Here, we ask the deeper question: <span className="text-[#d4af37]">Why does it affect me that way?</span>&rdquo;
+                    </>
+                  )}
                 </p>
               </div>
 
               <p>
-                I spent decades singing in European opera houses with eighty musicians playing in the pit, watching thousands of people cry together to the exact same chord.
+                {isDe
+                  ? 'Ich habe Jahrzehnte auf den großen Opernbühnen Europas gesungen, mit achtzig Musikern im Graben, und miterlebt, wie tausende Menschen beim exakt selben Akkord gleichzeitig zu Tränen gerührt waren.'
+                  : 'I spent decades singing in European opera houses with eighty musicians playing in the pit, watching thousands of people cry together to the exact same chord.'}
               </p>
 
               <p>
-                At first, you think it is just technique or biology. But the more you pay attention to sound, the more you realize: music is not just entertainment or decoration. It touches something deep inside all of us that words cannot reach.
+                {isDe
+                  ? 'Zunächst denkt man, es sei bloß Stimmtechnik oder Biologie. Doch je aufmerksamer man dem Klang lauscht, desto klarer wird: Musik ist weder bloße Unterhaltung noch Dekoration. Sie berührt etwas in unserem Innersten, das Worte niemals erreichen können.'
+                  : 'At first, you think it is just technique or biology. But the more you pay attention to sound, the more you realize: music is not just entertainment or decoration. It touches something deep inside all of us that words cannot reach.'}
               </p>
 
               {/* YouTube Episodes Roadmap */}
               <div className="pt-2">
                 <div className="text-xs font-mono uppercase text-[#d4af37] tracking-wider mb-2 font-medium">
-                  The Upcoming YouTube Series:
+                  {isDe ? 'Die kommende YouTube-Serie:' : 'The Upcoming YouTube Series:'}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="p-3 bg-black/50 border border-white/10 rounded-lg">
-                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">PART 01</div>
-                    <strong className="text-white block mb-1">Who Am I Really?</strong>
+                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">{isDe ? 'TEIL 01' : 'PART 01'}</div>
+                    <strong className="text-white block mb-1">{isDe ? 'Wer bin ich wirklich?' : 'Who Am I Really?'}</strong>
                     <span className="text-[11px] text-[#9c978b] leading-tight block">
-                      The real me behind the singer and teacher, without costumes or pretension.
+                      {isDe
+                        ? 'Das wahre Selbst hinter dem Sänger und Pädagogen – ganz ohne Maske oder Attitüde.'
+                        : 'The real me behind the singer and teacher, without costumes or pretension.'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-black/50 border border-white/10 rounded-lg">
-                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">PART 02</div>
-                    <strong className="text-white block mb-1">What is Good & Bad Music?</strong>
+                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">{isDe ? 'TEIL 02' : 'PART 02'}</div>
+                    <strong className="text-white block mb-1">{isDe ? 'Gute & schlechte Musik?' : 'What is Good & Bad Music?'}</strong>
                     <span className="text-[11px] text-[#9c978b] leading-tight block">
-                      Beyond snobbery: what makes music honest versus empty clichés.
+                      {isDe
+                        ? 'Jenseits von Snobismus: Was macht Musik wahrhaft ehrlich gegenüber leeren Klischees?'
+                        : 'Beyond snobbery: what makes music honest versus empty clichés.'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-black/50 border border-white/10 rounded-lg">
-                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">PART 03</div>
-                    <strong className="text-white block mb-1">The Spiritual Rabbit Hole</strong>
+                    <div className="font-mono text-[#d4af37] text-[10px] mb-1">{isDe ? 'TEIL 03' : 'PART 03'}</div>
+                    <strong className="text-white block mb-1">{isDe ? 'Der spirituelle Resonanzraum' : 'The Spiritual Rabbit Hole'}</strong>
                     <span className="text-[11px] text-[#9c978b] leading-tight block">
-                      How singing and listening to sound made me question everything about reality.
+                      {isDe
+                        ? 'Wie Singen und das tiefe Lauschen auf Frequenzen meine Sicht auf die Wirklichkeit verändert haben.'
+                        : 'How singing and listening to sound made me question everything about reality.'}
                     </span>
                   </div>
                 </div>
@@ -365,14 +389,14 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
                 <div className="p-4 bg-[#14231b] border border-[#2d5a3c] rounded-xl flex items-center gap-3 text-xs text-[#98e2b0]">
                   <Check className="w-5 h-5 text-[#22c55e] shrink-0" />
                   <div>
-                    <strong className="block font-medium">You are on the private premiere list.</strong>
-                    You will receive an invitation when the introductory video drops on YouTube.
+                    <strong className="block font-medium">{isDe ? 'Sie stehen auf der exklusiven Premierenliste.' : 'You are on the private premiere list.'}</strong>
+                    {isDe ? 'Sie erhalten eine Einladung, sobald das Einführungsvideo auf YouTube erscheint.' : 'You will receive an invitation when the introductory video drops on YouTube.'}
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubscribe} className="space-y-3">
                   <label className="block text-xs uppercase tracking-wider text-[#8e8b80] font-mono">
-                    Notify me when the YouTube series & introductory essay release:
+                    {isDe ? 'Benachrichtigen, sobald die YouTube-Serie & der Essay erscheinen:' : 'Notify me when the YouTube series & introductory essay release:'}
                   </label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
@@ -380,14 +404,14 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address..."
+                      placeholder={isDe ? 'Ihre E-Mail-Adresse...' : 'Enter your email address...'}
                       className="flex-1 px-4 py-2.5 bg-black/70 border border-white/15 rounded text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-[#d4af37]"
                     />
                     <button
                       type="submit"
                       className="px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#d4af37] hover:bg-[#e8c35d] rounded transition-all cursor-pointer whitespace-nowrap shadow-lg"
                     >
-                      Join Premiere Waitlist
+                      {isDe ? 'Auf Premierenliste eintragen' : 'Join Premiere Waitlist'}
                     </button>
                   </div>
                 </form>
@@ -402,7 +426,7 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
                 className="text-[#d4af37] hover:underline flex items-center gap-1 cursor-pointer font-medium"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Return to Atelier (4s Transition)</span>
+                <span>{isDe ? 'Zurück zum Atelier (4s Übergang)' : 'Return to Atelier (4s Transition)'}</span>
               </button>
             </div>
 

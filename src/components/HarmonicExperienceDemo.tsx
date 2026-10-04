@@ -56,14 +56,20 @@ const HARMONIC_PRESETS: HarmonicExample[] = [
 ];
 
 export const HarmonicExperienceDemo: React.FC = () => {
-  const [selectedId, setSelectedId] = useState<string>('minor-sixth');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hasListened, setHasListened] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeNodesRef = useRef<OscillatorNode[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const activePreset = HARMONIC_PRESETS.find((p) => p.id === selectedId) || HARMONIC_PRESETS[0];
 
   const stopAudio = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     activeNodesRef.current.forEach((osc) => {
       try {
         osc.stop();
@@ -90,35 +96,40 @@ export const HarmonicExperienceDemo: React.FC = () => {
         ctx.resume();
       }
 
+      const duration = 3.2; // automatically stops after ~3.2 seconds
+      const startTime = ctx.currentTime;
+
       const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0.01, ctx.currentTime);
-      masterGain.gain.linearRampToValueAtTime(0.18 / freqs.length, ctx.currentTime + 0.15);
-      masterGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3.5);
+      masterGain.gain.setValueAtTime(0.001, startTime);
+      masterGain.gain.linearRampToValueAtTime(0.18 / freqs.length, startTime + 0.1);
+      masterGain.gain.setValueAtTime(0.18 / freqs.length, startTime + 1.8);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
       masterGain.connect(ctx.destination);
 
       const newOscs: OscillatorNode[] = freqs.map((f, i) => {
         const osc = ctx.createOscillator();
         osc.type = i === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(f, ctx.currentTime);
+        osc.frequency.setValueAtTime(f, startTime);
         if (i > 0) {
-          osc.detune.setValueAtTime((Math.random() - 0.5) * 5, ctx.currentTime);
+          osc.detune.setValueAtTime((Math.random() - 0.5) * 6, startTime);
         }
 
         const oscGain = ctx.createGain();
-        oscGain.gain.setValueAtTime(1.0, ctx.currentTime);
+        oscGain.gain.setValueAtTime(1.0, startTime);
         osc.connect(oscGain);
         oscGain.connect(masterGain);
 
-        osc.start();
+        osc.start(startTime);
+        osc.stop(startTime + duration);
         return osc;
       });
 
       activeNodesRef.current = newOscs;
       setIsPlaying(true);
 
-      setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setIsPlaying(false);
-      }, 3500);
+      }, duration * 1000);
     } catch (err) {
       console.warn('Web Audio error:', err);
       setIsPlaying(false);
@@ -127,6 +138,7 @@ export const HarmonicExperienceDemo: React.FC = () => {
 
   const handleSelect = (preset: HarmonicExample) => {
     setSelectedId(preset.id);
+    setHasListened(true);
     playFrequencies(preset.frequencies);
   };
 
@@ -171,60 +183,74 @@ export const HarmonicExperienceDemo: React.FC = () => {
         })}
       </div>
 
-      {/* Detail Showcase */}
-      <div className="bg-[#0b0c0e] rounded-xl p-5 sm:p-6 border border-[#1f222a]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <div>
-            <div className="text-xs text-[#888478]">
-              Sound: <span className="text-[#dedacf]">{activePreset.name}</span> ({activePreset.technicalNote})
+      {/* Detail Showcase: Hidden until user clicks a sound */}
+      {!hasListened ? (
+        <div className="bg-[#0b0c0e] rounded-xl p-8 border border-[#1f222a] text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-[#161a22] text-[#c49750] flex items-center justify-center mx-auto border border-[#2b3040]">
+            <Volume2 className="w-5 h-5" />
+          </div>
+          <h4 className="text-base font-serif text-[#f2eee9]">
+            Listen with your ear first
+          </h4>
+          <p className="text-xs text-[#959184] max-w-md mx-auto leading-relaxed">
+            Click any of the 4 sounds above to listen. The emotional and harmonic breakdown will appear here once you feel the sound.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-[#0b0c0e] rounded-xl p-5 sm:p-6 border border-[#1f222a] transition-all duration-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+              <div className="text-xs text-[#888478]">
+                Sound: <span className="text-[#dedacf]">{activePreset.name}</span> ({activePreset.technicalNote})
+              </div>
+              <div className="text-lg font-serif text-[#f2eee9] mt-0.5 font-medium">
+                {activePreset.feelingTitle}
+              </div>
             </div>
-            <div className="text-lg font-serif text-[#f2eee9] mt-0.5 font-medium">
-              {activePreset.feelingTitle}
-            </div>
+
+            <button
+              onClick={() => {
+                if (isPlaying) {
+                  stopAudio();
+                } else {
+                  playFrequencies(activePreset.frequencies);
+                }
+              }}
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                isPlaying
+                  ? 'bg-[#c49750] text-black shadow-lg animate-pulse'
+                  : 'bg-[#1c202a] hover:bg-[#252b39] text-[#f2eee9] border border-[#2d323f]'
+              }`}
+            >
+              {isPlaying ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5" />
+                  <span>Stop Sound</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-[#c49750]" />
+                  <span>Play Again</span>
+                </>
+              )}
+            </button>
           </div>
 
-          <button
-            onClick={() => {
-              if (isPlaying) {
-                stopAudio();
-              } else {
-                playFrequencies(activePreset.frequencies);
-              }
-            }}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
-              isPlaying
-                ? 'bg-[#c49750] text-black shadow-lg animate-pulse'
-                : 'bg-[#1c202a] hover:bg-[#252b39] text-[#f2eee9] border border-[#2d323f]'
-            }`}
-          >
-            {isPlaying ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5" />
-                <span>Stop Sound</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-[#c49750]" />
-                <span>Play & Listen</span>
-              </>
-            )}
-          </button>
-        </div>
+          <div className="space-y-2.5 text-xs sm:text-sm text-[#b5b1a4] leading-relaxed pt-3 border-t border-white/5 font-light">
+            <p>
+              <strong className="text-[#e2ded5] font-normal block mb-1">
+                What your ear feels:
+              </strong>
+              {activePreset.simpleExplanation}
+            </p>
 
-        <div className="space-y-2.5 text-xs sm:text-sm text-[#b5b1a4] leading-relaxed pt-3 border-t border-white/5 font-light">
-          <p>
-            <strong className="text-[#e2ded5] font-normal block mb-1">
-              What your ear feels:
-            </strong>
-            {activePreset.simpleExplanation}
-          </p>
-
-          <p className="text-xs text-[#9c978b]">
-            <strong className="text-[#c49750] font-normal">Where you can hear this: </strong>
-            {activePreset.songExample}
-          </p>
+            <p className="text-xs text-[#9c978b]">
+              <strong className="text-[#c49750] font-normal">Where you can hear this: </strong>
+              {activePreset.songExample}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-4 text-center text-xs text-[#787469]">
         Once you recognize the feeling of these sounds with your ears, reading music or producing beats becomes ten times faster.

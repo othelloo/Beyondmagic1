@@ -4,6 +4,7 @@ import { getStoredVideos, onMediaChange } from '../data/mediaStore';
 import { SINGER_PORTRAIT_IMAGE } from '../data/content';
 import { VideoItem } from '../types';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
+import { useLanguage } from '../context/LanguageContext';
 
 interface FeaturedVideoSpotProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -14,6 +15,8 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
   onOpenInquiry,
   onOpenSpirituality
 }) => {
+  const { language, t } = useLanguage();
+  const isDe = language === 'de';
   const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos());
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -61,13 +64,13 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-1.5">
-              <span>Featured Performance & Music</span>
+              <span>{t.featuredVideo.eyebrow}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-serif text-[#f7f5f0] font-normal">
-              Stage & Music Spotlight
+              {t.featuredVideo.title}
             </h2>
             <p className="text-sm text-[#9f9b8f] mt-1 max-w-xl">
-              Listen to recordings of me singing on opera stages, live French songs, and my own musical compositions.
+              {t.featuredVideo.subtitle}
             </p>
           </div>
 
@@ -79,14 +82,14 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
               title="Pick a random lesson"
             >
               <Shuffle className="w-3.5 h-3.5 text-[#c49750]" />
-              <span>Shuffle Video</span>
+              <span>{t.featuredVideo.shuffle}</span>
             </button>
             
             <a
               href="#gallery"
               className="text-xs text-[#9f9b8f] hover:text-[#d4af37] transition-colors py-2"
             >
-              See all videos ({videos.length}) →
+              {isDe ? `Alle Videos ansehen (${videos.length}) →` : `See all videos (${videos.length}) →`}
             </a>
           </div>
         </div>
