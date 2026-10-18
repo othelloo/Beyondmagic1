@@ -211,12 +211,6 @@ export default defineConfig(({ command }) => {
             if (id.includes('pianoSamples')) {
               return 'audio-samples';
             }
-            if (id.includes('node_modules/lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-              return 'vendor-react';
-            }
           },
         },
       },

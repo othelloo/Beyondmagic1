@@ -14,10 +14,7 @@
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preload" as="image" href="./images/portrait.jpg" fetchpriority="high">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
-    </noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
   </head>
   <body class="bg-[#0b0c0e] text-[#e8e6e1] antialiased selection:bg-[#c49750] selection:text-black font-sans">
     <!-- Netlify form detection placeholder -->
@@ -30,7 +27,57 @@
       <input type="text" name="audioLink" />
     </form>
 
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant 0ms Shell: Eliminates the black screen wait on mobile browsers -->
+      <div id="pre-shell" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background-color:#0b0c0e;color:#fbf9f5;padding:24px;text-align:center;box-sizing:border-box;">
+        <div style="max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;">
+          
+          <!-- Beyond Magic Emblem -->
+          <div style="width:200px;max-width:80%;margin:0 auto 18px auto;">
+            <svg viewBox="0 0 560 240" style="width:100%;height:auto;display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.8));" xmlns="http://www.w3.org/2000/svg">
+              <text x="70" y="90" font-family="'Cormorant Garamond', Georgia, serif" font-size="54" font-weight="600" fill="#ffffff" letter-spacing="8">B E Y</text>
+              <text x="360" y="90" font-family="'Cormorant Garamond', Georgia, serif" font-size="54" font-weight="600" fill="#ffffff" letter-spacing="8">N D</text>
+              <text x="140" y="195" font-family="'Cinzel', Georgia, serif" font-size="46" font-weight="700" fill="#dd0000" letter-spacing="6">M A</text>
+              <text x="345" y="195" font-family="'Cinzel', Georgia, serif" font-size="46" font-weight="700" fill="#dd0000" letter-spacing="6">I C</text>
+              <!-- G-Clef Golden Key -->
+              <path d="M280 15 C265 15, 252 30, 252 52 C252 74, 268 96, 280 120 C290 145, 305 168, 305 188 C305 208, 290 222, 270 222 C254 222, 244 212, 244 196 C244 180, 257 170, 270 170 C273 170, 276 171, 279 173 C277 154, 262 134, 250 114 C239 93, 233 72, 233 52 C233 22, 254 2, 280 2 C296 2, 307 13, 310 28 L294 31 C292 23, 287 15, 280 15 Z" fill="url(#brandGold)"/>
+              <defs>
+                <linearGradient id="brandGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fff2c2"/>
+                  <stop offset="50%" stop-color="#c49750"/>
+                  <stop offset="100%" stop-color="#8c6428"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <!-- Divider -->
+          <div style="width:100px;height:1px;background:linear-gradient(90deg,transparent,#c49750,transparent);margin:0 auto 16px auto;"></div>
+
+          <!-- Artist Name -->
+          <h1 style="font-size:28px;font-weight:400;letter-spacing:0.14em;text-transform:uppercase;color:#fbf9f5;line-height:1.12;margin:0 0 10px 0;font-family:Georgia,'Times New Roman',serif;">
+            Abdellah<br>Lasri
+          </h1>
+
+          <!-- Subtitle -->
+          <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#c49750;margin-bottom:24px;">
+            Beyond Magic · Masterclasses
+          </div>
+
+          <!-- Golden Luxury Pulse Indicator -->
+          <div style="width:54px;height:2px;background:#181b22;border-radius:2px;overflow:hidden;position:relative;">
+            <div style="position:absolute;top:0;left:0;bottom:0;width:50%;background:linear-gradient(90deg,transparent,#c49750,transparent);animation:shellPulse 1.2s infinite ease-in-out;"></div>
+          </div>
+
+        </div>
+      </div>
+      <style>
+        @keyframes shellPulse {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

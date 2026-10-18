@@ -2,18 +2,18 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
-import { FeaturedVideoSpot } from './components/FeaturedVideoSpot';
-import { TargetAudiences } from './components/TargetAudiences';
-import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 
-// Code-split below-the-fold sections for instant initial page rendering
+// Code-split below-the-fold sections for instant mobile initial page rendering
+const FeaturedVideoSpot = lazy(() => import('./components/FeaturedVideoSpot').then(m => ({ default: m.FeaturedVideoSpot })));
+const TargetAudiences = lazy(() => import('./components/TargetAudiences').then(m => ({ default: m.TargetAudiences })));
 const MusicTheory = lazy(() => import('./components/MusicTheory').then(m => ({ default: m.MusicTheory })));
 const FrenchSpecialization = lazy(() => import('./components/FrenchSpecialization').then(m => ({ default: m.FrenchSpecialization })));
 const ContemporaryVocalCoaching = lazy(() => import('./components/ContemporaryVocalCoaching').then(m => ({ default: m.ContemporaryVocalCoaching })));
 const Biography = lazy(() => import('./components/Biography').then(m => ({ default: m.Biography })));
 const MediaSection = lazy(() => import('./components/MediaSection').then(m => ({ default: m.MediaSection })));
+const Footer = lazy(() => import('./components/Footer').then(m => ({ default: m.Footer })));
 
 // On-demand lazy modals and heavy overlays
 const InquiryModal = lazy(() => import('./components/InquiryModal').then(m => ({ default: m.InquiryModal })));
@@ -75,18 +75,17 @@ function MainApp() {
             onScrollToVideo={() => handleScrollToSection('studio-spotlight')}
           />
 
-          {/* Featured Video Spotlight & Randomizer */}
-          <FeaturedVideoSpot
-            onOpenInquiry={handleOpenInquiry}
-            onOpenSpirituality={() => setSpiritualityActive(true)}
-          />
+          {/* Below-the-fold sections lazy-loaded in background */}
+          <Suspense fallback={<div className="min-h-[20vh] bg-[#0b0c0e]" />}>
+            {/* Featured Video Spotlight & Randomizer */}
+            <FeaturedVideoSpot
+              onOpenInquiry={handleOpenInquiry}
+              onOpenSpirituality={() => setSpiritualityActive(true)}
+            />
 
-          {/* Target Audiences: Students, Producers, Discerning Listeners */}
-          <TargetAudiences onOpenInquiry={handleOpenInquiry} />
+            {/* Target Audiences: Students, Producers, Discerning Listeners */}
+            <TargetAudiences onOpenInquiry={handleOpenInquiry} />
 
-          {/* Music Theory: Sound, Harmonic Perception & Color */}
-          {/* Music Theory, Specializations, Coaching, Bio & Media lazy-loaded */}
-          <Suspense fallback={<div className="min-h-[30vh] bg-[#0b0c0e]" />}>
             {/* Music Theory: Sound, Harmonic Perception & Color */}
             <MusicTheory onOpenInquiry={handleOpenInquiry} />
 
@@ -107,14 +106,14 @@ function MainApp() {
 
             {/* Galleries: 2 Photo Collections + Video Archive */}
             <MediaSection onOpenInquiry={handleOpenInquiry} />
+
+            {/* Footer */}
+            <Footer
+              onOpenInquiry={handleOpenInquiry}
+              onOpenSpirituality={() => setSpiritualityActive(true)}
+            />
           </Suspense>
         </main>
-
-        {/* Footer */}
-        <Footer
-          onOpenInquiry={handleOpenInquiry}
-          onOpenSpirituality={() => setSpiritualityActive(true)}
-        />
       </div>
 
       {/* Floating Flag Switcher in the bottom right corner */}

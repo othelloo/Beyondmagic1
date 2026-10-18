@@ -207,9 +207,12 @@ export const BeyondMagicItem: React.FC<BeyondMagicItemProps> = ({
     svgHeight: '100%',
   };
 
-  const svgMarkup = withCircle
-    ? generateCircleAvatarSvg(config)
-    : generateStandaloneSvg(config);
+  const cacheKey = `${withCircle}_${showMagic}_${showName}_${magicColor}_${clefColor}_${className}`;
+  const svgMarkup = React.useMemo(() => {
+    return withCircle
+      ? generateCircleAvatarSvg(config)
+      : generateStandaloneSvg(config);
+  }, [cacheKey]);
 
   return (
     <div
