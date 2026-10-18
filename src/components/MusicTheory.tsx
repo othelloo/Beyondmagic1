@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { getPianoNoteBuffer, preloadAllPianoSamples } from '../data/pianoSamples';
+
+// Dynamic module loader for acoustic piano samples (decouples 503KB base64 audio from initial bundle)
+let pianoSamplesModule: typeof import('../data/pianoSamples') | null = null;
+async function getPianoSamplesModule() {
+  if (!pianoSamplesModule) {
+    pianoSamplesModule = await import('../data/pianoSamples');
+  }
+  return pianoSamplesModule;
+}
 
 interface MusicTheoryProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -198,7 +206,11 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
         if (ctx.state === 'suspended') {
           ctx.resume();
         }
-        preloadAllPianoSamples(ctx);
+        getPianoSamplesModule()
+          .then(({ preloadAllPianoSamples }) => {
+            preloadAllPianoSamples(ctx);
+          })
+          .catch(() => {});
       } catch (_) {}
       window.removeEventListener('pointerdown', handleInitialUserGesture);
       window.removeEventListener('keydown', handleInitialUserGesture);
@@ -317,6 +329,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
         masterGain.connect(airFilter);
         airFilter.connect(ctx.destination);
 
+        const { getPianoNoteBuffer } = await getPianoSamplesModule();
         const buffers = await Promise.all(
           chord.notes.map((note) => getPianoNoteBuffer(ctx, note))
         );

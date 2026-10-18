@@ -38,6 +38,10 @@ export const Hero: React.FC<HeroProps> = ({
               <img
                 src={resolveAssetUrl(portraitSrc || '/images/portrait.jpg')}
                 alt="Abdellah Lasri"
+                fetchPriority="high"
+                decoding="async"
+                width={630}
+                height={454}
                 className="w-full h-auto block object-cover filter contrast-[1.02] hover:scale-[1.01] transition-transform duration-700"
                 style={{ aspectRatio: '630 / 454' }}
                 referrerPolicy="no-referrer"

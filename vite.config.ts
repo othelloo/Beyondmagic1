@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import {defineConfig, Plugin} from 'vite';
 
+const rootDir = import.meta.dirname || path.resolve('.');
+
 function portraitUploadPlugin(): Plugin {
   return {
     name: 'portrait-upload-handler',
@@ -18,11 +20,11 @@ function portraitUploadPlugin(): Plugin {
               if (body.image) {
                 const base64Data = body.image.replace(/^data:image\/\w+;base64,/, '');
                 const buffer = Buffer.from(base64Data, 'base64');
-                const publicDir = path.resolve(__dirname, 'public/images');
+                const publicDir = path.resolve(rootDir, 'public/images');
                 fs.mkdirSync(publicDir, { recursive: true });
                 fs.writeFileSync(path.join(publicDir, 'portrait.jpg'), buffer);
 
-                const currentTs = path.resolve(__dirname, 'src/data/currentPortrait.ts');
+                const currentTs = path.resolve(rootDir, 'src/data/currentPortrait.ts');
                 fs.writeFileSync(currentTs, `export const PERMANENT_PORTRAIT: string = ${JSON.stringify(body.image)};\n`);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -53,7 +55,7 @@ function portraitUploadPlugin(): Plugin {
                 const category = body.category === 'behind_the_scenes' ? 'behind_the_scenes' : 'onstage';
                 const base64Data = body.image.replace(/^data:image\/\w+;base64,/, '');
                 const buffer = Buffer.from(base64Data, 'base64');
-                const targetDir = path.resolve(__dirname, `public/images/${category}`);
+                const targetDir = path.resolve(rootDir, `public/images/${category}`);
                 fs.mkdirSync(targetDir, { recursive: true });
 
                 const rawName = body.filename;
@@ -90,7 +92,7 @@ function portraitUploadPlugin(): Plugin {
             try {
               const body = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
               if (Array.isArray(body.photos) && body.photos.length > 0) {
-                const targetDir = path.resolve(__dirname, 'public/images/onstage');
+                const targetDir = path.resolve(rootDir, 'public/images/onstage');
                 fs.mkdirSync(targetDir, { recursive: true });
 
                 const processedPhotos = body.photos.map((photo: any, index: number) => {
@@ -107,7 +109,7 @@ function portraitUploadPlugin(): Plugin {
                   return photo;
                 });
 
-                const bundlePath = path.resolve(__dirname, 'src/data/bundledGallery.ts');
+                const bundlePath = path.resolve(rootDir, 'src/data/bundledGallery.ts');
                 fs.writeFileSync(bundlePath, `import { PhotoItem } from '../types';\n\nexport const BUNDLED_GALLERY_PHOTOS: PhotoItem[] = ${JSON.stringify(processedPhotos, null, 2)};\n`);
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -131,7 +133,7 @@ function portraitUploadPlugin(): Plugin {
       server.middlewares.use('/images', (req, res, next) => {
         try {
           const reqPath = decodeURIComponent(req.url || '');
-          const filePath = path.resolve(__dirname, 'public/images', reqPath.replace(/^\//, ''));
+          const filePath = path.resolve(rootDir, 'public/images', reqPath.replace(/^\//, ''));
           if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
             const ext = path.extname(filePath).toLowerCase();
             const mimeTypes: Record<string, string> = {
@@ -159,7 +161,7 @@ function portraitUploadPlugin(): Plugin {
       server.middlewares.use('/api/gallery-photos', (req, res) => {
         if (req.method === 'GET') {
           try {
-            const dir = path.resolve(__dirname, 'public/images/onstage');
+            const dir = path.resolve(rootDir, 'public/images/onstage');
             if (fs.existsSync(dir)) {
               const files = fs.readdirSync(dir);
               const photos = files
@@ -198,7 +200,25 @@ export default defineConfig(({ command }) => {
     plugins: [react(), tailwindcss(), portraitUploadPlugin()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(rootDir, '.'),
+      },
+    },
+    build: {
+      chunkSizeWarningLimit: 800,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('pianoSamples')) {
+              return 'audio-samples';
+            }
+            if (id.includes('node_modules/lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+              return 'vendor-react';
+            }
+          },
+        },
       },
     },
     server: {

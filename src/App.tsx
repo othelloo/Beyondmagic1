@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { FeaturedVideoSpot } from './components/FeaturedVideoSpot';
-import { MusicTheory } from './components/MusicTheory';
 import { TargetAudiences } from './components/TargetAudiences';
-import { FrenchSpecialization } from './components/FrenchSpecialization';
-import { ContemporaryVocalCoaching } from './components/ContemporaryVocalCoaching';
-import { Biography } from './components/Biography';
-import { MediaSection } from './components/MediaSection';
-import { SpiritualityExperience } from './components/SpiritualityExperience';
-import { InquiryModal } from './components/InquiryModal';
 import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+
+// Code-split below-the-fold sections for instant initial page rendering
+const MusicTheory = lazy(() => import('./components/MusicTheory').then(m => ({ default: m.MusicTheory })));
+const FrenchSpecialization = lazy(() => import('./components/FrenchSpecialization').then(m => ({ default: m.FrenchSpecialization })));
+const ContemporaryVocalCoaching = lazy(() => import('./components/ContemporaryVocalCoaching').then(m => ({ default: m.ContemporaryVocalCoaching })));
+const Biography = lazy(() => import('./components/Biography').then(m => ({ default: m.Biography })));
+const MediaSection = lazy(() => import('./components/MediaSection').then(m => ({ default: m.MediaSection })));
+
+// On-demand lazy modals and heavy overlays
+const InquiryModal = lazy(() => import('./components/InquiryModal').then(m => ({ default: m.InquiryModal })));
+const SpiritualityExperience = lazy(() => import('./components/SpiritualityExperience').then(m => ({ default: m.SpiritualityExperience })));
 
 function MainApp() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
@@ -108,25 +112,29 @@ function MainApp() {
           <TargetAudiences onOpenInquiry={handleOpenInquiry} />
 
           {/* Music Theory: Sound, Harmonic Perception & Color */}
-          <MusicTheory onOpenInquiry={handleOpenInquiry} />
+          {/* Music Theory, Specializations, Coaching, Bio & Media lazy-loaded */}
+          <Suspense fallback={<div className="min-h-[30vh] bg-[#0b0c0e]" />}>
+            {/* Music Theory: Sound, Harmonic Perception & Color */}
+            <MusicTheory onOpenInquiry={handleOpenInquiry} />
 
-          {/* French Repertoire Specialization & The One-Time Anatomy/IPA Intensive */}
-          <FrenchSpecialization onOpenInquiry={handleOpenInquiry} />
+            {/* French Repertoire Specialization & The One-Time Anatomy/IPA Intensive */}
+            <FrenchSpecialization onOpenInquiry={handleOpenInquiry} />
 
-          {/* Contemporary Vocal Coaching: Pop, R&B, Soul, Jazz, Indie & Beyond */}
-          <ContemporaryVocalCoaching 
-            onOpenInquiry={handleOpenInquiry}
-            onScrollToClassical={() => handleScrollToSection('specializations')}
-          />
+            {/* Contemporary Vocal Coaching: Pop, R&B, Soul, Jazz, Indie & Beyond */}
+            <ContemporaryVocalCoaching 
+              onOpenInquiry={handleOpenInquiry}
+              onScrollToClassical={() => handleScrollToSection('specializations')}
+            />
 
-          {/* Biography & The 2-Year Trajectory */}
-          <Biography
-            onScrollToGallery={() => handleScrollToSection('gallery')}
-            onOpenInquiry={handleOpenInquiry}
-          />
+            {/* Biography & The 2-Year Trajectory */}
+            <Biography
+              onScrollToGallery={() => handleScrollToSection('gallery')}
+              onOpenInquiry={handleOpenInquiry}
+            />
 
-          {/* Galleries: 2 Photo Collections + Video Archive */}
-          <MediaSection onOpenInquiry={handleOpenInquiry} />
+            {/* Galleries: 2 Photo Collections + Video Archive */}
+            <MediaSection onOpenInquiry={handleOpenInquiry} />
+          </Suspense>
         </main>
 
         {/* Footer */}
@@ -138,8 +146,6 @@ function MainApp() {
 
       {/* Floating Flag Switcher in the bottom right corner */}
       <LanguageSwitcher />
-
-
 
       {/* Floating Back to Top Button in bottom left corner */}
       {showScrollTop && (
@@ -154,18 +160,26 @@ function MainApp() {
         </button>
       )}
 
-      {/* Interactive Inquiries / Audition Modal */}
-      <InquiryModal
-        isOpen={inquiryOpen}
-        onClose={() => setInquiryOpen(false)}
-        defaultTopic={inquiryTopic}
-      />
+      {/* Interactive Inquiries / Audition Modal - Loaded on demand */}
+      {inquiryOpen && (
+        <Suspense fallback={null}>
+          <InquiryModal
+            isOpen={inquiryOpen}
+            onClose={() => setInquiryOpen(false)}
+            defaultTopic={inquiryTopic}
+          />
+        </Suspense>
+      )}
 
-      {/* Spirituality Awakening: 2s Negative color transition, rising Yin-Yang, splitting, and "who are you?" reveal */}
-      <SpiritualityExperience
-        isActive={spiritualityActive}
-        onClose={() => setSpiritualityActive(false)}
-      />
+      {/* Spirituality Awakening - Loaded on demand */}
+      {spiritualityActive && (
+        <Suspense fallback={null}>
+          <SpiritualityExperience
+            isActive={spiritualityActive}
+            onClose={() => setSpiritualityActive(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
