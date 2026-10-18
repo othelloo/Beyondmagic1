@@ -117,6 +117,8 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
                   <img
                     src={resolveAssetUrl(thumbnailSrc)}
                     alt={activeVideo.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover filter brightness-[0.7] group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />

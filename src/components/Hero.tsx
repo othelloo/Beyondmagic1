@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowDown } from 'lucide-react';
-import { getStoredPortrait, onMediaChange } from '../data/mediaStore';
+import { getStoredPortrait, onPortraitChange } from '../data/portraitStore';
 import { useLanguage } from '../context/LanguageContext';
 import { resolveAssetUrl } from '../utils/assetPath';
 import { BeyondMagicItem } from './BeyondMagicItem';
@@ -20,7 +20,7 @@ export const Hero: React.FC<HeroProps> = ({
   const [portraitSrc, setPortraitSrc] = useState<string>(getStoredPortrait());
 
   useEffect(() => {
-    const unsub = onMediaChange(() => {
+    const unsub = onPortraitChange(() => {
       setPortraitSrc(getStoredPortrait());
     });
     return unsub;
@@ -74,7 +74,7 @@ export const Hero: React.FC<HeroProps> = ({
               
               {/* Zone 1 (Left): Logo Centered in its own zone */}
               <div className="w-full flex items-center justify-center">
-                <div className="w-full max-w-[240px] sm:max-w-[230px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="w-full max-w-[200px] xs:max-w-[220px] sm:max-w-[220px] md:max-w-[240px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
                   <BeyondMagicItem
                     withCircle={false}
                     useMetallic3D={false}
@@ -89,17 +89,17 @@ export const Hero: React.FC<HeroProps> = ({
 
               {/* Centered Separator */}
               <div 
-                className="hidden sm:block w-[1.5px] self-center h-20 sm:h-24 lg:h-28 bg-gradient-to-b from-transparent via-[#c49750]/60 to-transparent shrink-0 shadow-[0_0_8px_rgba(196,151,80,0.25)]" 
+                className="hidden sm:block w-[1.5px] self-center h-22 sm:h-24 md:h-26 lg:h-28 bg-gradient-to-b from-transparent via-[#c49750]/60 to-transparent shrink-0 shadow-[0_0_8px_rgba(196,151,80,0.25)]" 
                 aria-hidden="true" 
               />
               <div 
-                className="block sm:hidden w-28 h-[1px] bg-gradient-to-r from-transparent via-[#c49750]/60 to-transparent my-1 mx-auto" 
+                className="block sm:hidden w-32 h-[1px] bg-gradient-to-r from-transparent via-[#c49750]/70 to-transparent my-2 mx-auto" 
                 aria-hidden="true" 
               />
 
-              {/* Zone 2 (Right): Artist Name Centered in its own zone */}
+              {/* Zone 2 (Right): Artist Name Centered in its own zone - balanced scale for phone and tablet */}
               <div className="w-full flex items-center justify-center text-center">
-                <h1 className="font-serif text-[20px] sm:text-[26px] lg:text-[34px] xl:text-[41px] uppercase tracking-wider text-[#fbf9f5] font-light leading-[1.12] text-center">
+                <h1 className="font-serif text-[30px] xs:text-[34px] sm:text-[32px] md:text-[36px] lg:text-[40px] xl:text-[45px] uppercase tracking-[0.12em] sm:tracking-[0.14em] text-[#fbf9f5] font-medium sm:font-normal leading-[1.08] text-center">
                   <span className="block">Abdellah</span>
                   <span className="block">Lasri</span>
                 </h1>

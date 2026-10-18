@@ -25,16 +25,23 @@ export const PhotoGallery: React.FC = () => {
   const [uploadStatus, setUploadStatus] = useState<string>('');
 
   useEffect(() => {
-    // Also fetch server gallery photos directly to guarantee all uploaded pictures appear
-    fetch('/api/gallery-photos')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
-          setPhotos(data.photos);
-          savePhotos(data.photos);
-        }
-      })
-      .catch((e) => console.log('Server gallery fetch optional', e));
+    // Only fetch server gallery on local dev server to avoid 404 stalls on GitHub Pages / static hosting
+    const isDevHost = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '3000');
+    if (isDevHost) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      fetch('/api/gallery-photos', { signal: controller.signal })
+        .then((res) => res.json())
+        .then((data) => {
+          clearTimeout(timeoutId);
+          if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
+            setPhotos(data.photos);
+            savePhotos(data.photos);
+          }
+        })
+        .catch(() => {});
+    }
 
     const unsubscribe = onMediaChange(() => {
       setPhotos(getStoredPhotos());

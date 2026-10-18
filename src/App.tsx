@@ -24,34 +24,7 @@ function MainApp() {
   const [inquiryTopic, setInquiryTopic] = useState('General Masterclass Consultation');
   const [spiritualityActive, setSpiritualityActive] = useState(false);
 
-  useEffect(() => {
-    try {
-      const savedPortrait = localStorage.getItem('verisme_custom_portrait_v2');
-      if (savedPortrait && savedPortrait.startsWith('data:image')) {
-        fetch('/api/upload-portrait', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: savedPortrait }),
-        }).catch(() => {});
-      }
 
-      const savedPhotosStr = localStorage.getItem('verisme_custom_photos_v9') || 
-                             localStorage.getItem('verisme_custom_photos') ||
-                             localStorage.getItem('verisme_custom_photos_v8');
-      if (savedPhotosStr) {
-        const parsed = JSON.parse(savedPhotosStr);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          fetch('/api/sync-gallery-photos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ photos: parsed }),
-          }).catch(() => {});
-        }
-      }
-    } catch (e) {
-      // Ignore
-    }
-  }, []);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 

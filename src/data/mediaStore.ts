@@ -1,27 +1,13 @@
 import { PhotoItem, VideoItem } from '../types';
 import { PHOTOS_COLLECTION, VIDEOS_COLLECTION } from './content';
 import { INITIAL_ARCHIVE_PHOTOS } from './uploadedPhotos';
-import { PERMANENT_PORTRAIT } from './currentPortrait';
 import { BUNDLED_GALLERY_PHOTOS } from './bundledGallery';
+import { getStoredPortrait, STORAGE_KEY_PORTRAIT, MEDIA_CHANGE_EVENT, onPortraitChange } from './portraitStore';
+
+export { getStoredPortrait, onPortraitChange };
 
 const STORAGE_KEY_VIDEOS = 'verisme_custom_videos_v5';
 const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v9';
-const STORAGE_KEY_PORTRAIT = 'verisme_custom_portrait_v2';
-
-const MEDIA_CHANGE_EVENT = 'verisme_media_changed';
-
-export function getStoredPortrait(): string {
-  if (typeof window === 'undefined') return PERMANENT_PORTRAIT || '/images/portrait.jpg';
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_PORTRAIT);
-    if (saved && !saved.includes('portrait_placeholder.svg')) {
-      return saved;
-    }
-  } catch (e) {
-    console.warn('Failed to read custom portrait', e);
-  }
-  return PERMANENT_PORTRAIT || '/images/portrait.jpg';
-}
 
 export async function savePortrait(dataUrl: string): Promise<void> {
   if (typeof window === 'undefined') return;
