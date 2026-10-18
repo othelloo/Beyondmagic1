@@ -5,6 +5,8 @@ export interface Translations {
     method: string;
     audiences: string;
     french: string;
+    contemporaryVocal: string;
+    musicTheory: string;
     about: string;
     media: string;
     spirituality: string;
@@ -87,6 +89,136 @@ export interface Translations {
     autonomyDesc: string;
     ctaApply: string;
     locationNote: string;
+  };
+  contemporaryVocal: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    credoQuote: string;
+    credoTagline: string;
+    hookQuote: string;
+    hookSubquote: string;
+    roleBadge: string;
+    roleTitle: string;
+    roleSubtitle: string;
+    roleTeacher: { title: string; badge: string; desc: string };
+    roleCoach: { title: string; badge: string; desc: string };
+    roleSpecialist: { title: string; badge: string; desc: string };
+    pharyngealBadge: string;
+    pharyngealTitle: string;
+    pharyngealSubtitle: string;
+    contrastLeftTag: string;
+    contrastLeftTitle: string;
+    contrastLeftDesc: string;
+    contrastRightTag: string;
+    contrastRightTitle: string;
+    contrastRightDesc: string;
+    noduleWarningBadge: string;
+    noduleWarningText: string;
+    retainersBadge: string;
+    retainersTitle: string;
+    retainersSubtitle: string;
+    retainerStudio: {
+      badge: string;
+      title: string;
+      tagline: string;
+      desc: string;
+      deliverables: string[];
+    };
+    retainerTour: {
+      badge: string;
+      title: string;
+      tagline: string;
+      desc: string;
+      deliverables: string[];
+    };
+    retainerMentorship: {
+      badge: string;
+      title: string;
+      tagline: string;
+      desc: string;
+      phases: Array<{ phase: string; title: string; desc: string }>;
+    };
+    pillarsBadge: string;
+    pillarsTitle: string;
+    pillarsSubtitle: string;
+    pillars: {
+      breathTitle: string;
+      breathTagline: string;
+      breathDesc: string;
+      rangeTitle: string;
+      rangeTagline: string;
+      rangeDesc: string;
+      habitsTitle: string;
+      habitsTagline: string;
+      habitsDesc: string;
+      theZoneTitle: string;
+      theZoneTagline: string;
+      theZoneDesc: string;
+    };
+    genresBadge: string;
+    genresTitle: string;
+    genresSubtitle: string;
+    genres: Array<{
+      id: string;
+      name: string;
+      tag: string;
+      tagline: string;
+      desc: string;
+      skills: string[];
+    }>;
+    gatekeepersBadge: string;
+    gatekeepersTitle: string;
+    gatekeepersSubtitle: string;
+    gatekeeperCards: Array<{
+      category: string;
+      title: string;
+      subtitle: string;
+      benefit: string;
+    }>;
+    diagnosticBadge: string;
+    diagnosticTitle: string;
+    diagnosticSubtitle: string;
+    diagnosticDesc: string;
+    diagnosticDeliverables: string[];
+    ctaBook: string;
+    ctaExploreClassical: string;
+    audioOptionalHint: string;
+  };
+  musicTheory: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    quoteText: string;
+    quoteAuthor: string;
+    secretGardenTag: string;
+    secretGardenTitle: string;
+    secretGardenIntro: string;
+    secretGardenWaysTitle: string;
+    secretGardenItems: { label: string; desc: string }[];
+    secretGardenClosing: string;
+    theoryTag: string;
+    theoryTitle: string;
+    theoryIntro: string;
+    theoryItems: { label: string; desc: string }[];
+    interactiveTitle: string;
+    interactiveSubtitle: string;
+    interactiveHint: string;
+    pianoInstrument: string;
+    synthInstrument: string;
+    instrumentLabel: string;
+    audiencesTitle: string;
+    producerBadge: string;
+    producerTitle: string;
+    producerDesc: string;
+    singerBadge: string;
+    singerTitle: string;
+    singerDesc: string;
+    classicalBadge: string;
+    classicalTitle: string;
+    classicalDesc: string;
+    ctaButton: string;
+    ctaNote: string;
   };
   biography: {
     badge: string;
@@ -171,21 +303,23 @@ export const translations: Record<Language, Translations> = {
       method: 'The Method',
       audiences: 'Who It’s For',
       french: 'French Coaching',
+      contemporaryVocal: 'Vocal Coaching',
+      musicTheory: 'Music Theory',
       about: 'About Me',
       media: 'Photos & Videos',
       spirituality: 'Spirituality (Soon)',
       contact: 'Contact / Book'
     },
     hero: {
-      badge: ['Opera & Diction Coaching', 'Ear-First Education', 'Somatic Technique'],
-      titleMain: 'Music is a natural language everyone understands.',
-      titleSub: 'Notes on paper are only a representation.',
-      summary: 'Master French lyric diction, release vocal constriction, and train your ear to internalize harmonic resonance before decoding notation. Private coaching and masterclasses by European lead tenor Abdellah Lasri.',
+      badge: ['emotion-first pedagogy', 'vocal atelier', 'Music theory'],
+      titleMain: 'Beyond Magic',
+      titleSub: 'Abdellah Lasri',
+      summary: 'At the edge where feeling meets understanding, music changes its voice. Each chord has its color, its weight. No note is sung the same twice. A whole spectrum opens, shades we never knew we could hear or feal, and we listen not to the words but to the sound, trembling at the faintest shift',
       locationAvailability: 'Available in NRW (Germany), Berlin, or online worldwide.',
       highlights: {
         location: 'NRW (Cologne/Düsseldorf/Essen) · Berlin · Online Worldwide',
         credentials: 'CNSMDP Paris Valedictorian · Staatsoper Berlin Young Artist',
-        stages: 'Opéra National de Paris · Deutsche Oper Berlin · Aalto-Theater Essen'
+        stages: 'Operalia finalist · Aalto Stage Prize for Young Artists'
       },
       ctaPrimary: 'Book a Lesson / Inquire',
       ctaMethod: 'Explore The Method ↓',
@@ -206,7 +340,7 @@ export const translations: Record<Language, Translations> = {
     },
     method: {
       badge: 'Pedagogical Philosophy',
-      title: 'The Method: Ear-First Somatic Learning',
+      title: 'The Method: Emotion-first Learning',
       subtitle: 'Starting with abstract notation slows musicians down. When you internalize acoustic feeling first, reading notes, vocal freedom, and true interpretation develop in record time.',
       pillar1Title: 'Auditory Memory First',
       pillar1Desc: 'Recognizing intervals, chord tensions, and phrasing as physical sensations in the body rather than mathematical calculations on a stave.',
@@ -221,36 +355,37 @@ export const translations: Record<Language, Translations> = {
       badge: 'Tailored Mentorship',
       title: 'Who These Lessons Are For',
       subtitle: 'Direct, goal-oriented guidance adapted to your specific artistic milestone.',
-      card1Badge: 'Singers & Students',
-      card1Title: 'Opera Singers & Voice Students',
-      card1Subtitle: 'Conservatory preparation, auditions & vocal freedom',
-      card1Desc: 'Break through vocal fatigue, eliminate throat tension, and learn complete roles 3x faster through auditory memory and authentic French and Italian diction.',
+      card1Badge: 'French Classical & Lyric Art',
+      card1Title: 'French Classical Music, Opera & Mélodie',
+      card1Subtitle: 'Elegant French style & language coaching for singers and pianists',
+      card1Desc: 'A specialized masterclass course on authentic French classical music interpretation, French lyric opera, and the intimate world of the mélodie. Focus on elegant French vocal style, nuanced language coaching, and collaborative interpretation for singers and collaborative pianists.',
       card1Points: [
-        'Eliminate vocal fatigue and throat strain',
-        'Learn roles 3x faster through auditory memory',
-        'Flawless French and Italian lyric diction'
+        'Master French diction: get to know the French sensitivity, and find your balance between authentic French elegance and an authentic you',
+        'Deep dive into French mélodies (Fauré, Debussy, Ravel, Duparc) for singers & pianists',
+        'French lyric opera role coaching (Massenet, Gounod, Bizet) with Paris CNSMDP heritage'
       ],
-      card1Cta: 'Singing Coaching',
-      card2Badge: 'Producers & Beatmakers',
-      card2Title: 'Music Producers & Composers',
-      card2Subtitle: 'Translating intuition into harmonic mastery',
-      card2Desc: 'Move beyond repetitive chord packs. Ground your DAW workflow in classical harmonic awareness to create chord progressions and arrangements that truly hit home.',
+      card1Cta: 'French Repertoire Coaching',
+      card2Badge: 'Vocal Studio',
+      card2Title: 'Vocal Coaching',
+      card2Subtitle: 'Pop, R&B, Soul, Jazz, Indie & Modern Styles',
+      card2Desc: 'Coaching modern singers using elite classical breath mechanics and vocal health—without the operatic stiffness. Build an authentic foundation, expand your range effortlessly, dissolve stage fright, and connect raw feeling directly to your voice.',
       card2Points: [
-        'Ear education tailored to modern DAW workflows',
-        'Craft emotional chord progressions without relying on preset packs',
-        'Incorporate orchestral voicing and acoustic depth into your beats'
+        'Build an authentic foundation: master effortless breath support and let your voice’s natural color emerge and mature',
+        'Explore and extend the range of your voice through personalized exercises',
+        'Healthy mix voice, fatigue-free belt, and agile pentatonic riffs',
+        'Enter "The Zone": connect feeling directly to your voice so stage fright naturally evaporates'
       ],
-      card2Cta: 'Producer Lessons',
-      card3Badge: 'Curious Listeners',
-      card3Title: 'Music Lovers & Active Listeners',
-      card3Subtitle: 'Hearing layers and emotions you never noticed before',
-      card3Desc: 'No instrument needed. Learn how tension and release operate inside classical music, opera, and film scores to experience music on a profoundly deeper level.',
+      card2Cta: 'Book Vocal Coaching',
+      card3Badge: 'Harmony, Emotion & Perception',
+      card3Title: 'Producers, Composers & Music Lovers',
+      card3Subtitle: 'Connecting sound to emotion through color and harmonic tension',
+      card3Desc: 'For creators shaping tracks and active listeners seeking deeper musical understanding. Move beyond cold formulas, presets, and dry theory: learn to recognize the emotional colors, harmonic tensions, and psychological release behind every chord and movement.',
       card3Points: [
-        'Recognize harmonic tension and emotional release in any piece',
-        'Explore classical masterpieces and opera with an expert guide',
-        'A relaxed, joyful approach to ear training with zero exam stress'
+        'Connect music directly to emotion by recognizing harmonic colors and intuitive tensions',
+        'For producers & beatmakers: craft rich, organic chord progressions without relying on preset packs',
+        'For listeners & music lovers: experience the hidden layers and emotional narratives in opera and orchestra'
       ],
-      card3Cta: 'Listening Sessions'
+      card3Cta: 'Harmony & Listening Sessions',
     },
     french: {
       badge: 'Specialized Discipline',
@@ -265,6 +400,265 @@ export const translations: Record<Language, Translations> = {
       autonomyDesc: 'The primary goal is complete independence: learning the acoustic rules of French and IPA so you never have to depend on a dictionary or coach again.',
       ctaApply: 'Inquire About This Specialization',
       locationNote: 'Available in NRW (Germany), Berlin, or online worldwide'
+    },
+    contemporaryVocal: {
+      badge: 'Vocal Coaching · Muscular Foundation, Emotional Relay & Tour Longevity',
+      title: 'The Healthy Basis: Longevity, Resilience & Emotional Relay',
+      subtitle: 'Twenty years on European opera stages taught me one undeniable truth: when your voice is anchored in a cultivated muscular and breathing system, you can endure demanding rehearsals, grueling schedules, and colds—without ever developing vocal nodules.',
+      credoQuote: 'To claim I never experienced vocal fatigue in twenty years of singing lead roles across Europe would be a lie. We rehearse for weeks, we sing through heavy exhaustion, we catch colds. The real mastery is knowing how to navigate all of that safely. When your muscular foundation and breathing system are deeply cultivated, the body instinctively steps in during tiredness and takes the entire pressure off your throat. No nodules. No permanent strain. Just an enduring, healthy basis that lets you survive demanding concerts, 40-date tours, and connect music directly with authentic emotion.',
+      credoTagline: 'CNSMDP Valedictorian · 20+ Years European Lead Operatic Roles · Zero Nodules · Anatomical Resilience',
+      hookQuote: 'Music is emotion. But if we are overwhelmed by emotion, the throat constricts and we cannot sing. True vocal artistry is learning how to deeply connect with emotion—and then having the technical basis to relay it without choking.',
+      hookSubquote: 'My role is to give you a foundation so reliable that even when you are exhausted on night 30 of a 40-date tour, your body knows exactly what to do—leaving your throat completely free.',
+      
+      roleBadge: 'The Core Concept',
+      roleTitle: 'The Three Cornerstones of Vocal Sovereignty',
+      roleSubtitle: 'A grounded muscular foundation, emotional transmission without throat constriction, and total resilience under exhaustion.',
+      roleTeacher: {
+        badge: '1. THE PHYSICAL INSTRUMENT',
+        title: 'Muscular Basis & Cultivated Breathing System',
+        desc: 'Building a robust muscular apparatus and an intuitive breathing system that cushions your vocal folds through weeks of rehearsals and hours of demanding performance.'
+      },
+      roleCoach: {
+        badge: '2. THE EMOTIONAL PARADOX',
+        title: 'Connecting with Emotion & Knowing How to Relay It',
+        desc: 'To move people, we must deeply know and connect with raw feeling. But being overwhelmed by emotion constricts the voice. We train the precise ability to experience emotion fully, and relay it to the audience without strangling the instrument.'
+      },
+      roleSpecialist: {
+        badge: '3. TOUR RESILIENCE & ZERO NODULES',
+        title: 'Navigating Fatigue: Surviving Long Concerts & 40-Date Tours',
+        desc: 'When tiredness, travel, or a cold strikes during a heavy tour, muscle memory takes over. The body absorbs the physical load, taking the entire pressure off the voice so you never suffer vocal nodules or injury.'
+      },
+
+      pharyngealBadge: 'Acoustic Alchemy · Biomechanical Principle',
+      pharyngealTitle: 'Arena-Sized Power via Dynamic Pharyngeal Space',
+      pharyngealSubtitle: 'The physics of modern commercial belting: how to cut through heavy electronic mixes without vocal cord collision.',
+      contrastLeftTag: 'Classical Cavern',
+      contrastLeftTitle: 'The Expansive Acoustic Cathedral (Opera)',
+      contrastLeftDesc: 'In classical tradition, we expand the lower pharynx and lower the larynx to build a booming acoustic megaphone that travels over 90 unamplified instruments without a microphone. It creates majestic warmth, but forms a dark vowel space unsuited for contemporary charts.',
+      contrastRightTag: 'Modern Compression',
+      contrastRightTitle: 'Dynamic Pharyngeal Focus (Contemporary Belt)',
+      contrastRightDesc: 'With a microphone, volume is already solved. For a modern stadium belt, we narrow the epilaryngeal funnel, engage gentle medial compression, and elevate oral-nasal brilliance. The tone becomes laser-focused, razor-sharp, and emotionally piercing—cutting cleanly through 808s and heavy guitars with zero vocal strain.',
+      noduleWarningBadge: 'THE TRAP OF FORCED CHEST-PULLING',
+      noduleWarningText: 'Most self-taught singers attempt to belt by forcing massive air against strained cords. This causes hoarseness, swelling, and career-ending nodules. Dynamic pharyngeal narrowing delivers ten times the acoustic presence with effortless lightness and total vocal fold safety.',
+
+      retainersBadge: 'Private Retainers & Engagements',
+      retainersTitle: 'A Solid Frame for Extraordinary Voices',
+      retainersSubtitle: 'Tailored for recording artists, touring performers, composers, and private individuals seeking absolute vocal sovereignty.',
+      retainerStudio: {
+        badge: 'STUDIO RECORDING WEEKS',
+        title: 'Vocal Producer & Tracking Alchemist',
+        tagline: 'Ensuring Radiant, Timeless Takes & Preserving Vocal Freshness',
+        desc: 'Studio tracking sessions are costly and emotionally demanding. As your confidential on-call vocal guardian, I ensure your voice stays luminous, centered, and effortless from the first take to the final chorus.',
+        deliverables: [
+          'Pre-tracking laryngeal decompression & subglottic air calibration',
+          'Take-by-take micro resets to eliminate fatigue between vocal passes',
+          'Harmonic formant tuning to sit organically inside the production mix',
+          'Rapid vocal revival during intense, multi-day recording schedules'
+        ]
+      },
+      retainerTour: {
+        badge: 'ARENA & TOUR STAMINA',
+        title: 'Tour Endurance & Backstage Sanctuary',
+        tagline: 'Unbreakable Vocal Stamina for Rigorous Multi-Date Calendars',
+        desc: 'Touring batters the vocal folds with dry travel air, adrenaline, and nightly demanding setlists. We construct a bulletproof physiological and mental shield so your voice rings as fresh on date 40 as on opening night.',
+        deliverables: [
+          'The 15-minute backstage emergency reset protocol',
+          'Dynamic breath stabilization under intense stage movement & choreo',
+          'Post-show decongestion and laryngeal cooling rituals',
+          'Private, discreet sanctuary for the artist’s mental and physical focus'
+        ]
+      },
+      retainerMentorship: {
+        badge: 'CONFIDENTIAL INTENSIVE',
+        title: '12-Week Private Vocal Mentorship',
+        tagline: 'From Physical Biomechanics to Unfettered Artistic Transcendence',
+        desc: 'A transformative one-on-one journey designed to give you permanent mastery over your instrument, dissolving every vocal obstacle and unlocking your truest, most dangerous artistic voice.',
+        phases: [
+          {
+            phase: 'Weeks 1–4',
+            title: 'Anatomy, Breath & The Italian Appoggio',
+            desc: 'Decoupling neck muscles, activating deep pelvic-diaphragmatic support, and ending subglottic air slamming at the root.'
+          },
+          {
+            phase: 'Weeks 5–8',
+            title: 'Dynamic Belting & Acoustic Compression',
+            desc: 'Mastering the epilarynx, bridging chest and head register with seamless ease, and adding healthy commercial grit.'
+          },
+          {
+            phase: 'Weeks 9–12',
+            title: 'Tour Conditioning, Mystery & "The Zone"',
+            desc: 'Daily longevity rituals, dissolving stage fright, and stepping into the transcendent flow state where technique vanishes and pure magic takes over.'
+          }
+        ]
+      },
+
+      pillarsBadge: 'The Four Pillars of Mastery',
+      pillarsTitle: 'The Synthesis of Science, Spirit & Passion',
+      pillarsSubtitle: 'Harnessing elite classical foundations to give contemporary artists infinite freedom, safety, and emotional power.',
+      pillars: {
+        breathTitle: 'Italian Appoggio Mechanics · Grounded Freedom',
+        breathTagline: 'Lower Torso Expansion & Zero Neck Strain',
+        breathDesc: 'We take the legendary breath foundations of classical masters—grounded, low-body support that cushions every note like an invisible pillar. No rigid postures, no fake vibrato, no tension. Your natural tone stays pure, conversational, and uniquely yours.',
+        rangeTitle: 'Seamless Mix, Effortless High Belts & Agile Runs',
+        rangeTagline: 'Acoustic Compression Without Strain or Breaks',
+        rangeDesc: 'Never fear a high note or crack again. Discover the acoustic brilliance of the mixed voice, seamless registration, rapid pentatonic flexibility, and straight-tone precision that blooms into warm, intentional vibrato on command.',
+        habitsTitle: 'Vocal Longevity & The 20-Year Athlete Mindset',
+        habitsTagline: '15-Minute Daily Maintenance for Lifelong Resilience',
+        habitsDesc: 'Singing is an athletic art of extreme precision. We curate a personal daily regimen of hydration, gentle phonation, and restorative rituals that keep your vocal folds supple, cushioned, and ready to ignite at a moment’s notice.',
+        theZoneTitle: 'The Sacred Non-Negotiable: "The Zone" & Pure Passion',
+        theZoneTagline: 'Dissolving Fear into Pure Artistic Magic',
+        theZoneDesc: 'When mechanics become second nature, anxiety dissolves into awe. We remove mental tension completely so you enter "The Zone"—the transcendent flow state where technique disappears and raw emotion speaks straight to the human heart.'
+      },
+
+      genresBadge: 'Genre Horizons',
+      genresTitle: 'Authentic Soul in Every Style',
+      genresSubtitle: 'From intimate bedroom pop to roaring arena rock, every genre receives genre-authentic nuance and anatomical protection.',
+      genres: [
+        {
+          id: 'rnb-soul',
+          name: 'R&B, Soul & Neo-Soul',
+          tag: 'Agility & Emotion',
+          tagline: 'Effortless Minor Pentatonic Runs & Warm Registration',
+          desc: 'Master the vocal agility and cord closure required for rapid melismas, seamless chest-to-head voice flips, and raw, vulnerable vocal delivery.',
+          skills: [
+            'Lightning-fast riffs & runs without laryngeal tension',
+            'Smooth registration and cord-closure control',
+            'Intimate ad-libs, syncopated timing & neo-soul phrasing',
+            'Soulful dynamics from delicate whispers to soaring belts'
+          ]
+        },
+        {
+          id: 'pop-commercial',
+          name: 'Pop & Contemporary Mainstream',
+          tag: 'Radio-Ready Brilliance',
+          tagline: 'Healthy Belt, Vocal Formants & Modern Mix Voice',
+          desc: 'Build a signature commercial tone that cuts cleanly through modern productions and stadium monitors without vocal fatigue.',
+          skills: [
+            'Powerful, fatigue-free commercial belt & mix voice',
+            'Straight-tone precision blooming into intentional vibrato',
+            'Studio microphone proximity effect & vocal dynamics',
+            'Vocal formants manipulation for crisp, modern presence'
+          ]
+        },
+        {
+          id: 'jazz-blues',
+          name: 'Jazz, Blues & Vocal Artistry',
+          tag: 'Texture & Phrasing',
+          tagline: 'Acoustic Resonator Control & Conversational Phrasing',
+          desc: 'Learn how to shape your vocal resonators to flip between smoky, gritty textures and warm, conversational storytelling with complete freedom.',
+          skills: [
+            'Conversational speech-level diction and organic storytelling',
+            'Safe raspy, breathy, and gritty textures without vocal injury',
+            'Scatting, syncopated rhythm, and sophisticated improvisation',
+            'Rich resonator adjustments for warm low-end presence'
+          ]
+        },
+        {
+          id: 'indie-rock',
+          name: 'Indie, Rock & Singer-Songwriter',
+          tag: 'Authenticity & Power',
+          tagline: 'Enduring Stamina & Raw Artistic Identity',
+          desc: 'Protect your instrument under heavy touring schedules and intense emotion while maintaining that unmistakable, unvarnished artistic edge.',
+          skills: [
+            'Safe raspy overdrive and vocal compression without node risk',
+            'Authentic, unstuffy delivery with personal lyrical depth',
+            'Dynamic control for acoustic sets and high-energy live bands',
+            'Nervous system grounding to perform fearlessly under pressure'
+          ]
+        }
+      ],
+
+      gatekeepersBadge: 'The Architecture of Mastery',
+      gatekeepersTitle: 'Science, Passion, Mystery & Sanctuary',
+      gatekeepersSubtitle: 'A rare sanctuary where world-class vocal physics serves the transcendent fire of human expression.',
+      gatekeeperCards: [
+        {
+          category: 'THE SCIENCE · 50%',
+          title: 'Unbreakable Biomechanics',
+          subtitle: 'The Anatomy of 20-Year Longevity',
+          benefit: 'Subglottic air decoupling, acoustic impedance, and dynamic pharyngeal space. The physical mastery that preserves the voice across decades of peak exertion.'
+        },
+        {
+          category: 'THE PASSION · 30%',
+          title: 'The Sacred Fire of Song',
+          subtitle: 'Pure Art & Emotional Truth',
+          benefit: 'Singing is an act of deep human connection. We dismantle inhibitions so every note carries authenticity, vulnerability, and genuine heart-stopping chills.'
+        },
+        {
+          category: 'THE MYSTERY · 20%',
+          title: 'The Hidden Architecture',
+          subtitle: 'Esoteric Acoustic Physics',
+          benefit: 'The unseen geometry of resonance chambers passed down through elite European masters: transforming breath into radiant, effortless acoustic energy.'
+        },
+        {
+          category: 'THE SOLID FRAME',
+          title: 'Discreet Private Practice',
+          subtitle: 'Confidentiality & Sanctuary',
+          benefit: 'An exclusive, quiet haven for serious artists, touring performers, and private creators. Absolute discretion, zero vanity, and total devotion to the voice.'
+        }
+      ],
+
+      diagnosticBadge: 'The 45-Minute Diagnostic Protocol',
+      diagnosticTitle: 'Book a 45-Minute Biomechanical Vocal Diagnostic',
+      diagnosticSubtitle: 'Diagnosing Technical Bottlenecks Within 15 Minutes',
+      diagnosticDesc: 'Experience the diagnostic rigor of an international master vocalist. In a focused 45-minute consultation, we analyze your acoustic compression, subglottic air leaks, and laryngeal tension—providing an immediate mechanical roadmap for your voice.',
+      diagnosticDeliverables: [
+        '15-minute diagnostic identification of structural bottlenecks & strain points',
+        'Custom roadmap for safe arena belting, range expansion & mix voice',
+        'Emergency 15-minute vocal fold reset blueprint tailored to your instrument',
+        'Direct consultation for managers, producers, or private students'
+      ],
+      ctaBook: 'Book a 45-Minute Vocal Diagnostic',
+      ctaExploreClassical: 'Explore Classical Masterclasses & Diction',
+      audioOptionalHint: 'Optional: Include a link to your Spotify release, SoundCloud demo, or phone voice memo.'
+    },
+    musicTheory: {
+      badge: 'emotion-first pedagogy',
+      title: 'Music Theory: Sound, Harmonic Perception & Color',
+      subtitle: '',
+      quoteText: 'Before there were scores, there was listening. Music is a language you already understand: a rising line lifts you, a slow chord settles you, a sudden silence makes you hold your breath. My lessons begin there, with how the music affects you. Once you can recognise that feeling, notation stops being a code to decipher and becomes a simple way to write down what you already hear.',
+      quoteAuthor: '',
+      secretGardenTag: '1 · The Secret Garden',
+      secretGardenTitle: 'The Secret Garden',
+      secretGardenIntro: 'Call it your secret garden, your DIY garage, or simply your private place. It is the space where you and your music get to know each other. Here you learn to feel the many nuances and colours of a sound, then examine them under a microscope until a vague impression becomes a clearly distinct feeling.',
+      secretGardenWaysTitle: 'We explore it in many ways:',
+      secretGardenItems: [
+        { label: 'Colour listening', desc: 'hear intervals and chords, and describe their colour.' },
+        { label: 'Auditory memory', desc: 'expand it through regular exercises.' },
+        { label: 'Synesthesia', desc: 'discover whether, and how, sound meets colour, shape or touch for you.' },
+        { label: 'Harmony in practice', desc: 'hear basic harmony and recognise the function of each chord.' },
+        { label: 'Genres', desc: 'explore different styles of music and notice how each one affects you.' },
+        { label: 'Rhythm', desc: 'study it by feeling it, by becoming the rhythm.' }
+      ],
+      secretGardenClosing: 'Behind every exercise sits the question that matters most: how does this music affect me?',
+      theoryTag: '2 · The Music Theory',
+      theoryTitle: 'The Music Theory',
+      theoryIntro: 'The focus is on developing a sharp ear, but reading music remains an important pillar. A wide range of memory aids and game-like puzzles speeds up the learning curve.',
+      theoryItems: [
+        { label: 'The basics, if needed', desc: 'what music is and how frequencies work.' },
+        { label: 'The scale by heart', desc: 'Do, Re, Mi, Fa, Sol, La, Si, Do, recited until it is automatic.' },
+        { label: 'The staff, step by step', desc: 'notes arrive slowly, with reflex games until reading becomes second nature.' },
+        { label: 'Colours from the Secret Garden', desc: 'use the palette built there to recognise intervals and chords.' },
+        { label: 'Pieces taken apart', desc: 'analyse every aspect of specific pieces of music, selected for the lesson.' }
+      ],
+      interactiveTitle: 'Interactive Harmonic Color & Weight Studio',
+      interactiveSubtitle: 'Select each chord below to hear its acoustic grand piano resonance and feel its emotional weight, color temperature, and gravitational pull.',
+      interactiveHint: 'Sampled Concert Grand Piano · Press any chord to strike immediately · Listen with headphones for full bass & overtone depth.',
+      pianoInstrument: 'Steinway Grand Piano',
+      synthInstrument: 'Harmonic Pure Tones',
+      instrumentLabel: 'Sound Timbre',
+      audiencesTitle: 'Who Learns Theory Here?',
+      producerBadge: 'Producers & Beatmakers',
+      producerTitle: 'Break Free from Generic Presets',
+      producerDesc: 'Stop relying on chord packs and random MIDI trials. Understand chord substitutions, secondary dominants, and voice-leading to create deep, evocative tracks across R&B, Neo-Soul, Electronic, and Film scores.',
+      singerBadge: 'Singers & Songwriters',
+      singerTitle: 'Resonant Intonation & Phrasing',
+      singerDesc: 'Understand the harmonic context beneath your vocal line. Sing in lockstep with the chord’s emotional color so your intonation settles with effortless resonance and chills-inducing precision.',
+      classicalBadge: 'Instrumentalists & Music Lovers',
+      classicalTitle: 'The Hidden Architecture of Masters',
+      classicalDesc: 'Decipher the harmonic genius of Debussy, Ravel, Chopin, Wagner, and Puccini. Move beyond robotic note-reading and experience the psychological drama woven into every modulation.',
+      ctaButton: 'Book a Music Theory & Harmony Session',
+      ctaNote: 'One-on-one sessions available in NRW (Germany), Berlin, or online worldwide'
     },
     biography: {
       badge: 'Background & Career',
@@ -347,21 +741,23 @@ export const translations: Record<Language, Translations> = {
       method: 'Die Methode',
       audiences: 'Für Wen',
       french: 'Französisches Coaching',
+      contemporaryVocal: 'Modernes Coaching',
+      musicTheory: 'Musiktheorie',
       about: 'Über Mich',
       media: 'Fotos & Videos',
       spirituality: 'Spiritualität (Demnächst)',
       contact: 'Kontakt / Buchen'
     },
     hero: {
-      badge: ['Opern- & Diktions-Coaching', 'Gehör-orientierte Ausbildung', 'Somatische Stimmtechnik'],
+      badge: ['emotion-first pedagogy', 'vocal atelier', 'Music theory'],
       titleMain: 'Musik ist eine natürliche Sprache, die jeder versteht.',
       titleSub: 'Noten auf Papier sind nur eine Repräsentation.',
-      summary: 'Meistern Sie französische Gesangsdiktion, lösen Sie Stimmblockaden und lernen Sie, harmonische Resonanz im Körper zu fühlen, bevor Sie Noten deuten. Einzelcoaching und Meisterkurse von Operntenor Abdellah Lasri.',
+      summary: 'An der Schwelle, wo Fühlen auf Verstehen trifft, verändert die Musik ihre Stimme. Jeder Akkord hat seine Farbe, sein Gewicht. Kein Ton wird zweimal gleich gesungen. Ein ganzes Spektrum öffnet sich, Nuancen, von denen wir nie ahnten, dass wir sie hören oder fühlen können – und wir lauschen nicht den Worten, sondern dem Klang selbst, erbebend bei der leisesten Veränderung.',
       locationAvailability: 'Verfügbar in NRW (Köln / Düsseldorf / Essen), Berlin oder weltweit online.',
       highlights: {
         location: 'NRW (Köln / Düsseldorf / Essen) · Berlin · Online weltweit',
         credentials: 'CNSMDP Paris Jahrgangsbester · Staatsoper Berlin Opernstudio',
-        stages: 'Opéra National de Paris · Deutsche Oper Berlin · Aalto-Theater Essen'
+        stages: 'Operalia finalist · Aalto Stage Prize for Young Artists'
       },
       ctaPrimary: 'Stunde anfragen / Buchen',
       ctaMethod: 'Die Methode entdecken ↓',
@@ -382,7 +778,7 @@ export const translations: Record<Language, Translations> = {
     },
     method: {
       badge: 'Pädagogischer Ansatz',
-      title: 'Die Methode: Gehör-orientiertes somatisches Lernen',
+      title: 'Die Methode: Emotionsorientiertes Lernen',
       subtitle: 'Abstrakte Notenlehre hemmt Musiker oft jahrelang. Wenn Sie Klang und Resonanz zuerst im Körper verankern, entwickeln sich Notenlesen, Stimmfreiheit und echte Interpretation in Rekordzeit.',
       pillar1Title: 'Auditives Gedächtnis zuerst',
       pillar1Desc: 'Intervalle, harmonische Spannungen und Phrasierungen als körperliche Empfindungen spüren – statt als mathematische Berechnungen auf Notenlinien.',
@@ -397,16 +793,17 @@ export const translations: Record<Language, Translations> = {
       badge: 'Maßgeschneiderte Begleitung',
       title: 'Für Wen Dieser Unterricht Ist',
       subtitle: 'Gezielte, praxisnahe Förderung abgestimmt auf Ihre individuellen musikalischen Meilensteine.',
-      card1Badge: 'Sänger & Studierende',
-      card1Title: 'Opernsänger & Gesangsstudierende',
-      card1Subtitle: 'Hochschulvorbereitung, Vorsingen & Stimmbefreiung',
-      card1Desc: 'Stimmliche Ermüdung überwinden, Partien durch auditives Gedächtnis dreimal schneller lernen und authentische französische sowie italienische Diktion meistern.',
+      card1Badge: 'Französische Klassik & Kunstgesang',
+      card1Title: 'Französische Oper, Mélodie & Interpretation',
+      card1Subtitle: 'Eleganter französischer Stil & Sprachcoaching für Sänger und Pianisten',
+      card1Desc: 'Ein spezialisiertes Meisterkurs-Coaching für authentische Interpretation französischer Klassik, französischer Oper und die Poesie der Mélodie. Fokus auf den eleganten französischen Stil, präzises Sprachcoaching und die gemeinsame Ausgestaltung für Sänger und Liedbegleiter (Pianisten).',
       card1Points: [
-        'Stimmliche Überlastung und Enge dauerhaft auflösen',
-        'Rollen 3x schneller durch auditives Gedächtnis erarbeiten',
-        'Perfekte Diktion im französischen und italienischen Repertoire'
+        'Französische Diktion meistern: Die französische Sensibilität begreifen und die Balance zwischen authentischer französischer Eleganz und Ihrem wahren Selbst finden',
+        'Deep-Dive in die französische Mélodie (Fauré, Debussy, Ravel, Duparc) für Sänger & Pianisten',
+        'Rollenstudium im französischen Opernfach (Massenet, Gounod, Bizet) mit Pariser CNSMDP-Expertise',
+        'Präzises Sprachcoaching & Phonetik – pure Eleganz ohne steife Theatermanierismen'
       ],
-      card1Cta: 'Gesangscoaching',
+      card1Cta: 'Französisches Coaching',
       card2Badge: 'Produzenten & Beatmaker',
       card2Title: 'Musikproduzenten & Komponisten',
       card2Subtitle: 'Intuition in harmonische Meisterschaft verwandeln',
@@ -441,6 +838,265 @@ export const translations: Record<Language, Translations> = {
       autonomyDesc: 'Das oberste Ziel ist Unabhängigkeit: Sie erlernen die phonetischen und akustischen Gesetze des Französischen so fundiert, dass Sie nie wieder von Wörterbüchern oder Coaches abhängig sind.',
       ctaApply: 'Diesen Schwerpunkt anfragen',
       locationNote: 'Verfügbar in NRW (Deutschland), Berlin oder weltweit online'
+    },
+    contemporaryVocal: {
+      badge: 'Gesangscoaching · Muskuläres Fundament, Emotionale Übertragung & Tour-Resilienz',
+      title: 'Die gesunde Basis: Belastbarkeit, Langlebigkeit & Emotion',
+      subtitle: 'Zwanzig Jahre auf europäischen Opernbühnen haben mich eines gelehrt: Wenn die Stimme auf einem fundierten Muskel- und Atemsystem ruht, meistert man anstrengende Probenwochen, Müdigkeit und Erkältungen – vollkommen ohne Stimmbandknötchen.',
+      credoQuote: 'Zu behaupten, ich hätte in zwanzig Jahren nie Stimmermüdung gespürt, wäre schlicht eine Lüge. Man singt manchmal zu viel, Probenphasen ziehen sich über Wochen, Reisen schlauchen oder man fängt sich eine Erkältung ein. Die wahre Kunst ist, wie man sicher durch all das hindurch navigiert. Wenn die muskuläre Basis und das Atemsystem tief verankert sind, übernimmt der Körper bei Erschöpfung automatisch die Arbeit und nimmt den gesamten Druck von den Stimmbändern. Keine Knötchen. Keine Überlastung. Sondern eine gesunde Basis, mit der man lange Konzerte und 40 Tour-Termine souverän übersteht.',
+      credoTagline: 'CNSMDP Paris Jahrgangsbester · 20+ Jahre Europäische Opern-Hauptrollen · Null Knötchen · Anatomische Resilienz',
+      hookQuote: 'Musik ist Emotion. Doch wenn wir von unseren Gefühlen überwältigt werden, schnürt die Kehle zu und wir können nicht mehr frei singen. Wahre Vokalkunst bedeutet, tief mit Emotionen in Kontakt zu treten – und sie dann klar ans Publikum weiterzugeben, ohne die Stimme zu blockieren.',
+      hookSubquote: 'Meine Aufgabe ist es, Ihnen ein Fundament zu geben, das Sie durch jede Erschöpfung trägt: Wenn die Müdigkeit kommt, weiß Ihr Körper exakt, was zu tun ist – und entlastet die Stimme vollständig.',
+
+      roleBadge: 'Das Gesamtkonzept',
+      roleTitle: 'Die drei Säulen stimmlicher Souveränität',
+      roleSubtitle: 'Ein solides Muskel- und Atemsystem, emotionale Übertragung ohne Enge, und verlässliche Entlastung bei Erschöpfung.',
+      roleTeacher: {
+        badge: '1. DAS PHYSISCHE INSTRUMENT',
+        title: 'Muskuläre Basis & Atemsystem',
+        desc: 'Aufbau eines belastbaren Muskelapparats und eines kultivierten Atemsystems, das die Stimmbänder über unzählige Probenwochen und Gesangsstunden hinweg verlässlich schützt.'
+      },
+      roleCoach: {
+        badge: '2. DAS EMOTIONALE PARADOXON',
+        title: 'Emotionen spüren & transparent übertragen',
+        desc: 'Wir müssen die Emotion intensiv fühlen. Doch wer emotional überwältigt wird, verliert die Stimmkontrolle. Wir lernen, Gefühle ganzheitlich zu erfassen und sie ungefiltert ans Publikum weiterzuleiten, ohne dass die Kehle zuschnürt.'
+      },
+      roleSpecialist: {
+        badge: '3. TOUR-RESILIENZ & NULL KNÖTCHEN',
+        title: 'Müdigkeit navigieren & 40 Tour-Dates überstehen',
+        desc: 'Wenn Erschöpfung oder ein Infekt während einer Tournee eintreten, übernimmt der Körper die Last. Der Druck wird vollkommen von der Kehle genommen – für dauerhafte Stimmgesundheit ohne Knötchenrisiko.'
+      },
+
+      pharyngealBadge: 'Klang-Alchemie · Biomechanisches Prinzip',
+      pharyngealTitle: 'Arena-Belting durch dynamischen Pharynx-Raum',
+      pharyngealSubtitle: 'Die Physik modernen Belting-Sounds: Wie man sich im dichten elektronischen Mix durchsetzt – ohne Stimmband-Kollision.',
+      contrastLeftTag: 'Klassischer Resonanz-Dom',
+      contrastLeftTitle: 'Der offene akustische Resonanzraum (Oper)',
+      contrastLeftDesc: 'Im klassischen Gesang weiten wir den unteren Rachenraum und senken den Kehlkopf, um ein gewaltiges Megafon zu formen, das 90 Instrumente ohne Mikrofon übertönt. Das erzeugt majestätische Tiefe, schafft aber dunkle Vokale, die modernen Pop-Produktionen fremd sind.',
+      contrastRightTag: 'Moderne Kompression',
+      contrastRightTitle: 'Dynamische Epilarynx-Fokussierung (Moderner Belt)',
+      contrastRightDesc: 'Mit dem Mikrofon ist reine Lautstärke gelöst. Für einen modernen Arena-Belt verengen wir gezielt den Epilarynx-Trichter, aktivieren sanfte mediale Kompression und verstärken die orale Brillanz. Der Ton wird laser-scharf und emotional schneidend – er durchdringt 808-Bässe und Gitarrenwände ohne jede Überanstrengung.',
+      noduleWarningBadge: 'DIE FALLE DES ERZWUNGENEN „CHEST-PULLING“',
+      noduleWarningText: 'Viele Sänger versuchen zu belten, indem sie rohe Brustluft gegen verkrampfte Stimmbänder pressen. Das führt unweigerlich zu Heiserkeit und Knötchen. Dynamische Epilarynx-Fokussierung liefert zehnfache Durchsetzungskraft bei federleichter Leichtigkeit und absolutem Stimmbandschutz.',
+
+      retainersBadge: 'Private Retainer & Begleitung',
+      retainersTitle: 'Ein solides Fundament für außergewöhnliche Stimmen',
+      retainersSubtitle: 'Für Recording-Künstler, Tournee-Solisten, Produzenten und private Persönlichkeiten auf der Suche nach absoluter stimmlicher Souveränität.',
+      retainerStudio: {
+        badge: 'STUDIO-TRACKING & RECORDING',
+        title: 'Vocal Producer & Klang-Alchemist',
+        tagline: 'Strahlende, zeitlose Takes & Vollkommene Stimmfrische',
+        desc: 'Aufnahmesessions sind kostbar und fordernd. Als diskreter On-Call Vocal Fixer stelle ich sicher, dass Ihre Stimme vom ersten bis zum finalen Take leuchtend, elastisch und vollkommen unverkrampft bleibt.',
+        deliverables: [
+          'Pre-Tracking Dekompression & Kalibrierung des subglottischen Luftstroms',
+          'Mikro-Resets zwischen den Vocal-Passes zur Beseitigung jeglicher Ermüdung',
+          'Formanten-Feinabstimmung, damit die Stimme organisch im Mix sitzt',
+          'Sofortige Stimm-Wiederherstellung bei mehrtägigen, intensiven Tracking-Plänen'
+        ]
+      },
+      retainerTour: {
+        badge: 'ARENA- & TOUR-AUSDAUER',
+        title: 'Tournee-Endurance & Backstage-Sanctuary',
+        tagline: 'Unzerstörbare Ausdauer für anspruchsvolle Tournee-Kalender',
+        desc: 'Lange Reisen und trockene Hotel-Klimaanlagen fordern ihren Tribut. Wir errichten einen unerschütterlichen physiologischen und mentalen Schutzschild, damit Ihre Stimme an Show 40 so strahlt wie am Eröffnungsabend.',
+        deliverables: [
+          'Das 15-Minuten-Backstage-Notfallprotokoll für schnelle Stimmbandregeneration',
+          'Atemstabilisierung unter anspruchsvollen Choreografien und Live-Dynamik',
+          'Sanfte Abschwellungs- und Kühlungsrituale nach intensiven Konzerten',
+          'Diskreter Raum für Ruhe, Fokussierung und mentale Zentrierung'
+        ]
+      },
+      retainerMentorship: {
+        badge: 'DISKRITES INTENSIVPROGRAMM',
+        title: '12-Wochen Privates Stimm-Mentoring',
+        tagline: 'Von körperlicher Biomechanik zu grenzenloser künstlerischer Entfaltung',
+        desc: 'Eine tiefgreifende 1:1-Transformation, die Ihnen die dauerhafte Souveränität über Ihr Instrument schenkt, jede stimmliche Barriere auflöst und Ihre wahrhaftigste, mutigste Stimme freilegt.',
+        phases: [
+          {
+            phase: 'Woche 1–4',
+            title: 'Anatomie, Atem & Das italienische Appoggio',
+            desc: 'Entkopplung der Nackenmuskulatur, Aktivierung tiefer Becken-Zwerchfell-Stützen und Ende des Kehlkopfdrucks an der Wurzel.'
+          },
+          {
+            phase: 'Woche 5–8',
+            title: 'Dynamisches Belting & Akustische Kompression',
+            desc: 'Beherrschung des Epilarynx, nahtlose Verbindung von Brust- und Kopfstimme und gesunde, ausdrucksstarke Texturen.'
+          },
+          {
+            phase: 'Woche 9–12',
+            title: 'Tour-Konditionierung, Mysterium & „The Zone“',
+            desc: 'Tägliche Langlebigkeits-Routinen, Auflösung von Bühnenangst und Eintreten in den Flow-Zustand, in dem Technik verschwindet und reine Magie wirkt.'
+          }
+        ]
+      },
+
+      pillarsBadge: 'Die Vier Säulen der Meisterschaft',
+      pillarsTitle: 'Die Synthese aus Wissenschaft, Geist & Leidenschaft',
+      pillarsSubtitle: 'Elite-Klassik-Physik für moderne Durchschlagskraft, unendliche Freiheit und tiefes emotionales Berühren.',
+      pillars: {
+        breathTitle: 'Italienische Appoggio-Mechanik · Geerdete Freiheit',
+        breathTagline: 'Tiefe Rumpf-Ausdehnung & Null Nackenspannung',
+        breathDesc: 'Wir nutzen das legendäre Fundament der alten italienischen Meister – eine tiefe, elastische Körperstütze, die jeden Ton wie eine unsichtbare Säule trägt. Keine starre Theaterhaltung, kein künstliches Dauervibrato. Ihr Klang bleibt natürlich, sprechnah und unverwechselbar.',
+        rangeTitle: 'Nahtlose Mix Voice, Mühelose Höhen & Agile Runs',
+        rangeTagline: 'Akustische Kompression ohne Druck oder Registerbrüche',
+        rangeDesc: 'Nie wieder Furcht vor hohen Tönen. Entdecken Sie die klangliche Brillanz der gemischten Stimme, nahtlose Registerübergänge, flexible Pentatonik-Läufe und kontrollierten Straight-Tone, der gezielt in warmes Vibrato aufblüht.',
+        habitsTitle: '20-Jahre-Langlebigkeit & Die Routine des Vokal-Athleten',
+        habitsTagline: '15-Minuten tägliche Pflege für lebenslange Belastbarkeit',
+        habitsDesc: 'Singen ist Hochleistungssport von extremer Präzision. Gemeinsam etablieren wir ein persönliches tägliches Ritual aus Hydratation, sanfter Phonation und Erholung, das Ihre Stimmbänder geschmeidig und jederzeit einsatzbereit hält.',
+        theZoneTitle: 'Das Herzstück: „The Zone“ & Pure Leidenschaft',
+        theZoneTagline: 'Bühnenangst auflösen in pure emotionale Hingabe',
+        theZoneDesc: 'Wenn die Biomechanik in Fleisch und Blut übergeht, weicht jede Angst dem Staunen. Wir lösen Anspannung vollkommen auf, damit Sie in „The Zone“ eintreten – jenen Zustand, in dem die Technik verblasst und die Seele direkt zum Publikum spricht.'
+      },
+
+      genresBadge: 'Genre-Welten',
+      genresTitle: 'Echte Seele in jedem Stil',
+      genresSubtitle: 'Von intimer Bedroom-Pop-Produktion bis zur Stadion-Bühne – jedes Genre erhält stilistische Authentizität und anatomische Sicherheit.',
+      genres: [
+        {
+          id: 'rnb-soul',
+          name: 'R&B, Soul & Neo-Soul',
+          tag: 'Agilität & Ausdruck',
+          tagline: 'Mühelose Pentatonik-Läufe & Warme Register',
+          desc: 'Meistern Sie die Stimmband-Schließung und Agilität für blitzschnelle Melismen, samtweiche Registerwechsel und rohe, berührende Emotion.',
+          skills: [
+            'Präzise Riffs & Runs ohne Druck auf den Kehlkopf',
+            'Nahtlose Übergänge zwischen Brust- und Kopfstimme',
+            'Intime Phrasierung, Ad-Libs & modernes Timing',
+            'Vom zarten Hauch bis zum kraftvollen Soul-Belt'
+          ]
+        },
+        {
+          id: 'pop-commercial',
+          name: 'Pop & Contemporary Mainstream',
+          tag: 'Radio-Tauglicher Glanz',
+          tagline: 'Gesunder Belt, Vokalformanten & Moderner Mix',
+          desc: 'Entwickeln Sie einen klaren, modernen Sound, der sich im Mix auf Streaming-Plattformen oder im Live-Monitoring souverän durchsetzt.',
+          skills: [
+            'Kraftvolles, ermüdungsfreies Belting & Mix Voice',
+            'Straight-Tone-Präzision mit gezieltem Vibrato-Abschluss',
+            'Nahbesprechungseffekt am Mikrofon & Studio-Dynamik',
+            'Gezielte Formanten-Anpassung für modernen Glanz'
+          ]
+        },
+        {
+          id: 'jazz-blues',
+          name: 'Jazz, Blues & Gesangskunst',
+          tag: 'Textur & Phrasierung',
+          tagline: 'Resonanzräume & Sprechnahe Phrasierung',
+          desc: 'Lernen Sie, Ihre Resonanzräume gezielt zu steuern: von warmen, rauchigen Farben bis zu intimer, sprechnaher Geschichtenerzählung.',
+          skills: [
+            'Natürliche Speech-Level-Diktion und ehrliche Erzählung',
+            'Gesunde raue, hauchige Texturen ohne Stimmbandschäden',
+            'Scat-Gesang, Synkopen und stilsichere Improvisation',
+            'Warme, tragende Tiefe durch gezielte Resonanzanpassung'
+          ]
+        },
+        {
+          id: 'indie-rock',
+          name: 'Indie, Rock & Songwriter',
+          tag: 'Authentizität & Kraft',
+          tagline: 'Dauerhafte Belastbarkeit & Eigene Identität',
+          desc: 'Schützen Sie Ihr Instrument bei intensiven Tourneen und maximalem emotionalem Einsatz, ohne Ihre raue, ungeschminkte Kante zu verlieren.',
+          skills: [
+            'Sicherer rauer Overdrive & Stimmbandkompression ohne Knötchenrisiko',
+            'Echte, ungestelzte Interpretation mit lyrischer Tiefe',
+            'Dynamikkontrolle für Akustik-Sets und laute Live-Bands',
+            'Nervensystem-Erdung für furchtlose Bühnenpräsenz'
+          ]
+        }
+      ],
+
+      gatekeepersBadge: 'Die Architektur der Meisterschaft',
+      gatekeepersTitle: 'Wissenschaft, Passion, Mysterium & Zuflucht',
+      gatekeepersSubtitle: 'Ein seltener Ort, an dem weltklasse Vokal-Physik dem heiligen Feuer menschlicher Empfindung dient.',
+      gatekeeperCards: [
+        {
+          category: 'DIE WISSENSCHAFT · 50%',
+          title: 'Unzerstörbare Biomechanik',
+          subtitle: 'Die Anatomie von 20 Jahren Ausdauer',
+          benefit: 'Subglottische Druckentkopplung, akustische Impedanz und dynamischer Pharynx-Raum. Die physische Meisterschaft, die Ihre Stimme über Jahrzehnte schützt.'
+        },
+        {
+          category: 'DIE PASSION · 30%',
+          title: 'Das heilige Feuer des Gesangs',
+          subtitle: 'Reine Kunst & Emotionale Wahrheit',
+          benefit: 'Singen ist ein Akt tiefer menschlicher Verbindung. Wir lösen innere Hürden, damit jeder Ton echte Wahrhaftigkeit, Verletzlichkeit und Gänsehaut transportiert.'
+        },
+        {
+          category: 'DAS MYSTERIUM · 20%',
+          title: 'Die verborgene Architektur',
+          subtitle: 'Esoterische Akustik-Physik',
+          benefit: 'Die unsichtbare Geometrie der Resonanzräume alter europäischer Meister: Wie reiner Atem in strahlende, mühelose akustische Energie verwandelt wird.'
+        },
+        {
+          category: 'DER SOLIDE RAHMEN',
+          title: 'Diskrete Privat-Praxis',
+          subtitle: 'Vertraulichkeit & Zuflucht',
+          benefit: 'Ein exklusiver, geschützter Raum für professionelle Künstler, Tournee-Musiker und Privatschüler. Absolute Diskretion und pure Hingabe an die Stimme.'
+        }
+      ],
+
+      diagnosticBadge: 'Das 45-Minuten-Diagnose-Protokoll',
+      diagnosticTitle: '45-Minuten Stimm-Biomechanik-Diagnose buchen',
+      diagnosticSubtitle: 'Diagnose technischer Engpässe innerhalb von 15 Minuten',
+      diagnosticDesc: 'Erleben Sie die diagnostische Präzision eines internationalen Opern-Solisten. In einer intensiven 45-minütigen Session analysieren wir Ihre akustische Kompression, subglottischen Druckverlust und Kehlkopfspannung – mit direktem Fahrplan für Ihre Stimme.',
+      diagnosticDeliverables: [
+        '15-Minuten-Diagnose: Erkennung struktureller Blockaden und Druckpunkte',
+        'Individueller Fahrplan für sicheres Arena-Belting, Range-Erweiterung & Mix-Voice',
+        'Notfall-Stimmband-Reset-Protokoll (15 Min.) abgestimmt auf Ihre Stimme',
+        'Direkte Beratung für Managements, Produzenten oder Privatschüler'
+      ],
+      ctaBook: '45-Minuten Stimm-Diagnose anfragen',
+      ctaExploreClassical: 'Klassische Meisterkurse & Diktion ansehen',
+      audioOptionalHint: 'Optional: Fügen Sie Ihrer Anfrage einen Link zu Ihrem Spotify-Release, SoundCloud-Demo oder einer Sprachmemo bei.'
+    },
+    musicTheory: {
+      badge: 'Emotions-zuerst-Pädagogik',
+      title: 'Musiktheorie: Klang, harmonische Wahrnehmung & Farbe',
+      subtitle: '',
+      quoteText: 'Bevor es Partituren gab, gab es das Hören. Musik ist eine Sprache, die Sie bereits verstehen: Eine aufsteigende Linie hebt Sie empor, ein getragener Akkord beruhigt, eine plötzliche Stille lässt Sie den Atem anhalten. Genau dort setzt mein Unterricht an – bei der Wirkung der Musik auf Sie. Sobald Sie dieses Empfinden erkennen, hört die Notation auf, ein zu entschlüsselnder Code zu sein, und wird zu einem einfachen Weg, das aufzuschreiben, was Sie bereits hören.',
+      quoteAuthor: '',
+      secretGardenTag: '1 · Der persönliche Klangraum',
+      secretGardenTitle: 'The Secret Garden (Der geheime Garten)',
+      secretGardenIntro: 'Nennen Sie es Ihren geheimen Garten, Ihre eigene Klangwerkstatt oder einfach Ihren ganz privaten Ort. Es ist der Raum, in dem Sie und Ihre Musik einander kennenlernen. Hier lernen Sie, die feinsten Nuancen und Farben eines Klanges zu spüren und sie unter dem Mikroskop zu betrachten, bis aus einer vagen Ahnung ein glasklares Empfinden wird.',
+      secretGardenWaysTitle: 'Wir erforschen ihn auf vielfältige Weise:',
+      secretGardenItems: [
+        { label: 'Farben-Hören', desc: 'Intervalle und Akkorde wahrnehmen und ihre Klangfarbe beschreiben.' },
+        { label: 'Auditives Gedächtnis', desc: 'durch gezielte Übungen stetig erweitern.' },
+        { label: 'Synästhesie', desc: 'entdecken, ob und wie Klang für Sie mit Farbe, Form oder Berührung verschmilzt.' },
+        { label: 'Harmonie in der Praxis', desc: 'grundlegende Harmonik hören und die Funktion jedes Akkords erfassen.' },
+        { label: 'Genres', desc: 'verschiedene Musikstile erkunden und spüren, wie jeder einzelne auf Sie wirkt.' },
+        { label: 'Rhythmus', desc: 'durch körperliches Fühlen studieren – indem Sie selbst zum Rhythmus werden.' }
+      ],
+      secretGardenClosing: 'Hinter jeder Übung steht die entscheidende Frage: Was bewirkt diese Musik in mir?',
+      theoryTag: '2 · Die Musiktheorie',
+      theoryTitle: 'The Music Theory (Die Musiktheorie)',
+      theoryIntro: 'Der Schwerpunkt liegt auf der Entwicklung eines geschulten Gehörs, doch das Notenlesen bleibt eine wichtige Säule. Eine Vielzahl an Gedankenstützen und spielerischen Rätseln beschleunigt die Lernkurve spürbar.',
+      theoryItems: [
+        { label: 'Die Grundlagen (nach Bedarf)', desc: 'was Musik ist und wie Frequenzen physikalisch wirken.' },
+        { label: 'Die Tonleiter auswendig', desc: 'Do, Re, Mi, Fa, Sol, La, Si, Do – rezitiert bis zur mühelosen Automatisierung.' },
+        { label: 'Das Notensystem, Schritt für Schritt', desc: 'Noten werden behutsam eingeführt, mit Reaktionsspielen, bis das Lesen zur zweiten Natur wird.' },
+        { label: 'Farben aus dem Secret Garden', desc: 'die dort erarbeitete Farbpalette nutzen, um Intervalle und Harmonien wiederzuerkennen.' },
+        { label: 'Musikstücke im Detail zerlegt', desc: 'jeden Aspekt ausgewählter Stücke analysieren und musikalisch verstehen.' }
+      ],
+      interactiveTitle: 'Interaktives Farb- & Gewichts-Atelier',
+      interactiveSubtitle: 'Wählen Sie einen Akkord, um seine akustische Flügelresonanz zu hören und sein emotionales Gewicht, seine Farbtemperatur und seine Anziehungskraft zu spüren.',
+      interactiveHint: 'Akustischer Konzertflügel · Jeder Akkord ertönt sofort beim Anschlagen · Für vollen Bass und Obertöne mit Kopfhörern empfohlen.',
+      pianoInstrument: 'Steinway-Konzertflügel',
+      synthInstrument: 'Harmonische Sinustöne',
+      instrumentLabel: 'Klangquelle',
+      audiencesTitle: 'Für wen ist diese Musiktheorie?',
+      producerBadge: 'Produzenten & Beatmaker',
+      producerTitle: 'Frei von generischen Preset-Packs',
+      producerDesc: 'Lösen Sie sich von starren Akkord-Presets. Verstehen Sie Akkord-Substitutionen, Zwischendominanten und Stimmführung, um tiefe, atmosphärische Tracks für R&B, Neo-Soul, Pop und Filmmusik zu erschaffen.',
+      singerBadge: 'Sänger & Songwriter',
+      singerTitle: 'Resonante Intonation & Phrasierung',
+      singerDesc: 'Verstehen Sie den harmonischen Kontext unter Ihrer Gesangslinie. Singen Sie im Einklang mit der emotionalen Farbe des Akkords, damit Ihre Intonation mit natürlicher Resonanz und Gänsehaut-Präzision rastet.',
+      classicalBadge: 'Instrumentalisten & Musikliebhaber',
+      classicalTitle: 'Die verborgene Architektur der Meister',
+      classicalDesc: 'Entschlüsseln Sie das harmonische Genie von Debussy, Ravel, Chopin, Wagner und Puccini. Hören Sie mit geschärftem Gehör die psychologischen Dramen, die in jeder Modulation verwoben sind.',
+      ctaButton: 'Stunde für Musiktheorie & Harmonie anfragen',
+      ctaNote: 'Einzelsitzungen verfügbar in NRW (Köln / Düsseldorf / Essen), Berlin oder weltweit online'
     },
     biography: {
       badge: 'Künstlerischer Werdegang',

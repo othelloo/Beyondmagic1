@@ -233,8 +233,23 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                 onChange={(e) => setSelectedTopic(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-[#0b0c10] border border-[#272a34] rounded text-xs text-[#dedacf] focus:outline-none focus:border-[#c49750]"
               >
-                <option value="The Method: Ear Education & Learning Fast">
-                  {isDe ? 'Die Methode: Gehörbildung & Schnelles Lernen' : 'The Method: Ear Education & Learning Fast'}
+                <option value="45-Minute Biomechanical Vocal Diagnostic (Pop, R&B, Rock, Modern Styles)">
+                  {isDe ? '45-Minuten Stimm-Biomechanik-Diagnose (Pop, R&B, Rock, Modern)' : '45-Minute Biomechanical Vocal Diagnostic (Pop, R&B, Rock, Modern Styles)'}
+                </option>
+                <option value="Studio Tracking Week Retainer (On-Call Vocal Producer & Tracking Alchemist)">
+                  {isDe ? 'Studiowoche-Retainer: On-Call Vocal Producer & Klang-Alchemist (Vor Ort / Remote)' : 'Studio Tracking Week Retainer: On-Call Vocal Producer & Tracking Alchemist (Studio / Remote)'}
+                </option>
+                <option value="Tour Endurance Retainer & Arena Vocal Insurance">
+                  {isDe ? 'Tournee-Endurance Retainer & Stimm-Versicherung (20–40 Arena-Shows)' : 'Tour Endurance Retainer & Arena Vocal Insurance (20–40 Dates)'}
+                </option>
+                <option value="12-Week High-Performance Vocal Mentorship">
+                  {isDe ? '12-Wochen High-Performance Mentoring (3-Phasen-Biomechanik)' : '12-Week High-Performance Vocal Mentorship (3-Phase Biomechanics)'}
+                </option>
+                <option value="Vocal Coaching (Pop, R&B, Soul, Jazz, Modern Styles)">
+                  {isDe ? 'Gesangscoaching (Pop, R&B, Soul, Jazz, Moderne Stile)' : 'Vocal Coaching (Pop, R&B, Soul, Jazz, Modern Styles)'}
+                </option>
+                <option value="The Method: Emotion-first Learning">
+                  {isDe ? 'Die Methode: Emotionsorientiertes Lernen' : 'The Method: Emotion-first Learning'}
                 </option>
                 <option value="The Anatomy of Speech & French Rules (One-Time Intensive)">
                   {isDe ? 'Anatomie der Sprache & Französische Regeln (Intensivkurs)' : 'The Anatomy of Speech & French Rules (One-Time Intensive)'}
@@ -252,7 +267,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                   {isDe ? 'Hör-Sessions für Musikliebhaber' : 'Listening Sessions for Music Lovers'}
                 </option>
                 <option value="General Question / Other">
-                  {isDe ? 'Allgemeine Frage / Sonstiges' : 'General Question / Other'}
+                  {isDe ? 'Allgemeine Anfrage / Management-Kontakt' : 'General Question / Management Inquiry'}
                 </option>
               </select>
             </div>

@@ -633,9 +633,9 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(currentVideos, nu
                   Current Photos in Gallery ({currentPhotos.length}):
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {currentPhotos.map((p) => (
+                  {currentPhotos.map((p, idx) => (
                     <div
-                      key={p.id}
+                      key={`manager-photo-${p.id}-${idx}`}
                       className="flex items-center justify-between p-2.5 bg-black/40 rounded-lg border border-white/5 text-xs"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">

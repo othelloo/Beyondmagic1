@@ -3,9 +3,10 @@ import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { FeaturedVideoSpot } from './components/FeaturedVideoSpot';
-import { TheMethod } from './components/TheMethod';
+import { MusicTheory } from './components/MusicTheory';
 import { TargetAudiences } from './components/TargetAudiences';
 import { FrenchSpecialization } from './components/FrenchSpecialization';
+import { ContemporaryVocalCoaching } from './components/ContemporaryVocalCoaching';
 import { Biography } from './components/Biography';
 import { MediaSection } from './components/MediaSection';
 import { SpiritualityExperience } from './components/SpiritualityExperience';
@@ -94,7 +95,6 @@ function MainApp() {
           {/* Hero Section */}
           <Hero
             onOpenInquiry={handleOpenInquiry}
-            onScrollToMethod={() => handleScrollToSection('the-method')}
             onScrollToVideo={() => handleScrollToSection('studio-spotlight')}
           />
 
@@ -104,17 +104,20 @@ function MainApp() {
             onOpenSpirituality={() => setSpiritualityActive(true)}
           />
 
-          {/* The Method: Ear-First Somatic Education & Notation critique */}
-          <TheMethod
-            onOpenInquiry={handleOpenInquiry}
-            onOpenSpirituality={() => setSpiritualityActive(true)}
-          />
-
           {/* Target Audiences: Students, Producers, Discerning Listeners */}
           <TargetAudiences onOpenInquiry={handleOpenInquiry} />
 
+          {/* Music Theory: Sound, Harmonic Perception & Color */}
+          <MusicTheory onOpenInquiry={handleOpenInquiry} />
+
           {/* French Repertoire Specialization & The One-Time Anatomy/IPA Intensive */}
           <FrenchSpecialization onOpenInquiry={handleOpenInquiry} />
+
+          {/* Contemporary Vocal Coaching: Pop, R&B, Soul, Jazz, Indie & Beyond */}
+          <ContemporaryVocalCoaching 
+            onOpenInquiry={handleOpenInquiry}
+            onScrollToClassical={() => handleScrollToSection('specializations')}
+          />
 
           {/* Biography & The 2-Year Trajectory */}
           <Biography
@@ -135,6 +138,8 @@ function MainApp() {
 
       {/* Floating Flag Switcher in the bottom right corner */}
       <LanguageSwitcher />
+
+
 
       {/* Floating Back to Top Button in bottom left corner */}
       {showScrollTop && (

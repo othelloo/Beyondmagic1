@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Sparkles } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { BeyondMagicNavbarLogo } from './BeyondMagicNavbarLogo';
 
 interface NavbarProps {
   onOpenInquiry: (defaultTopic?: string) => void;
@@ -19,7 +20,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
       setScrolled(window.scrollY > 20);
 
       // Simple active section detection
-      const sections = ['the-method', 'audiences', 'specializations', 'biography', 'gallery'];
+      const sections = ['audiences', 'music-theory', 'specializations', 'vocal-coaching', 'biography', 'gallery'];
       const scrollPos = window.scrollY + 140;
       for (const id of sections) {
         const el = document.getElementById(id);
@@ -40,12 +41,39 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isDe = language === 'de';
+
   const navLinks = [
-    { name: t.nav.method, href: '#the-method' },
-    { name: t.nav.audiences, href: '#audiences' },
-    { name: t.nav.french, href: '#specializations' },
-    { name: t.nav.about, href: '#biography' },
-    { name: t.nav.media, href: '#gallery' },
+    {
+      name: t.nav.audiences,
+      line1: isDe ? 'Für' : 'Who It’s',
+      line2: isDe ? 'wen' : 'For',
+      href: '#audiences'
+    },
+    {
+      name: t.nav.musicTheory,
+      line1: isDe ? 'Musik' : 'Music',
+      line2: isDe ? 'Theorie' : 'Theory',
+      href: '#music-theory'
+    },
+    {
+      name: t.nav.french,
+      line1: isDe ? 'Französisch' : 'French',
+      line2: isDe ? 'Coaching' : 'Coaching',
+      href: '#specializations'
+    },
+    {
+      name: t.nav.contemporaryVocal,
+      line1: isDe ? 'Vocal' : 'Vocal',
+      line2: isDe ? 'Coaching' : 'Coaching',
+      href: '#vocal-coaching'
+    },
+    {
+      name: t.nav.about,
+      line1: isDe ? 'Über' : 'About',
+      line2: isDe ? 'mich' : 'Me',
+      href: '#biography'
+    },
   ];
 
   const handleNavClick = (e: React.MouseEvent, href: string) => {
@@ -62,21 +90,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-3.5 shadow-2xl transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-40 bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-2 sm:py-2.5 shadow-2xl transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Zone 1: Single text wordmark that scrolls to top */}
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
+        {/* Left Side: Logo */}
         <a
           href="#"
           onClick={(e) => handleNavClick(e, '#')}
-          className="text-xl md:text-2xl font-serif tracking-[0.18em] text-[#f2eee9] uppercase hover:text-[#d4af37] transition-colors cursor-pointer"
-          title="Back to Top"
+          className="flex items-center group py-0.5 cursor-pointer text-left shrink-0"
+          title="Beyond Magic — Back to Top"
         >
-          Vérisme Atelier
+          <BeyondMagicNavbarLogo />
         </a>
 
-        {/* Zone 2: 4-6 clean text navigation links */}
-        <nav className="hidden lg:flex items-center gap-7 text-sm font-medium tracking-wide text-[#b3b0a6]">
+        {/* Center: Navigation menu spread evenly across the available space */}
+        <nav className="hidden lg:flex items-center justify-between flex-1 mx-4 sm:mx-6 xl:mx-8 text-[15px] xl:text-base font-medium tracking-wide text-[#b3b0a6]">
           {navLinks.map((link) => {
             const isActive = activeSection === link.href;
             return (
@@ -84,29 +112,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
                 key={link.name}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className={`transition-colors relative py-1 hover:text-[#f2eee9] ${
+                className={`transition-colors relative py-1 flex flex-col items-end text-right leading-[1.2] hover:text-[#f2eee9] ${
                   isActive
                     ? 'text-[#c49750] border-b-2 border-[#c49750] font-semibold'
                     : 'text-[#b3b0a6] hover:border-b hover:border-[#c49750]/50'
                 }`}
               >
-                {link.name}
+                <span className="whitespace-nowrap text-sm sm:text-[15px] xl:text-[16px]">{link.line1}</span>
+                <span className="text-xs sm:text-[13px] whitespace-nowrap opacity-90">{link.line2}</span>
               </a>
             );
           })}
-          {/* Spirituality link - indicated as in-progress / coming soon */}
+
+          {/* Spirituality link - words above words, right-aligned */}
           <button
             onClick={onOpenSpirituality}
-            className="flex items-center gap-1.5 text-xs text-[#d4af37]/80 hover:text-[#d4af37] transition-colors py-1 cursor-pointer"
+            className="flex flex-col items-end text-right leading-[1.2] py-1 transition-colors group cursor-pointer shrink-0"
             title="Spirituality through Music"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-            <span className="font-normal italic">{t.nav.spirituality}</span>
+            <span className="flex items-center gap-1.5 text-sm sm:text-[15px] xl:text-[16px] text-[#d4af37]/90 group-hover:text-[#d4af37] italic font-normal">
+              <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+              <span>{isDe ? 'Spiritualität' : 'Spirituality'}</span>
+            </span>
+            <span className="text-xs sm:text-[12px] text-[#d4af37]/70 italic font-mono whitespace-nowrap">
+              {isDe ? '(In Kürze)' : '(Soon)'}
+            </span>
           </button>
         </nav>
 
-        {/* Zone 3: Language switcher & Primary action & mobile trigger */}
-        <div className="flex items-center gap-3 md:gap-4">
+        {/* Right Side: Action cluster: Language switcher & Primary action & mobile trigger */}
+        <div className="flex items-center gap-3 md:gap-4 shrink-0">
           {/* Flag Switcher in Navbar */}
           <div className="flex items-center bg-[#151821] border border-[#272b35] rounded-full p-0.5 text-xs">
             <button
@@ -164,20 +199,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
                   setMobileMenuOpen(false);
                   handleNavClick(e, link.href);
                 }}
-                className="text-[#cfccc3] hover:text-[#d4af37] py-2 border-b border-white/5 transition-colors cursor-pointer"
+                className="text-[#cfccc3] hover:text-[#d4af37] py-2 border-b border-white/5 transition-colors cursor-pointer text-right flex flex-col items-end leading-tight"
               >
-                {link.name}
+                <span className="font-medium">{link.line1}</span>
+                <span className="text-xs text-[#9c988e]">{link.line2}</span>
               </a>
             ))}
+
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 onOpenSpirituality();
               }}
-              className="flex items-center gap-2 text-[#d4af37] py-2 text-left text-sm italic"
+              className="flex flex-col items-end gap-0.5 text-[#d4af37] py-2 text-right text-sm italic cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{t.nav.spirituality}</span>
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" />
+                <span>{isDe ? 'Spiritualität' : 'Spirituality'}</span>
+              </span>
+              <span className="text-xs text-[#d4af37]/60">{isDe ? '(In Kürze)' : '(Soon)'}</span>
             </button>
             <div className="pt-3 flex flex-col gap-3">
               <div className="flex items-center justify-between px-1 text-sm text-[#a09c91]">

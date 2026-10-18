@@ -174,10 +174,10 @@ export const PhotoGallery: React.FC = () => {
   }, [lightboxPhoto, isFullGalleryOpen]);
 
   // Pure, clean photo card: ZERO descriptions, ZERO overlays on the picture
-  const renderPhotoCard = (photo: PhotoItem) => {
+  const renderPhotoCard = (photo: PhotoItem, index?: number, prefix: string = 'card') => {
     return (
       <div
-        key={photo.id}
+        key={`${prefix}-${photo.id}-${index ?? 0}`}
         onClick={() => openLightbox(photo)}
         className="group relative rounded-xl overflow-hidden bg-[#101217] border border-[#222630] cursor-pointer shadow-lg hover:border-[#c49750]/60 transition-all duration-300 aspect-[4/3]"
       >
@@ -310,7 +310,7 @@ export const PhotoGallery: React.FC = () => {
         /* CURATED PREVIEW OF REAL PHOTOS (NO TEXT OVERLAY) */
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {curatedPreviews.map((photo) => renderPhotoCard(photo))}
+            {curatedPreviews.map((photo, idx) => renderPhotoCard(photo, idx, 'preview'))}
           </div>
 
           {displayPhotos.length > 12 && (
@@ -370,7 +370,7 @@ export const PhotoGallery: React.FC = () => {
             {/* Scrollable Pure Grid */}
             <div className="flex-1 overflow-y-auto pr-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-8">
-                {displayPhotos.map((photo) => renderPhotoCard(photo))}
+                {displayPhotos.map((photo, idx) => renderPhotoCard(photo, idx, 'modal'))}
               </div>
             </div>
 

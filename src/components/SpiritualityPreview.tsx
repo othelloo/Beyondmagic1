@@ -135,7 +135,7 @@ export const SpiritualityPreview: React.FC<SpiritualityPreviewProps> = ({ isOpen
 
         {/* Footer */}
         <div className="px-6 py-3.5 bg-[#0c0e14] border-t border-white/5 flex items-center justify-between text-xs text-[#7d796e]">
-          <span>Vérisme Atelier · Forthcoming Chapter</span>
+          <span>Beyond <span className="magic-word font-medium">Magic</span> · Forthcoming Chapter</span>
           <button
             onClick={onClose}
             className="text-[#c49750] hover:underline cursor-pointer"

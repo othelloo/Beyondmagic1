@@ -80,30 +80,63 @@ export function deleteCustomVideo(id: string): void {
 }
 
 export function getStoredPhotos(): PhotoItem[] {
-  if (typeof window === 'undefined') {
-    return BUNDLED_GALLERY_PHOTOS;
-  }
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_PHOTOS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const hasDataUrls = parsed.some((p: PhotoItem) => p.image && p.image.startsWith('data:image'));
-        if (hasDataUrls) {
-          return parsed;
+  let list: PhotoItem[] = BUNDLED_GALLERY_PHOTOS;
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PHOTOS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasDataUrls = parsed.some((p: PhotoItem) => p.image && p.image.startsWith('data:image'));
+          if (hasDataUrls) {
+            list = parsed;
+          }
         }
       }
+    } catch (e) {
+      console.warn('Failed to read custom photos from localStorage', e);
     }
-  } catch (e) {
-    console.warn('Failed to read custom photos from localStorage', e);
   }
-  return BUNDLED_GALLERY_PHOTOS;
+
+  // Ensure every photo has a strictly unique ID
+  const seenIds = new Set<string>();
+  const uniquePhotos: PhotoItem[] = [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    let uniqueId = item.id || `photo-${i}`;
+    if (seenIds.has(uniqueId)) {
+      uniqueId = `${uniqueId}_dup_${i}`;
+    }
+    seenIds.add(uniqueId);
+    uniquePhotos.push({
+      ...item,
+      id: uniqueId
+    });
+  }
+
+  return uniquePhotos;
 }
 
 export function savePhotos(photos: PhotoItem[]): void {
   if (typeof window === 'undefined') return;
+  // Deduplicate IDs before saving
+  const seenIds = new Set<string>();
+  const uniquePhotos: PhotoItem[] = [];
+  for (let i = 0; i < photos.length; i++) {
+    const item = photos[i];
+    let uniqueId = item.id || `photo-${i}`;
+    if (seenIds.has(uniqueId)) {
+      uniqueId = `${uniqueId}_dup_${i}`;
+    }
+    seenIds.add(uniqueId);
+    uniquePhotos.push({
+      ...item,
+      id: uniqueId
+    });
+  }
+
   try {
-    localStorage.setItem(STORAGE_KEY_PHOTOS, JSON.stringify(photos));
+    localStorage.setItem(STORAGE_KEY_PHOTOS, JSON.stringify(uniquePhotos));
   } catch (e) {
     console.warn('Failed to save photos to localStorage (quota exceeded)', e);
   }

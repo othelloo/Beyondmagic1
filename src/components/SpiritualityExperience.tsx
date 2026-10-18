@@ -420,7 +420,7 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
 
             {/* Bottom Actions */}
             <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[#8c887d]">
-              <span>Vérisme Atelier · Sacred Acoustics</span>
+              <span>Beyond <span className="magic-word font-medium">Magic</span> · Sacred Acoustics</span>
               <button
                 onClick={onClose}
                 className="text-[#d4af37] hover:underline flex items-center gap-1 cursor-pointer font-medium"

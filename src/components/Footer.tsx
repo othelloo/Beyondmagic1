@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, ArrowUp, Mail } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { BeyondMagicNavbarLogo } from './BeyondMagicNavbarLogo';
 
 interface FooterProps {
   onOpenInquiry: (topic?: string) => void;
@@ -24,9 +25,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
           <div className="md:col-span-5 space-y-3">
             <a
               href="#"
-              className="text-xl font-serif tracking-[0.16em] text-[#f2eee9] uppercase hover:text-[#d4af37] transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToTop();
+              }}
+              className="inline-flex items-center hover:opacity-90 transition-opacity"
+              title="Beyond Magic — Back to Top"
             >
-              Vérisme Atelier
+              <BeyondMagicNavbarLogo />
             </a>
             <p className="text-xs text-[#8c887d] max-w-sm leading-relaxed">
               {t.footer.tagline}
@@ -43,18 +49,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
             </div>
             <ul className="space-y-2 text-xs">
               <li>
-                <a href="#the-method" className="hover:text-white transition-colors">
-                  {t.nav.method}
-                </a>
-              </li>
-              <li>
                 <a href="#audiences" className="hover:text-white transition-colors">
                   {t.nav.audiences}
                 </a>
               </li>
               <li>
+                <a href="#music-theory" className="hover:text-white transition-colors">
+                  {t.nav.musicTheory}
+                </a>
+              </li>
+              <li>
                 <a href="#specializations" className="hover:text-white transition-colors">
                   {t.nav.french}
+                </a>
+              </li>
+              <li>
+                <a href="#vocal-coaching" className="hover:text-white transition-colors">
+                  {t.nav.contemporaryVocal}
                 </a>
               </li>
               <li>
@@ -111,7 +122,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#676358] gap-4">
           <div>
-            © {new Date().getFullYear()} Vérisme Atelier. {t.footer.copyright}
+            © {new Date().getFullYear()} Beyond <span className="magic-word">Magic</span> · Abdellah Lasri. {t.footer.copyright}
           </div>
 
           <div className="flex items-center gap-6">

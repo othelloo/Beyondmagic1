@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, Sliders, Headphones, Check, ArrowRight } from 'lucide-react';
+import { Music, Mic, Headphones, Check, ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface TargetAudiencesProps {
@@ -11,8 +11,8 @@ export const TargetAudiences: React.FC<TargetAudiencesProps> = ({ onOpenInquiry 
 
   const audienceCards = [
     {
-      id: 'singers',
-      icon: GraduationCap,
+      id: 'french-classical',
+      icon: Music,
       category: t.audiences.card1Badge,
       title: t.audiences.card1Title,
       subtitle: t.audiences.card1Subtitle,
@@ -21,8 +21,8 @@ export const TargetAudiences: React.FC<TargetAudiencesProps> = ({ onOpenInquiry 
       cta: t.audiences.card1Cta
     },
     {
-      id: 'producers',
-      icon: Sliders,
+      id: 'contemporary-vocal',
+      icon: Mic,
       category: t.audiences.card2Badge,
       title: t.audiences.card2Title,
       subtitle: t.audiences.card2Subtitle,
@@ -31,7 +31,7 @@ export const TargetAudiences: React.FC<TargetAudiencesProps> = ({ onOpenInquiry 
       cta: t.audiences.card2Cta
     },
     {
-      id: 'listeners',
+      id: 'producers-and-listeners',
       icon: Headphones,
       category: t.audiences.card3Badge,
       title: t.audiences.card3Title,
