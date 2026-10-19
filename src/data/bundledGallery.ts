@@ -1,13 +1,5 @@
 import { PhotoItem } from '../types';
-import { ALL_PERMANENT_PHOTOS } from './galleryChunks';
+import { INITIAL_ARCHIVE_PHOTOS } from './uploadedPhotos';
 
-// Map all permanent, embedded photos directly so they never rely on ephemeral disk files
-export const BUNDLED_GALLERY_PHOTOS: PhotoItem[] = ALL_PERMANENT_PHOTOS.map((p, index) => ({
-  id: p.id || `permanent-photo-${index + 1}`,
-  title: '',
-  category: 'production',
-  image: p.image,
-  caption: '',
-  venueOrContext: '',
-  year: ''
-}));
+// Map all permanent photos directly from static clean asset paths
+export const BUNDLED_GALLERY_PHOTOS: PhotoItem[] = INITIAL_ARCHIVE_PHOTOS;

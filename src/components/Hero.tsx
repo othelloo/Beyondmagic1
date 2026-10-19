@@ -74,7 +74,7 @@ export const Hero: React.FC<HeroProps> = ({
               
               {/* Zone 1 (Left): Logo Centered in its own zone */}
               <div className="w-full flex items-center justify-center">
-                <div className="w-full max-w-[200px] xs:max-w-[220px] sm:max-w-[220px] md:max-w-[240px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="w-full max-w-[155px] sm:max-w-[210px] md:max-w-[240px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
                   <BeyondMagicItem
                     withCircle={false}
                     useMetallic3D={false}
@@ -93,13 +93,13 @@ export const Hero: React.FC<HeroProps> = ({
                 aria-hidden="true" 
               />
               <div 
-                className="block sm:hidden w-32 h-[1px] bg-gradient-to-r from-transparent via-[#c49750]/70 to-transparent my-2 mx-auto" 
+                className="block sm:hidden w-28 h-[1px] bg-gradient-to-r from-transparent via-[#c49750]/70 to-transparent my-2 mx-auto" 
                 aria-hidden="true" 
               />
 
-              {/* Zone 2 (Right): Artist Name Centered in its own zone - balanced scale for phone and tablet */}
+              {/* Zone 2 (Right): Artist Name Centered in its own zone - commanding scale on phone and tablet */}
               <div className="w-full flex items-center justify-center text-center">
-                <h1 className="font-serif text-[30px] xs:text-[34px] sm:text-[32px] md:text-[36px] lg:text-[40px] xl:text-[45px] uppercase tracking-[0.12em] sm:tracking-[0.14em] text-[#fbf9f5] font-medium sm:font-normal leading-[1.08] text-center">
+                <h1 className="font-serif text-[34px] sm:text-[34px] md:text-[38px] lg:text-[42px] xl:text-[45px] uppercase tracking-[0.14em] text-[#fbf9f5] font-normal leading-[1.08] text-center">
                   <span className="block">Abdellah</span>
                   <span className="block">Lasri</span>
                 </h1>

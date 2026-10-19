@@ -19,7 +19,11 @@ export const PhotoGallery: React.FC = () => {
   // Owner Setup / Lock State (Locked by default for clean presentation)
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
-    return localStorage.getItem('verisme_gallery_locked') !== 'false';
+    try {
+      return localStorage.getItem('verisme_gallery_locked') !== 'false';
+    } catch {
+      return true;
+    }
   });
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>('');
@@ -246,7 +250,7 @@ export const PhotoGallery: React.FC = () => {
             <button
               onClick={() => {
                 setIsLocked(true);
-                localStorage.setItem('verisme_gallery_locked', 'true');
+                try { localStorage.setItem('verisme_gallery_locked', 'true'); } catch {}
               }}
               className="px-3.5 py-2.5 bg-[#1b202e] hover:bg-[#252b3d] text-[#c49750] hover:text-[#d8a85c] text-xs font-mono rounded-lg border border-[#c49750]/40 transition-all flex items-center gap-1.5 cursor-pointer"
               title="Lock and hide uploader permanently for public visitors"
@@ -279,7 +283,7 @@ export const PhotoGallery: React.FC = () => {
             <button
               onClick={() => {
                 setIsLocked(false);
-                localStorage.removeItem('verisme_gallery_locked');
+                try { localStorage.removeItem('verisme_gallery_locked'); } catch {}
               }}
               className="text-[11px] font-mono text-[#777367] hover:text-[#c49750] transition-colors flex items-center gap-1 cursor-pointer mr-2"
               title="Manage photos"

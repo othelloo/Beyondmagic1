@@ -3,7 +3,6 @@ import { ArrowUp } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { LanguageProvider } from './context/LanguageContext';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
 
 // Code-split below-the-fold sections for instant mobile initial page rendering
 const FeaturedVideoSpot = lazy(() => import('./components/FeaturedVideoSpot').then(m => ({ default: m.FeaturedVideoSpot })));
@@ -115,9 +114,6 @@ function MainApp() {
           </Suspense>
         </main>
       </div>
-
-      {/* Floating Flag Switcher in the bottom right corner */}
-      <LanguageSwitcher />
 
       {/* Floating Back to Top Button in bottom left corner */}
       {showScrollTop && (
