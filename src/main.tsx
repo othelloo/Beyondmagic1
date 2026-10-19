@@ -58,6 +58,12 @@ function mountApp() {
         <App />
       </AppErrorBoundary>
     );
+    if (typeof window !== 'undefined') {
+      const win = window as unknown as { __dismissShell?: () => void };
+      if (typeof win.__dismissShell === 'function') {
+        win.__dismissShell();
+      }
+    }
   } else {
     // Retry as soon as DOM finishes loading
     if (document.readyState === 'loading') {
