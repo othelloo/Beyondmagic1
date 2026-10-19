@@ -50,11 +50,26 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, Er
   }
 }
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  createRoot(rootElement).render(
-    <AppErrorBoundary>
-      <App />
-    </AppErrorBoundary>
-  );
+function mountApp() {
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    createRoot(rootElement).render(
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    );
+  } else {
+    // Retry as soon as DOM finishes loading
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mountApp, { once: true });
+    } else {
+      setTimeout(mountApp, 25);
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mountApp, { once: true });
+} else {
+  mountApp();
 }
