@@ -16,6 +16,12 @@
     <link rel="preload" as="image" href="./images/portrait.jpg" fetchpriority="high">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
     <script>
+      // Ensure trailing slash on GitHub Pages so relative './assets/' bundles resolve accurately
+      if (window.location.hostname.endsWith('github.io') && !window.location.pathname.endsWith('/') && !window.location.pathname.slice(-5).includes('.')) {
+        window.location.replace(window.location.pathname + '/' + window.location.search + window.location.hash);
+      }
+    </script>
+    <script>
       (function() {
         var errBox = null;
         function getBox() {
@@ -240,28 +246,53 @@
           <h1 style="font-size:32px;font-family:Georgia,serif;letter-spacing:0.12em;text-transform:uppercase;color:#fbf9f5;margin-bottom:8px;font-weight:normal;">
             Abdellah Lasri
           </h1>
-          <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#c49750;">
+          <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#c49750;margin-bottom:20px;">
             Beyond Magic · Masterclasses & Vocal Coaching
           </p>
+          <div id="boot-diagnostics" style="display:inline-block;padding:8px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(196,151,80,0.3);border-radius:20px;font-size:11px;color:#c49750;font-family:monospace;max-width:90%;">
+            <span id="boot-status">Initializing application...</span>
+          </div>
         </div>
       </div>
 
     <script>
-      window.__dismissShell = function() {
-        var s = document.getElementById('pre-shell');
-        if (s) {
-          s.classList.add('dismissed');
-          setTimeout(function() {
-            if (s && s.parentNode) s.parentNode.removeChild(s);
-          }, 300);
-        }
-      };
-      // Safety auto-dismiss fallback: guarantees the shell is never stuck on mobile browsers
-      setTimeout(function() {
-        if (typeof window.__dismissShell === 'function') {
-          window.__dismissShell();
-        }
-      }, 2500);
+      (function() {
+        window.__updateBoot = function(msg, isError) {
+          var el = document.getElementById('boot-status');
+          if (el) {
+            el.textContent = msg;
+            if (isError) {
+              el.style.color = '#f87171';
+              if (el.parentElement) el.parentElement.style.borderColor = '#dc2626';
+            }
+          }
+        };
+
+        window.__dismissShell = function() {
+          var s = document.getElementById('pre-shell');
+          if (s) {
+            s.classList.add('dismissed');
+            setTimeout(function() {
+              if (s && s.parentNode) s.parentNode.removeChild(s);
+            }, 300);
+          }
+        };
+
+        setTimeout(function() {
+          if (typeof window.__dismissShell === 'function') {
+            window.__dismissShell();
+          }
+        }, 2200);
+
+        setTimeout(function() {
+          if (!window.__reactMounted) {
+            var el = document.getElementById('boot-status');
+            if (el && !el.textContent.includes('Failed') && !el.textContent.includes('Error')) {
+              window.__updateBoot('Script delayed. Tap Shields icon to verify scripts are allowed in Brave.', true);
+            }
+          }
+        }, 3800);
+      })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

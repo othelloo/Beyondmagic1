@@ -214,6 +214,7 @@ export default defineConfig(({ command }) => {
     },
     build: {
       target: 'es2020',
+      modulePreload: false,
       chunkSizeWarningLimit: 800,
       rollupOptions: {
         output: {

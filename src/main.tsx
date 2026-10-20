@@ -3,6 +3,13 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+if (typeof window !== 'undefined') {
+  const win = window as unknown as { __updateBoot?: (msg: string) => void };
+  if (typeof win.__updateBoot === 'function') {
+    win.__updateBoot('Script executing, launching application...');
+  }
+}
+
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
@@ -55,8 +62,11 @@ function mountApp() {
   if (rootElement) {
     try {
       if (typeof window !== 'undefined') {
-        const win = window as unknown as { __reactMounted?: boolean; __dismissShell?: () => void };
+        const win = window as unknown as { __reactMounted?: boolean; __dismissShell?: () => void; __updateBoot?: (msg: string) => void };
         win.__reactMounted = true;
+        if (typeof win.__updateBoot === 'function') {
+          win.__updateBoot('Rendering interactive view...');
+        }
         const banner = document.getElementById('brave-debug-banner');
         if (banner && banner.style.background.includes('b45309')) {
           banner.remove();
