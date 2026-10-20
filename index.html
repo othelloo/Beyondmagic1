@@ -174,29 +174,39 @@
             <div style="position:absolute;top:0;left:0;bottom:0;width:50%;background:linear-gradient(90deg,transparent,#c49750,transparent);animation:shellPulse 1.2s infinite ease-in-out;"></div>
           </div>
 
+          <style>
+            @keyframes shellPulse {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(200%); }
+            }
+            #pre-shell {
+              animation: autoFadeShell 0.5s ease 2.0s forwards;
+            }
+            @keyframes autoFadeShell {
+              0% { opacity: 1; pointer-events: auto; }
+              100% { opacity: 0; pointer-events: none; visibility: hidden; }
+            }
+            #pre-shell.dismissed {
+              opacity: 0 !important;
+              pointer-events: none !important;
+              visibility: hidden !important;
+              transition: opacity 0.25s ease !important;
+            }
+          </style>
         </div>
       </div>
-      <style>
-        @keyframes shellPulse {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      </style>
-    </div>
 
-    <!-- Live React Mount Root -->
-    <div id="root"></div>
+      <!-- Live React Mount Root (Inside body) -->
+      <div id="root"></div>
 
     <script>
       window.__dismissShell = function() {
         var s = document.getElementById('pre-shell');
         if (s) {
-          s.style.opacity = '0';
-          s.style.pointerEvents = 'none';
-          s.style.transition = 'opacity 0.25s ease';
+          s.classList.add('dismissed');
           setTimeout(function() {
             if (s && s.parentNode) s.parentNode.removeChild(s);
-          }, 250);
+          }, 300);
         }
       };
       // Safety auto-dismiss fallback: guarantees the shell is never stuck on mobile browsers
@@ -204,7 +214,7 @@
         if (typeof window.__dismissShell === 'function') {
           window.__dismissShell();
         }
-      }, 3000);
+      }, 2500);
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
