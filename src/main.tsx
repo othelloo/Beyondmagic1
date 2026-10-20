@@ -72,6 +72,7 @@ function mountApp() {
           banner.remove();
         }
       }
+      rootElement.innerHTML = '';
       createRoot(rootElement).render(
         <AppErrorBoundary>
           <App />

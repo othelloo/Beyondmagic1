@@ -4,15 +4,13 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { FeaturedVideoSpot } from './components/FeaturedVideoSpot';
 import { TargetAudiences } from './components/TargetAudiences';
+import { MusicTheory } from './components/MusicTheory';
+import { FrenchSpecialization } from './components/FrenchSpecialization';
+import { ContemporaryVocalCoaching } from './components/ContemporaryVocalCoaching';
+import { Biography } from './components/Biography';
+import { MediaSection } from './components/MediaSection';
 import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
-
-// Code-split below-the-fold heavy interactive workshops & galleries
-const MusicTheory = lazy(() => import('./components/MusicTheory').then(m => ({ default: m.MusicTheory })));
-const FrenchSpecialization = lazy(() => import('./components/FrenchSpecialization').then(m => ({ default: m.FrenchSpecialization })));
-const ContemporaryVocalCoaching = lazy(() => import('./components/ContemporaryVocalCoaching').then(m => ({ default: m.ContemporaryVocalCoaching })));
-const Biography = lazy(() => import('./components/Biography').then(m => ({ default: m.Biography })));
-const MediaSection = lazy(() => import('./components/MediaSection').then(m => ({ default: m.MediaSection })));
 
 // On-demand lazy modals and heavy overlays
 const InquiryModal = lazy(() => import('./components/InquiryModal').then(m => ({ default: m.InquiryModal })));
@@ -90,29 +88,26 @@ function MainApp() {
           {/* Target Audiences: Students, Producers, Discerning Listeners */}
           <TargetAudiences onOpenInquiry={handleOpenInquiry} />
 
-          {/* Heavy interactive modules code-split & lazy-loaded in background */}
-          <Suspense fallback={<div className="min-h-[20vh] bg-[#0b0c0e]" />}>
-            {/* Music Theory: Sound, Harmonic Perception & Color */}
-            <MusicTheory onOpenInquiry={handleOpenInquiry} />
+          {/* Music Theory: Sound, Harmonic Perception & Color */}
+          <MusicTheory onOpenInquiry={handleOpenInquiry} />
 
-            {/* French Repertoire Specialization & The One-Time Anatomy/IPA Intensive */}
-            <FrenchSpecialization onOpenInquiry={handleOpenInquiry} />
+          {/* French Repertoire Specialization & The One-Time Anatomy/IPA Intensive */}
+          <FrenchSpecialization onOpenInquiry={handleOpenInquiry} />
 
-            {/* Contemporary Vocal Coaching: Pop, R&B, Soul, Jazz, Indie & Beyond */}
-            <ContemporaryVocalCoaching 
-              onOpenInquiry={handleOpenInquiry}
-              onScrollToClassical={() => handleScrollToSection('specializations')}
-            />
+          {/* Contemporary Vocal Coaching: Pop, R&B, Soul, Jazz, Indie & Beyond */}
+          <ContemporaryVocalCoaching 
+            onOpenInquiry={handleOpenInquiry}
+            onScrollToClassical={() => handleScrollToSection('specializations')}
+          />
 
-            {/* Biography & The 2-Year Trajectory */}
-            <Biography
-              onScrollToGallery={() => handleScrollToSection('gallery')}
-              onOpenInquiry={handleOpenInquiry}
-            />
+          {/* Biography & The 2-Year Trajectory */}
+          <Biography
+            onScrollToGallery={() => handleScrollToSection('gallery')}
+            onOpenInquiry={handleOpenInquiry}
+          />
 
-            {/* Galleries: 2 Photo Collections + Video Archive */}
-            <MediaSection onOpenInquiry={handleOpenInquiry} />
-          </Suspense>
+          {/* Galleries: 2 Photo Collections + Video Archive */}
+          <MediaSection onOpenInquiry={handleOpenInquiry} />
 
           {/* Footer */}
           <Footer
