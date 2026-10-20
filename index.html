@@ -27,14 +27,30 @@
           }
           return errBox;
         }
+
+        // Capture phase (true) is required to catch <script> and <link> 404 or network blocks
         window.addEventListener('error', function(e) {
           var b = getBox();
-          b.textContent = '❌ JS Error: ' + (e.message || e) + ' (' + (e.filename || 'unknown') + ':' + (e.lineno || '0') + ')';
-        });
+          if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+            b.textContent = '❌ Failed to load asset: ' + (e.target.src || e.target.href);
+          } else {
+            b.textContent = '❌ JS Error: ' + (e.message || e) + ' (' + (e.filename || 'unknown') + ':' + (e.lineno || '0') + ')';
+          }
+        }, true);
+
         window.addEventListener('unhandledrejection', function(e) {
           var b = getBox();
           b.textContent = '❌ Promise Rejection: ' + (e.reason ? (e.reason.message || e.reason.stack || e.reason) : e);
         });
+
+        // Watchdog: If React does not mount within 3 seconds, display diagnostic alert
+        setTimeout(function() {
+          if (!window.__reactMounted) {
+            var b = getBox();
+            b.style.background = '#b45309';
+            b.textContent = '⚠️ App initialization notice: React has not mounted after 3s. Check browser console or privacy shields.';
+          }
+        }, 3000);
       })();
     </script>
   </head>

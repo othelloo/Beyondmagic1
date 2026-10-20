@@ -53,16 +53,33 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, Er
 function mountApp() {
   const rootElement = document.getElementById('root');
   if (rootElement) {
-    createRoot(rootElement).render(
-      <AppErrorBoundary>
-        <App />
-      </AppErrorBoundary>
-    );
-    if (typeof window !== 'undefined') {
-      const win = window as unknown as { __dismissShell?: () => void };
-      if (typeof win.__dismissShell === 'function') {
-        win.__dismissShell();
+    try {
+      if (typeof window !== 'undefined') {
+        const win = window as unknown as { __reactMounted?: boolean; __dismissShell?: () => void };
+        win.__reactMounted = true;
+        const banner = document.getElementById('brave-debug-banner');
+        if (banner && banner.style.background.includes('b45309')) {
+          banner.remove();
+        }
       }
+      createRoot(rootElement).render(
+        <AppErrorBoundary>
+          <App />
+        </AppErrorBoundary>
+      );
+      if (typeof window !== 'undefined') {
+        const win = window as unknown as { __dismissShell?: () => void };
+        if (typeof win.__dismissShell === 'function') {
+          win.__dismissShell();
+        }
+      }
+    } catch (err) {
+      console.error('Fatal mount error:', err);
+      const banner = document.getElementById('brave-debug-banner') || document.createElement('div');
+      banner.id = 'brave-debug-banner';
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999999;background:#991b1b;color:#fff;padding:16px;font-family:monospace;font-size:12px;';
+      banner.textContent = '❌ React Mount Exception: ' + ((err as Error)?.message || String(err));
+      document.body.appendChild(banner);
     }
   } else {
     // Retry as soon as DOM finishes loading
