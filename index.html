@@ -15,6 +15,28 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="preload" as="image" href="./images/portrait.jpg" fetchpriority="high">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap">
+    <script>
+      (function() {
+        var errBox = null;
+        function getBox() {
+          if (!errBox) {
+            errBox = document.createElement('div');
+            errBox.id = 'brave-debug-banner';
+            errBox.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999999;background:#991b1b;color:#fff;padding:16px;font-family:monospace;font-size:12px;line-height:1.4;box-shadow:0 4px 20px rgba(0,0,0,0.8);word-break:break-all;';
+            (document.body || document.documentElement).appendChild(errBox);
+          }
+          return errBox;
+        }
+        window.addEventListener('error', function(e) {
+          var b = getBox();
+          b.textContent = '❌ JS Error: ' + (e.message || e) + ' (' + (e.filename || 'unknown') + ':' + (e.lineno || '0') + ')';
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+          var b = getBox();
+          b.textContent = '❌ Promise Rejection: ' + (e.reason ? (e.reason.message || e.reason.stack || e.reason) : e);
+        });
+      })();
+    </script>
   </head>
   <body class="bg-[#0b0c0e] text-[#e8e6e1] antialiased selection:bg-[#c49750] selection:text-black font-sans">
     <!-- Netlify form detection placeholder -->
@@ -197,7 +219,16 @@
       </div>
 
       <!-- Live React Mount Root (Inside body) -->
-      <div id="root"></div>
+      <div id="root">
+        <div id="root-static-fallback" style="min-height:90vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;">
+          <h1 style="font-size:32px;font-family:Georgia,serif;letter-spacing:0.12em;text-transform:uppercase;color:#fbf9f5;margin-bottom:8px;font-weight:normal;">
+            Abdellah Lasri
+          </h1>
+          <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#c49750;">
+            Beyond Magic · Masterclasses & Vocal Coaching
+          </p>
+        </div>
+      </div>
 
     <script>
       window.__dismissShell = function() {

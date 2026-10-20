@@ -194,10 +194,19 @@ function portraitUploadPlugin(): Plugin {
   };
 }
 
+function noCrossOriginPlugin() {
+  return {
+    name: 'no-crossorigin',
+    transformIndexHtml(html: string) {
+      return html.replace(/ crossorigin(?:="[^"]*")?/g, '');
+    },
+  };
+}
+
 export default defineConfig(({ command }) => {
   return {
     base: command === 'build' ? './' : '/',
-    plugins: [react(), tailwindcss(), portraitUploadPlugin()],
+    plugins: [react(), tailwindcss(), portraitUploadPlugin(), noCrossOriginPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(rootDir, '.'),
