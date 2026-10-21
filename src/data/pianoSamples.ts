@@ -25,8 +25,37 @@ export const PIANO_SAMPLES: Record<string, string> = {
 const bufferCache: Map<string, AudioBuffer> = new Map();
 const inFlightPromises: Map<string, Promise<AudioBuffer | null>> = new Map();
 
+const NOTE_TO_SEMITONE: Record<string, number> = {
+  'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
+  'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
+  'A#': 10, 'Bb': 10, 'B': 11
+};
+
+function parseNoteToMidi(note: string): number {
+  const match = note.match(/^([A-G][b#]?)([0-9])$/);
+  if (!match) return 60;
+  const name = match[1];
+  const octave = parseInt(match[2], 10);
+  return (octave + 1) * 12 + (NOTE_TO_SEMITONE[name] ?? 0);
+}
+
+function findNearestSampledNote(targetMidi: number): string {
+  const keys = Object.keys(PIANO_SAMPLES);
+  let closest = keys[0];
+  let minDiff = 999;
+  for (const k of keys) {
+    const diff = Math.abs(parseNoteToMidi(k) - targetMidi);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = k;
+    }
+  }
+  return closest;
+}
+
 /**
- * Decodes a base64 MP3 piano sample into an AudioBuffer with robust browser compatibility
+ * Decodes a base64 MP3 piano sample into an AudioBuffer with robust browser compatibility,
+ * and seamlessly pitch-shifts any missing notes using OfflineAudioContext (0 extra data bytes).
  */
 export async function getPianoNoteBuffer(ctx: AudioContext, note: string): Promise<AudioBuffer | null> {
   if (bufferCache.has(note)) {
@@ -36,55 +65,99 @@ export async function getPianoNoteBuffer(ctx: AudioContext, note: string): Promi
     return inFlightPromises.get(note)!;
   }
 
-  const dataUri = PIANO_SAMPLES[note];
-  if (!dataUri) return null;
-
-  const decodePromise = new Promise<AudioBuffer | null>((resolve) => {
-    try {
-      const base64 = dataUri.split(",")[1];
-      const binaryString = window.atob(base64);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const arrayBuffer = bytes.buffer.slice(0);
-
-      let isDone = false;
-      const onSuccess = (decoded: AudioBuffer) => {
-        if (!isDone) {
-          isDone = true;
-          bufferCache.set(note, decoded);
-          inFlightPromises.delete(note);
-          resolve(decoded);
-        }
-      };
-      const onError = (err: unknown) => {
-        if (!isDone) {
-          isDone = true;
-          inFlightPromises.delete(note);
-          console.warn("Failed to decode piano note " + note, err);
-          resolve(null);
-        }
-      };
-
+  // 1. If note is directly sampled, decode it
+  if (PIANO_SAMPLES[note]) {
+    const dataUri = PIANO_SAMPLES[note];
+    const decodePromise = new Promise<AudioBuffer | null>((resolve) => {
       try {
-        const result = ctx.decodeAudioData(arrayBuffer, onSuccess, onError);
-        if (result && typeof result.then === "function") {
-          result.then(onSuccess).catch(onError);
+        const base64 = dataUri.split(",")[1];
+        const binaryString = window.atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
         }
-      } catch (callErr) {
-        onError(callErr);
-      }
-    } catch (err) {
-      inFlightPromises.delete(note);
-      console.warn("Error preparing piano sample for " + note, err);
-      resolve(null);
-    }
-  });
+        const arrayBuffer = bytes.buffer.slice(0);
 
-  inFlightPromises.set(note, decodePromise);
-  return decodePromise;
+        let isDone = false;
+        const onSuccess = (decoded: AudioBuffer) => {
+          if (!isDone) {
+            isDone = true;
+            bufferCache.set(note, decoded);
+            inFlightPromises.delete(note);
+            resolve(decoded);
+          }
+        };
+        const onError = (err: unknown) => {
+          if (!isDone) {
+            isDone = true;
+            inFlightPromises.delete(note);
+            console.warn("Failed to decode piano note " + note, err);
+            resolve(null);
+          }
+        };
+
+        try {
+          const result = ctx.decodeAudioData(arrayBuffer, onSuccess, onError);
+          if (result && typeof result.then === "function") {
+            result.then(onSuccess).catch(onError);
+          }
+        } catch (callErr) {
+          onError(callErr);
+        }
+      } catch (err) {
+        inFlightPromises.delete(note);
+        console.warn("Error preparing piano sample for " + note, err);
+        resolve(null);
+      }
+    });
+
+    inFlightPromises.set(note, decodePromise);
+    return decodePromise;
+  }
+
+  // 2. Note not in base sample set: pitch-shift from nearest sampled note (0 bytes preloaded)
+  const targetMidi = parseNoteToMidi(note);
+  const baseNote = findNearestSampledNote(targetMidi);
+  const baseBuffer = await getPianoNoteBuffer(ctx, baseNote);
+  if (!baseBuffer) return null;
+
+  const semitoneDiff = targetMidi - parseNoteToMidi(baseNote);
+  if (semitoneDiff === 0) {
+    bufferCache.set(note, baseBuffer);
+    return baseBuffer;
+  }
+
+  const shiftPromise = (async () => {
+    try {
+      const rate = Math.pow(2, semitoneDiff / 12);
+      const newLength = Math.max(1, Math.round(baseBuffer.length / rate));
+      const OfflineAudio = window.OfflineAudioContext || (window as unknown as { webkitOfflineAudioContext: typeof OfflineAudioContext }).webkitOfflineAudioContext;
+      const offlineCtx = new OfflineAudio(
+        baseBuffer.numberOfChannels,
+        newLength,
+        baseBuffer.sampleRate
+      );
+      const srcNode = offlineCtx.createBufferSource();
+      srcNode.buffer = baseBuffer;
+      srcNode.playbackRate.value = rate;
+      srcNode.connect(offlineCtx.destination);
+      srcNode.start(0);
+
+      const pitched = await offlineCtx.startRendering();
+      bufferCache.set(note, pitched);
+      inFlightPromises.delete(note);
+      return pitched;
+    } catch (err) {
+      console.warn("Pitch-shift fallback for note " + note, err);
+      bufferCache.set(note, baseBuffer);
+      inFlightPromises.delete(note);
+      return baseBuffer;
+    }
+  })();
+
+  inFlightPromises.set(note, shiftPromise);
+  return shiftPromise;
 }
 
 /**

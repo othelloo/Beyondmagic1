@@ -56,23 +56,23 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     musicalReferences: 'Opening of Beethoven Symphony No. 5 finale, traditional hymn resolutions, clean acoustic anthems.',
   },
   {
-    id: 'c-maj7',
-    name: 'Cmaj7',
+    id: 'eb-maj7',
+    name: 'E♭maj7',
     voicingLabel: 'Root · Major 3rd · 5th · Leading Major 7th',
     archetype: 'Luminescent Nostalgia & Bittersweet Longing',
     archetypeDe: 'Luminiszierende Sehnsucht & Nostalgie',
-    frequencies: [130.81, 164.81, 196.00, 246.94], // C3, E3, G3, B3
-    notes: ['C3', 'E3', 'G3', 'B3'],
+    frequencies: [155.56, 196.00, 233.08, 293.66], // Eb3, G3, Bb3, D4
+    notes: ['Eb3', 'G3', 'Bb3', 'D4'],
     color: '#a78bfa',
     bgGlow: 'rgba(167, 139, 250, 0.18)',
     tensionPercentage: 35,
     tensionLabel: 'Tender Floating (35% Tension)',
     tensionLabelDe: 'Zartes Schweben (35% Spannung)',
-    emotionalFeeling: 'The B-natural hovers a semitone below the octave, like looking at an old photograph with a warm, wistful smile. It smiles with a tear.',
-    emotionalFeelingDe: 'Das H schwebt einen Halbton unter der Oktave – wie der Blick auf ein altes Foto mit einem wehmütigen, warmen Lächeln.',
-    acousticPhenomenon: 'The gentle clash between the deep root C and the major 7th B creates a luminous harmonic shimmer without harshness.',
-    acousticPhenomenonDe: 'Die feine Reibung zwischen Grundton C und der großen Septime H erzeugt ein silbriges Flirren ohne jede Härte.',
-    musicalReferences: 'Debussy (Clair de lune), Ravel, Bill Evans, Brazilian Bossa Nova (Jobim), modern dream-pop.',
+    emotionalFeeling: 'Looking at an old photograph with a warm, wistful smile. The high major 7th (D) hovers a semitone below the E♭ octave, smiling through tears.',
+    emotionalFeelingDe: 'Der Blick auf ein altes Foto mit einem wehmütigen Lächeln. Die große Septime (D) schwebt zart unter der Es-Oktave und lächelt durch Tränen.',
+    acousticPhenomenon: 'The velvet clash between deep bass E♭ and ethereal leading tone D generates a luminous harmonic shimmer without harshness.',
+    acousticPhenomenonDe: 'Die feine Reibung zwischen Grundton Es und der großen Septime D erzeugt ein silbriges Flirren ohne jede Härte.',
+    musicalReferences: 'Debussy (Clair de lune), Ravel (Daphnis), Bill Evans, Brazilian Bossa Nova (Jobim), modern dream-pop.',
   },
   {
     id: 'a-min9',
@@ -113,61 +113,61 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     musicalReferences: 'Verdi & Puccini cadences, Motown gospel turnarounds, classical symphonic climaxes, blues turnarounds.',
   },
   {
-    id: 'c-min6',
-    name: 'Cm6 / Minor 6th',
-    voicingLabel: 'Minor 3rd · Perfect 5th · Major 6th',
+    id: 'd-min6',
+    name: 'Dm6 / Minor 6th',
+    voicingLabel: 'Root · Minor 3rd · Perfect 5th · Major 6th',
     archetype: 'Noble Tragic Pathos & Autumnal Elegance',
     archetypeDe: 'Edles Pathos & Herbstliche Melancholie',
-    frequencies: [130.81, 155.56, 196.00, 220.00], // C3, Eb3, G3, A3
-    notes: ['C3', 'Eb3', 'G3', 'A3'],
+    frequencies: [146.83, 174.61, 220.00, 246.94], // D3, F3, A3, B3
+    notes: ['D3', 'F3', 'A3', 'B3'],
     color: '#ec4899',
     bgGlow: 'rgba(236, 72, 153, 0.18)',
     tensionPercentage: 65,
     tensionLabel: 'Bittersweet Descent (65% Tension)',
     tensionLabelDe: 'Herbe Melancholie (65% Spannung)',
-    emotionalFeeling: 'A heavy sigh. The major 6th against the minor third creates the bittersweet nobility of classic European tragedy.',
-    emotionalFeelingDe: 'Ein tiefer Seufzer. Die große Sexte gegen die kleine Terz erzeugt jenen herben, vornehmen Schmerz europäischer Tragödien.',
-    acousticPhenomenon: 'The acoustic collision of minor third and major sixth echoes the Dorian vocal color, familiar in ancient modal chant.',
-    acousticPhenomenonDe: 'Der akustische Kontrast aus Mollterz und großer Sexte spiegelt die dorische Stimmfarbe wider.',
-    musicalReferences: 'Fauré & Duparc mélodies, Ennio Morricone film themes, Puccini (La Bohème act IV), Django Reinhardt jazz.',
+    emotionalFeeling: 'A profound operatic sigh in classic D-minor pathos. The natural 6th (B) against the minor 3rd (F) creates the bittersweet nobility of classic European tragedy.',
+    emotionalFeelingDe: 'Ein tiefer Seufzer in edlem d-Moll-Opernpathos. Die große Sexte (H) gegen die Mollterz (F) erzeugt jenen herben, vornehmen Schmerz europäischer Tragödien.',
+    acousticPhenomenon: 'The acoustic collision of minor third and Dorian major sixth echoes the ancient modal vocal color in sacred and theatrical tradition.',
+    acousticPhenomenonDe: 'Der akustische Kontrast aus Mollterz und dorischer großer Sexte spiegelt die ausdrucksvolle Stimmfarbe alter Moden wider.',
+    musicalReferences: 'Fauré (Élégie) & Duparc mélodies, Ennio Morricone film themes, Puccini (La Bohème act IV), Django Reinhardt jazz.',
   },
   {
-    id: 'c-aug',
-    name: 'Caug (Augmented)',
+    id: 'e-aug',
+    name: 'Eaug (Augmented)',
     voicingLabel: 'Root · Major 3rd · Augmented 5th (Symmetrical)',
     archetype: 'Zero Gravity & Dreamlike Dissolution',
     archetypeDe: 'Schwerelosigkeit & Traumhafte Auflösung',
-    frequencies: [130.81, 164.81, 207.65], // C3, E3, Ab3
-    notes: ['C3', 'E3', 'Ab3'],
+    frequencies: [164.81, 207.65, 261.63], // E3, Ab3, C4
+    notes: ['E3', 'Ab3', 'C4'],
     color: '#10b981',
     bgGlow: 'rgba(16, 185, 129, 0.18)',
     tensionPercentage: 75,
     tensionLabel: 'Suspended Levitation (75% Tension)',
     tensionLabelDe: 'Schwebende Levitation (75% Spannung)',
     emotionalFeeling: 'Disorientation, vertigo, waking up inside a dream. The boundaries of tonality blur because there is no natural anchor.',
-    emotionalFeelingDe: 'Orientierungslosigkeit, Schwindel, Aufwachen in einem Traum. Die tonalen Grenzen lösen sich auf.',
+    emotionalFeelingDe: 'Orientierungslosigkeit, Schwindel, Aufwachen in einem Traum. Die tonalen Grenzen lösen sich auf, weil kein Gravitationsanker existiert.',
     acousticPhenomenon: 'Symmetrical major thirds (whole-tone structure) eliminate gravitational polarity, depriving the ear of any single tonal center.',
     acousticPhenomenonDe: 'Symmetrische große Terzen heben die tonale Polarität auf; das Ohr verliert jeden festen Boden.',
     musicalReferences: 'Debussy (Voiles), Stevie Wonder, film transitions depicting hypnotism or altered states of consciousness.',
   },
   {
-    id: 'c-dim-min7',
-    name: 'Cø7 (Dim. + m7)',
+    id: 'b-dim-min7',
+    name: 'Bø7 (Tristan Chord)',
     voicingLabel: 'Root · Minor 3rd · Diminished 5th · Minor 7th',
     archetype: 'The Tristan Ache & Tragic Yearning',
     archetypeDe: 'Tristan-Sehnsucht & Tragische Tiefe',
-    frequencies: [130.81, 155.56, 185.00, 233.08], // C3, Eb3, Gb3, Bb3
-    notes: ['C3', 'Eb3', 'Gb3', 'Bb3'],
+    frequencies: [123.47, 146.83, 174.61, 220.00], // B2, D3, F3, A3
+    notes: ['B2', 'D3', 'F3', 'A3'],
     color: '#818cf8',
     bgGlow: 'rgba(129, 140, 248, 0.20)',
     tensionPercentage: 84,
     tensionLabel: 'Urgent Yearning (84% Tension)',
     tensionLabelDe: 'Dringliche Sehnsucht (84% Spannung)',
-    emotionalFeeling: 'A bittersweet ache suspended between dark friction and aching vulnerability. The tritone and minor 7th pull together with visceral, unresolved longing.',
-    emotionalFeelingDe: 'Ein bittersüßer Schmerz zwischen tritonischer Reibung und zerbrechlicher Verwundbarkeit. Der Klang schwebt unaufgelöst und berührt das Herz unmittelbar.',
-    acousticPhenomenon: 'A diminished triad paired with a minor seventh (half-diminished): the internal tritone (C-Gb) and minor intervals create deep, asymmetric gravitational pull.',
-    acousticPhenomenonDe: 'Ein verminderter Dreiklang mit kleiner Septime: Der interne Tritonus (C-Ges) und die Moll-Intervalle erzeugen einen asymmetrischen, sehnsuchtsvollen Gravitationssog.',
-    musicalReferences: 'Wagner (Tristan und Isolde Prelude - the Tristan Chord), Chopin (Ballades & Nocturnes), Ravel (Pavane), Wayne Shorter, classic jazz ii-V minor cadences.',
+    emotionalFeeling: 'The authentic archetype of Wagner\'s Tristan und Isolde. Suspended between dark tritone friction (B–F) and aching minor 7th vulnerability, it pulls with visceral, unresolved longing.',
+    emotionalFeelingDe: 'Der authentische Archetyp aus Wagners Tristan und Isolde. Schwebend zwischen dunkler Tritonus-Reibung (H–F) und zerbrechlicher Mollseptimen-Sehnsucht berührt er das Herz unmittelbar.',
+    acousticPhenomenon: 'A half-diminished seventh chord: the internal tritone (B–F) and minor intervals create deep, asymmetric gravitational pull toward resolution.',
+    acousticPhenomenonDe: 'Ein halbverminderter Septakkord: Der interne Tritonus (H–F) und die Moll-Intervalle erzeugen einen asymmetrischen, sehnsuchtsvollen Gravitationssog.',
+    musicalReferences: 'Wagner (Tristan und Isolde Prelude - the Tristan Chord), Chopin (Ballades & Nocturnes), Ravel (Pavane), Wayne Shorter, classic jazz iiø–V minor cadences.',
   }
 ];
 
@@ -175,7 +175,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const { language, t } = useLanguage();
   const isDe = language === 'de';
 
-  const [activeChordId, setActiveChordId] = useState<string>('c-maj7');
+  const [activeChordId, setActiveChordId] = useState<string>('eb-maj7');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [soundMode, setSoundMode] = useState<'piano' | 'synth'>('piano');
 

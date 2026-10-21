@@ -32,6 +32,27 @@ export const Hero: React.FC<HeroProps> = ({
         
         {/* Left Column: Picture on the Left (Clean uncropped photo without frame) */}
         <div className="lg:col-span-5 xl:col-span-5 flex flex-col items-center lg:items-start order-1">
+          
+          {/* Mobile & Tablet Golden Letters: Displayed ON TOP of the picture (< lg) */}
+          {/* Mobile view (< sm): Two lines, centered with no dash after first line */}
+          <div className="flex sm:hidden lg:hidden flex-col items-center justify-center text-center text-xs tracking-[0.20em] uppercase text-[#c49750] font-medium mb-5 gap-1.5 w-full">
+            <span>{t.hero.badge[0]}</span>
+            <div className="flex items-center justify-center gap-2">
+              <span>{t.hero.badge[1]}</span>
+              <span aria-hidden="true" className="opacity-40">-</span>
+              <span>{t.hero.badge[2]}</span>
+            </div>
+          </div>
+
+          {/* Tablet view (sm to lg): One clean line centered on top of picture */}
+          <div className="hidden sm:flex lg:hidden items-center justify-center gap-2.5 text-xs md:text-sm tracking-[0.22em] uppercase text-[#c49750] font-medium mb-5 text-center w-full">
+            <span>{t.hero.badge[0]}</span>
+            <span aria-hidden="true" className="opacity-40">-</span>
+            <span>{t.hero.badge[1]}</span>
+            <span aria-hidden="true" className="opacity-40">-</span>
+            <span>{t.hero.badge[2]}</span>
+          </div>
+
           <div className="w-full max-w-lg lg:max-w-none">
             {/* Uncropped Photo: Exact 630 / 454 Proportion without frame */}
             <div className="relative rounded-xl overflow-hidden bg-[#0c0e12] shadow-2xl">
@@ -59,8 +80,8 @@ export const Hero: React.FC<HeroProps> = ({
         {/* Right Column: Text content (Centered Logo & Artist Pedagogy) */}
         <div className="lg:col-span-7 xl:col-span-7 flex flex-col justify-center text-left order-2">
           
-          {/* Golden Letters Above Logo & Name */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs md:text-sm tracking-[0.22em] uppercase text-[#c49750] font-medium mb-4 text-left">
+          {/* PC Desktop view (>= lg): Centered in one clean line on top of Logo & Name */}
+          <div className="hidden lg:flex items-center justify-center gap-2.5 text-xs md:text-sm tracking-[0.22em] uppercase text-[#c49750] font-medium mb-4 text-center max-w-2xl lg:max-w-3xl w-full">
             <span>{t.hero.badge[0]}</span>
             <span aria-hidden="true" className="opacity-40">-</span>
             <span>{t.hero.badge[1]}</span>
@@ -74,7 +95,7 @@ export const Hero: React.FC<HeroProps> = ({
               
               {/* Zone 1 (Left): Logo Centered in its own zone */}
               <div className="w-full flex items-center justify-center">
-                <div className="w-full max-w-[155px] sm:max-w-[210px] md:max-w-[240px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
+                <div className="w-full max-w-[195px] xs:max-w-[210px] sm:max-w-[210px] md:max-w-[240px] lg:max-w-[260px] transform hover:scale-[1.02] transition-transform duration-300">
                   <BeyondMagicItem
                     withCircle={false}
                     useMetallic3D={false}
@@ -97,9 +118,9 @@ export const Hero: React.FC<HeroProps> = ({
                 aria-hidden="true" 
               />
 
-              {/* Zone 2 (Right): Artist Name Centered in its own zone - commanding scale on phone and tablet */}
+              {/* Zone 2 (Right): Artist Name Centered in its own zone */}
               <div className="w-full flex items-center justify-center text-center">
-                <h1 className="font-serif text-[34px] sm:text-[34px] md:text-[38px] lg:text-[42px] xl:text-[45px] uppercase tracking-[0.14em] text-[#fbf9f5] font-normal leading-[1.08] text-center">
+                <h1 className="font-serif text-[30px] xs:text-[32px] sm:text-[34px] md:text-[38px] lg:text-[42px] xl:text-[45px] uppercase tracking-[0.14em] text-[#fbf9f5] font-normal leading-[1.08] text-center">
                   <span className="block">Abdellah</span>
                   <span className="block">Lasri</span>
                 </h1>

@@ -25,7 +25,7 @@ export const BeyondMagicNavbarLogo: React.FC<BeyondMagicNavbarLogoProps> = ({ cl
         useMetallic3D={false}
         showName={false}
         centered={true}
-        className={className || "h-[60px] sm:h-[68px] w-auto max-w-[220px] sm:max-w-[260px]"}
+        className={className || "h-[36px] sm:h-[42px] md:h-[44px] lg:h-[48px] xl:h-[50px] w-auto max-w-[140px] sm:max-w-[170px] lg:max-w-[200px]"}
         style={{ aspectRatio: '560 / 240' }}
       />
     </div>

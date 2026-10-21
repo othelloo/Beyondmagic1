@@ -90,9 +90,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenInquiry, onOpenSpiritualit
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-2 sm:py-2.5 shadow-2xl transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-40 bg-[#0b0c0e]/95 backdrop-blur-md border-b border-[#23262d] py-1.5 sm:py-2 shadow-2xl transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4 lg:gap-6">
         {/* Left Side: Logo */}
         <a
           href="#"
