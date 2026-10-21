@@ -237,6 +237,31 @@
           <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:#c49750;margin-bottom:20px;">
             Beyond Magic · Masterclasses & Vocal Coaching
           </p>
+
+          <noscript>
+            <div style="margin:16px auto;padding:16px 20px;background:rgba(220,38,38,0.18);border:1px solid #ef4444;border-radius:12px;color:#fca5a5;font-size:13px;max-width:340px;line-height:1.5;text-align:left;">
+              <div style="color:#ffffff;font-weight:bold;margin-bottom:6px;">
+                ⚠️ JavaScript Blocked in Brave Shields
+              </div>
+              <p style="margin:0 0 8px 0;font-size:12px;color:#fecaca;">
+                Brave Shields has script blocking turned on for this site:
+              </p>
+              <ol style="margin:0;padding-left:18px;font-size:12px;color:#fecaca;line-height:1.6;">
+                <li>Tap the <strong>Lion icon</strong> in your Brave address bar.</li>
+                <li>Turn <strong>Block Scripts</strong> to <strong>OFF</strong>.</li>
+                <li>Refresh to load the studio masterclasses.</li>
+              </ol>
+            </div>
+          </noscript>
+
+          <button
+            id="manual-enter-btn"
+            onclick="if(window.__manualMount){window.__manualMount();}else{window.location.reload();}"
+            style="display:inline-block;margin-bottom:16px;padding:10px 24px;background:#c49750;color:#000000;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;border-radius:30px;border:none;cursor:pointer;"
+          >
+            Enter Studio Experience
+          </button>
+
           <div id="boot-diagnostics" style="display:inline-block;padding:8px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(196,151,80,0.3);border-radius:20px;font-size:11px;color:#c49750;font-family:monospace;max-width:90%;">
             <span id="boot-status">Initializing application...</span>
           </div>

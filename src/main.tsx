@@ -102,6 +102,11 @@ function mountApp() {
   }
 }
 
+if (typeof window !== 'undefined') {
+  (window as unknown as { __manualMount?: () => void }).__manualMount = mountApp;
+  window.addEventListener('load', mountApp, { once: true });
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', mountApp, { once: true });
 } else {

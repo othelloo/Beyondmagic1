@@ -198,7 +198,14 @@ function noCrossOriginPlugin() {
   return {
     name: 'no-crossorigin',
     transformIndexHtml(html: string) {
-      return html.replace(/ crossorigin(?:="[^"]*")?/g, '');
+      let clean = html.replace(/ crossorigin(?:="[^"]*")?/g, '');
+      // Move script tag to end of body so DOM is guaranteed ready before module runs
+      const scriptMatch = clean.match(/<script type="module" src="\.\/assets\/index-[^"]+\.js"><\/script>/);
+      if (scriptMatch) {
+        clean = clean.replace(scriptMatch[0], '');
+        clean = clean.replace('</body>', `  ${scriptMatch[0]}\n  </body>`);
+      }
+      return clean;
     },
   };
 }
