@@ -57,54 +57,54 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, Er
   }
 }
 
+let reactRoot: ReturnType<typeof createRoot> | null = null;
+
 function mountApp() {
   const rootElement = document.getElementById('root');
-  if (rootElement) {
-    try {
-      if (typeof window !== 'undefined') {
-        const win = window as unknown as { __reactMounted?: boolean; __dismissShell?: () => void; __updateBoot?: (msg: string) => void };
-        win.__reactMounted = true;
-        if (typeof win.__updateBoot === 'function') {
-          win.__updateBoot('Rendering interactive view...');
-        }
-        const banner = document.getElementById('brave-debug-banner');
-        if (banner && banner.style.background.includes('b45309')) {
-          banner.remove();
-        }
-      }
-      rootElement.innerHTML = '';
-      createRoot(rootElement).render(
+  if (!rootElement) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mountApp, { once: true });
+    }
+    return;
+  }
+
+  try {
+    if (reactRoot) {
+      // Container is already mounted, re-render without recreating root
+      reactRoot.render(
         <AppErrorBoundary>
           <App />
         </AppErrorBoundary>
       );
-      if (typeof window !== 'undefined') {
-        const win = window as unknown as { __dismissShell?: () => void };
-        if (typeof win.__dismissShell === 'function') {
-          win.__dismissShell();
-        }
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      const win = window as unknown as { __reactMounted?: boolean; __dismissShell?: () => void };
+      win.__reactMounted = true;
+    }
+
+    rootElement.innerHTML = '';
+    reactRoot = createRoot(rootElement);
+    reactRoot.render(
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    );
+
+    if (typeof window !== 'undefined') {
+      const win = window as unknown as { __dismissShell?: () => void };
+      if (typeof win.__dismissShell === 'function') {
+        win.__dismissShell();
       }
-    } catch (err) {
-      console.error('Fatal mount error:', err);
-      const banner = document.getElementById('brave-debug-banner') || document.createElement('div');
-      banner.id = 'brave-debug-banner';
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999999;background:#991b1b;color:#fff;padding:16px;font-family:monospace;font-size:12px;';
-      banner.textContent = '❌ React Mount Exception: ' + ((err as Error)?.message || String(err));
-      document.body.appendChild(banner);
     }
-  } else {
-    // Retry as soon as DOM finishes loading
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', mountApp, { once: true });
-    } else {
-      setTimeout(mountApp, 25);
-    }
+  } catch (err) {
+    console.error('Mount error:', err);
   }
 }
 
 if (typeof window !== 'undefined') {
   (window as unknown as { __manualMount?: () => void }).__manualMount = mountApp;
-  window.addEventListener('load', mountApp, { once: true });
 }
 
 if (document.readyState === 'loading') {
