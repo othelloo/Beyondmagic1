@@ -14,6 +14,7 @@ import {
   Wind
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveAssetUrl } from '../utils/assetPath';
 import pianoStudioMicImg from '../assets/images/piano_studio_mic_1792754629403.jpg';
 
 interface ContemporaryVocalCoachingProps {
@@ -140,28 +141,38 @@ export const ContemporaryVocalCoaching: React.FC<ContemporaryVocalCoachingProps>
           <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
             
             {/* Visual Column: Grand Piano Keys leading into deep Bokeh with Studio Condenser Mic */}
-            <div className="lg:col-span-6 relative min-h-[300px] sm:min-h-[400px] lg:min-h-[520px] overflow-hidden group">
-              <img
-                src={pianoStudioMicImg}
-                alt="Grand piano keys leading into soft bokeh with a studio condenser microphone on shockmount"
-                className="w-full h-full object-cover object-center lg:object-left-center transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                loading="eager"
-                referrerPolicy="no-referrer"
-              />
+            <div className="lg:col-span-6 relative w-full overflow-hidden group bg-[#0e111a] flex flex-col justify-center">
+              <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:h-full lg:min-h-[520px]">
+                <img
+                  src={resolveAssetUrl('/images/piano_studio_mic.jpg')}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== pianoStudioMicImg) {
+                      target.src = pianoStudioMicImg;
+                    }
+                  }}
+                  alt="Grand piano keys leading into soft bokeh with a studio condenser microphone on shockmount"
+                  width={1280}
+                  height={720}
+                  decoding="async"
+                  fetchPriority="high"
+                  className="w-full h-full object-cover object-center lg:object-left-center block filter contrast-[1.03] transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+                />
 
-              {/* Seamless atmospheric scrims */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#10121a] via-transparent to-transparent lg:hidden" />
-              <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#10121a]" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#0b0c0e]/30 via-transparent to-[#0b0c0e]/40 pointer-events-none" />
+                {/* Seamless atmospheric scrims */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#10121a] via-transparent to-transparent lg:hidden pointer-events-none" />
+                <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#10121a] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0b0c0e]/30 via-transparent to-[#0b0c0e]/40 pointer-events-none" />
 
-              {/* Lens caption badge */}
-              <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-[#dcd7cb]">
-                <Headphones className="w-3.5 h-3.5 text-[#c49750]" />
-                <span>
-                  {isDe 
-                    ? 'Aerodynamische Stabilität · Volle Vokalfreiheit' 
-                    : 'Aerodynamic Stability · Full Vocal Freedom'}
-                </span>
+                {/* Lens caption badge */}
+                <div className="absolute bottom-3 left-3 sm:bottom-5 sm:left-5 z-10 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-[#dcd7cb]">
+                  <Headphones className="w-3.5 h-3.5 text-[#c49750]" />
+                  <span>
+                    {isDe 
+                      ? 'Aerodynamische Stabilität · Volle Vokalfreiheit' 
+                      : 'Aerodynamic Stability · Full Vocal Freedom'}
+                  </span>
+                </div>
               </div>
             </div>
 
