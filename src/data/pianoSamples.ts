@@ -268,10 +268,28 @@ export async function getPianoNoteBuffer(ctx: AudioContext, note: string): Promi
 }
 
 /**
+ * Returns decoded AudioBuffer and exact playbackRate for any arbitrary frequency in Hz.
+ * Enables microtonal tuning, continuous transposition, and ear-training pitch shifts
+ * with zero additional samples and zero network load.
+ */
+export async function getPianoFrequencyInfo(ctx: AudioContext, frequency: number): Promise<PianoNotePlaybackInfo | null> {
+  const targetMidi = Math.round(12 * Math.log2(Math.max(20, frequency) / 440) + 69);
+  const baseNote = findNearestSampledNote(targetMidi);
+  const baseMidi = parseNoteToMidi(baseNote);
+  const baseFreq = 440 * Math.pow(2, (baseMidi - 69) / 12);
+  const playbackRate = frequency / baseFreq;
+
+  const baseInfo = await getPianoNoteInfo(ctx, baseNote);
+  if (!baseInfo) return null;
+  return { buffer: baseInfo.buffer, playbackRate };
+}
+
+/**
  * Pre-decodes all piano notes into memory so first click is instantaneous
  */
 export async function preloadAllPianoSamples(ctx: AudioContext): Promise<void> {
   const notes = Object.keys(PIANO_SAMPLES);
   await Promise.all(notes.map((note) => getPianoNoteInfo(ctx, note)));
 }
+
 
