@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Activity } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 
 // Dynamic module loader for acoustic piano samples (decouples 503KB base64 audio from initial bundle)
 let pianoSamplesModule: typeof import('../data/pianoSamples') | null = null;
@@ -176,16 +177,21 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const isDe = language === 'de';
 
   const [activeChordId, setActiveChordId] = useState<string>('eb-maj7');
+  const [heldChordId, setHeldChordId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [soundMode, setSoundMode] = useState<'piano' | 'synth'>('piano');
+  const [somaticAwareness, setSomaticAwareness] = useState<boolean>(true);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
   const activeOscillatorsRef = useRef<OscillatorNode[]>([]);
   const masterGainRef = useRef<GainNode | null>(null);
-  const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const damperGainRef = useRef<GainNode | null>(null);
+  const pedalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTriggerTimeRef = useRef<number>(0);
+  const stopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pressStartTimeRef = useRef<number>(0);
+  const heldChordIdRef = useRef<string | null>(null);
 
   const selectedChord = CHORD_PALETTE.find((c) => c.id === activeChordId) || CHORD_PALETTE[1];
 
@@ -225,68 +231,8 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     };
   }, [getAudioContext]);
 
-  const stopAudio = useCallback((immediate = false) => {
-    if (stopTimeoutRef.current) {
-      clearTimeout(stopTimeoutRef.current);
-      stopTimeoutRef.current = null;
-    }
-    if (fadeTimeoutRef.current) {
-      clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = null;
-    }
-
-    const ctx = audioContextRef.current;
-    const masterGain = masterGainRef.current;
-
-    const cleanupNodes = () => {
-      activeSourcesRef.current.forEach((src) => {
-        try {
-          src.stop();
-          src.disconnect();
-        } catch (_) {}
-      });
-      activeSourcesRef.current = [];
-
-      activeOscillatorsRef.current.forEach((osc) => {
-        try {
-          osc.stop();
-          osc.disconnect();
-        } catch (_) {}
-      });
-      activeOscillatorsRef.current = [];
-      setIsPlaying(false);
-    };
-
-    if (immediate || !ctx || !masterGain) {
-      cleanupNodes();
-      return;
-    }
-
-    try {
-      const now = ctx.currentTime;
-      masterGain.gain.cancelScheduledValues(now);
-      masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
-    } catch (_) {}
-
-    fadeTimeoutRef.current = setTimeout(() => {
-      cleanupNodes();
-      fadeTimeoutRef.current = null;
-    }, 130);
-  }, []);
-
-  const playChord = useCallback(async (chord: ChordPaletteItem, mode = soundMode) => {
-    // If a previous fadeout was scheduled, cancel it immediately so it doesn't kill the new note!
-    if (fadeTimeoutRef.current) {
-      clearTimeout(fadeTimeoutRef.current);
-      fadeTimeoutRef.current = null;
-    }
-    if (stopTimeoutRef.current) {
-      clearTimeout(stopTimeoutRef.current);
-      stopTimeoutRef.current = null;
-    }
-
-    // Immediately stop running audio nodes before starting the new chord
+  // Clean up all active audio nodes safely
+  const cleanupNodes = useCallback(() => {
     activeSourcesRef.current.forEach((src) => {
       try {
         src.stop();
@@ -303,55 +249,199 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     });
     activeOscillatorsRef.current = [];
 
+    if (damperGainRef.current) {
+      try {
+        damperGainRef.current.disconnect();
+      } catch (_) {}
+      damperGainRef.current = null;
+    }
+    if (masterGainRef.current) {
+      try {
+        masterGainRef.current.disconnect();
+      } catch (_) {}
+      masterGainRef.current = null;
+    }
+
+    setIsPlaying(false);
+  }, []);
+
+  // Pianist Physical Model:
+  // When a chord is released, the keys are released, but the right sustain pedal remains pushed.
+  // The pedal stops being pushed in 3 cases:
+  // 1. User stops the sound using the website key to stop
+  // 2. Another chord is played
+  // 3. Exactly 6 seconds after release
+  const releaseChord = useCallback((chordId?: string) => {
+    if (chordId && heldChordIdRef.current && heldChordIdRef.current !== chordId) {
+      return;
+    }
+    if (!heldChordIdRef.current) {
+      return;
+    }
+    heldChordIdRef.current = null;
+    setHeldChordId(null);
+
+    // Cancel any previous pedal release timer
+    if (pedalTimerRef.current) {
+      clearTimeout(pedalTimerRef.current);
+      pedalTimerRef.current = null;
+    }
+
+    // After release, the right pedal continues holding the open strings for exactly 6 seconds
+    pedalTimerRef.current = setTimeout(() => {
+      pedalTimerRef.current = null;
+      const ctx = audioContextRef.current;
+      const damperGain = damperGainRef.current;
+
+      if (!ctx || !damperGain) {
+        cleanupNodes();
+        return;
+      }
+
+      try {
+        const now = ctx.currentTime;
+        // 6 seconds after release: pedal is released, dampers drop onto strings,
+        // fading the lingering resonance smoothly to silence over 1.8s
+        damperGain.gain.cancelScheduledValues(now);
+        damperGain.gain.setValueAtTime(1.0, now);
+        damperGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+      } catch (_) {}
+
+      fadeTimeoutRef.current = setTimeout(() => {
+        cleanupNodes();
+        fadeTimeoutRef.current = null;
+      }, 1850);
+    }, 6000);
+  }, [cleanupNodes]);
+
+  // Case 1: Stop sound immediately or with a subtle 120ms anti-pop curve
+  const stopAudio = useCallback((immediate = false) => {
+    if (pedalTimerRef.current) {
+      clearTimeout(pedalTimerRef.current);
+      pedalTimerRef.current = null;
+    }
+    if (stopTimeoutRef.current) {
+      clearTimeout(stopTimeoutRef.current);
+      stopTimeoutRef.current = null;
+    }
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+    heldChordIdRef.current = null;
+    setHeldChordId(null);
+
+    const ctx = audioContextRef.current;
+    const damperGain = damperGainRef.current;
+
+    if (immediate || !ctx || !damperGain) {
+      cleanupNodes();
+      return;
+    }
+
+    try {
+      const now = ctx.currentTime;
+      damperGain.gain.cancelScheduledValues(now);
+      damperGain.gain.setValueAtTime(1.0, now);
+      damperGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    } catch (_) {}
+
+    fadeTimeoutRef.current = setTimeout(() => {
+      cleanupNodes();
+      fadeTimeoutRef.current = null;
+    }, 140);
+  }, [cleanupNodes]);
+
+  // Case 2: When another chord in the website is played, previous chord & pedal stop and new chord begins
+  const playChord = useCallback(async (chord: ChordPaletteItem, mode = soundMode) => {
+    // If a previous pedal release or fadeout was scheduled, cancel it immediately
+    if (pedalTimerRef.current) {
+      clearTimeout(pedalTimerRef.current);
+      pedalTimerRef.current = null;
+    }
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+    if (stopTimeoutRef.current) {
+      clearTimeout(stopTimeoutRef.current);
+      stopTimeoutRef.current = null;
+    }
+
+    // Immediately stop running audio nodes before starting the new chord
+    cleanupNodes();
+
     try {
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') {
         await ctx.resume();
       }
 
-      const now = ctx.currentTime;
-      const masterGain = ctx.createGain();
-      masterGainRef.current = masterGain;
-
       if (mode === 'piano') {
         // High-Fidelity Steinway Grand Piano Sample Playback
-        // Immediate hammer impact, sustained acoustic resonance over 4.5s
-        masterGain.gain.setValueAtTime(0.001, now);
-        masterGain.gain.linearRampToValueAtTime(0.75, now + 0.012);
-        masterGain.gain.exponentialRampToValueAtTime(0.40, now + 1.2);
-        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 4.5);
+        let noteInfos: ({ buffer: AudioBuffer; playbackRate: number } | null)[] = [];
+        try {
+          const { getPianoNoteInfo } = await getPianoSamplesModule();
+          noteInfos = await Promise.all(
+            chord.notes.map((note) => getPianoNoteInfo(ctx, note))
+          );
+        } catch (sampleErr) {
+          console.warn('Piano sample loading error, falling back to harmonic synthesis:', sampleErr);
+        }
 
-        // Acoustic air presence filter
-        const airFilter = ctx.createBiquadFilter();
-        airFilter.type = 'lowpass';
-        airFilter.frequency.setValueAtTime(11500, now);
+        const validInfos = noteInfos.filter((info): info is { buffer: AudioBuffer; playbackRate: number } => info !== null);
 
-        masterGain.connect(airFilter);
-        airFilter.connect(ctx.destination);
+        if (validInfos.length > 0) {
+          const startTime = ctx.currentTime + 0.015;
 
-        const { getPianoNoteBuffer } = await getPianoSamplesModule();
-        const buffers = await Promise.all(
-          chord.notes.map((note) => getPianoNoteBuffer(ctx, note))
-        );
+          const masterGain = ctx.createGain();
+          masterGainRef.current = masterGain;
 
-        const hasValidBuffers = buffers.some((b) => b !== null);
-        if (hasValidBuffers) {
+          const damperGain = ctx.createGain();
+          damperGainRef.current = damperGain;
+
+          // Acoustic piano string resonance envelope: crisp hammer strike, and smooth natural 20s decay
+          masterGain.gain.setValueAtTime(0.001, startTime);
+          masterGain.gain.linearRampToValueAtTime(1.30, startTime + 0.015);
+          masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 20.0);
+
+          // Right pedal is pushed down: dampers are fully lifted (gain = 1.0)
+          damperGain.gain.setValueAtTime(1.0, startTime);
+
+          // Acoustic air presence filter
+          const airFilter = ctx.createBiquadFilter();
+          airFilter.type = 'lowpass';
+          airFilter.frequency.setValueAtTime(12000, startTime);
+
+          // Dynamics compressor to guarantee punchy loud output without digital clipping
+          const compressor = ctx.createDynamicsCompressor();
+          compressor.threshold.setValueAtTime(-2, startTime);
+          compressor.knee.setValueAtTime(6, startTime);
+          compressor.ratio.setValueAtTime(4.0, startTime);
+          compressor.attack.setValueAtTime(0.003, startTime);
+          compressor.release.setValueAtTime(0.25, startTime);
+
+          masterGain.connect(damperGain);
+          damperGain.connect(airFilter);
+          airFilter.connect(compressor);
+          compressor.connect(ctx.destination);
+
           const sources: AudioBufferSourceNode[] = [];
-          buffers.forEach((buffer, idx) => {
-            if (!buffer) return;
+          validInfos.forEach((info, idx) => {
             const source = ctx.createBufferSource();
-            source.buffer = buffer;
+            source.buffer = info.buffer;
+            source.playbackRate.setValueAtTime(info.playbackRate, startTime);
 
-            // Micro-voicing roll (12ms stagger from root to top note, human pianist touch)
-            const noteOffset = idx * 0.012;
+            // Micro-voicing roll (14ms stagger from bass root to top note, human pianist touch)
+            const noteOffset = idx * 0.014;
             const noteGain = ctx.createGain();
-            const voiceVolume = idx === 0 ? 1.0 : (idx === chord.notes.length - 1 ? 0.95 : 0.85);
-            noteGain.gain.setValueAtTime(voiceVolume, now + noteOffset);
+            const voiceVolume = idx === 0 ? 1.25 : (idx === validInfos.length - 1 ? 1.15 : 1.05);
+            noteGain.gain.setValueAtTime(voiceVolume, startTime + noteOffset);
 
             source.connect(noteGain);
             noteGain.connect(masterGain);
 
-            source.start(now + noteOffset);
+            source.start(startTime + noteOffset);
             sources.push(source);
           });
 
@@ -359,37 +449,47 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
           setIsPlaying(true);
 
           stopTimeoutRef.current = setTimeout(() => {
-            setIsPlaying(false);
-          }, 4600);
+            cleanupNodes();
+            stopTimeoutRef.current = null;
+          }, 20500);
           return;
         }
       }
 
-      // Harmonic Synthesis Mode / Warm Pure Color Waves
+      // Harmonic Synthesis Mode / Warm Pure Color Waves (Fallback or Selected)
+      const startTime = ctx.currentTime + 0.015;
+      const masterGain = ctx.createGain();
+      masterGainRef.current = masterGain;
+
+      const damperGain = ctx.createGain();
+      damperGainRef.current = damperGain;
+
       const filter = ctx.createBiquadFilter();
       filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(1450, now);
-      filter.Q.setValueAtTime(1.1, now);
+      filter.frequency.setValueAtTime(1450, startTime);
+      filter.Q.setValueAtTime(1.1, startTime);
 
-      masterGain.connect(filter);
+      masterGain.connect(damperGain);
+      damperGain.connect(filter);
       filter.connect(ctx.destination);
 
-      masterGain.gain.setValueAtTime(0.0001, now);
-      masterGain.gain.linearRampToValueAtTime(0.22, now + 0.04);
-      masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.9);
-      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
+      masterGain.gain.setValueAtTime(0.0001, startTime);
+      masterGain.gain.linearRampToValueAtTime(0.32, startTime + 0.04);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 20.0);
+
+      damperGain.gain.setValueAtTime(1.0, startTime);
 
       const oscs: OscillatorNode[] = [];
       chord.frequencies.forEach((freq, idx) => {
         const osc = ctx.createOscillator();
         osc.type = idx % 2 === 0 ? 'sine' : 'triangle';
-        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.setValueAtTime(freq, startTime);
 
-        if (idx === 1) osc.detune.setValueAtTime(2.5, now);
-        if (idx === 3) osc.detune.setValueAtTime(-2.5, now);
+        if (idx === 1) osc.detune.setValueAtTime(2.5, startTime);
+        if (idx === 3) osc.detune.setValueAtTime(-2.5, startTime);
 
         osc.connect(masterGain);
-        osc.start(now);
+        osc.start(startTime);
         oscs.push(osc);
       });
 
@@ -397,36 +497,125 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
       setIsPlaying(true);
 
       stopTimeoutRef.current = setTimeout(() => {
-        setIsPlaying(false);
-      }, 3900);
+        cleanupNodes();
+        stopTimeoutRef.current = null;
+      }, 20500);
     } catch (e) {
       console.warn('Web Audio playback unavailable:', e);
-      setIsPlaying(false);
+      cleanupNodes();
     }
-  }, [getAudioContext, soundMode]);
+  }, [cleanupNodes, getAudioContext, soundMode]);
 
-  const handleTriggerChord = useCallback((chord: ChordPaletteItem) => {
-    lastTriggerTimeRef.current = Date.now();
+  const handleChordPress = useCallback((chord: ChordPaletteItem) => {
+    pressStartTimeRef.current = Date.now();
+    if (pedalTimerRef.current) {
+      clearTimeout(pedalTimerRef.current);
+      pedalTimerRef.current = null;
+    }
+    heldChordIdRef.current = chord.id;
+    setHeldChordId(chord.id);
     setActiveChordId(chord.id);
     playChord(chord);
   }, [playChord]);
 
+  const handleChordRelease = useCallback((chordId?: string) => {
+    releaseChord(chordId);
+  }, [releaseChord]);
+
   const handleTogglePlay = useCallback(() => {
-    lastTriggerTimeRef.current = Date.now();
     if (isPlaying) {
-      stopAudio();
+      stopAudio(false);
     } else {
-      playChord(selectedChord);
+      handleChordPress(selectedChord);
     }
-  }, [isPlaying, playChord, selectedChord, stopAudio]);
+  }, [handleChordPress, isPlaying, selectedChord, stopAudio]);
+
+  // Global window pointerup/cancel to ensure damper is released even if pointer drifts outside element
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      if (heldChordIdRef.current) {
+        releaseChord(heldChordIdRef.current);
+      }
+    };
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    window.addEventListener('pointercancel', handleGlobalPointerUp);
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+    };
+  }, [releaseChord]);
+
 
   return (
-    <section id="music-theory" className="py-24 px-6 bg-[#090b0f] relative border-t border-[#1e222a]">
-      {/* Background ambient lighting */}
+    <section id="music-theory" className="py-24 px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
+      {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound) */}
+      <SomaticResonanceCanvas
+        enabled={somaticAwareness}
+        isPlaying={isPlaying}
+        chordColor={selectedChord.color}
+        chordTension={selectedChord.tensionPercentage}
+        chordName={selectedChord.name}
+      />
+
+      {/* Background ambient lighting & somatic acoustic resonance field aura */}
       <div 
-        className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none opacity-20"
+        className={`absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none transition-all duration-700 ${
+          somaticAwareness && isPlaying ? 'opacity-35 scale-110' : 'opacity-20 scale-100'
+        }`}
         style={{ background: selectedChord.color }}
       />
+      {somaticAwareness && (
+        <div 
+          className={`absolute bottom-1/4 left-1/4 w-[420px] h-[420px] rounded-full blur-[150px] pointer-events-none transition-all duration-1000 ${
+            isPlaying ? 'opacity-20 scale-125' : 'opacity-8 scale-90'
+          }`}
+          style={{ background: selectedChord.color }}
+        />
+      )}
+
+      {/* Floating Somatic Awareness Resonance Toggle (Sticky & responsive in Music Theory section) */}
+      <div className="sticky top-20 sm:top-24 z-30 flex justify-end max-w-7xl mx-auto px-2 sm:px-4 pointer-events-none mb-4 -mt-8 sm:-mt-12">
+        <button
+          type="button"
+          onClick={() => setSomaticAwareness((prev) => !prev)}
+          className={`pointer-events-auto group flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border backdrop-blur-md transition-all duration-300 shadow-2xl select-none cursor-pointer ${
+            somaticAwareness
+              ? 'bg-[#121622]/95 border-[#c49750]/65 text-[#fbf9f5] shadow-[0_4px_24px_rgba(196,151,80,0.22)] ring-1 ring-[#c49750]/30'
+              : 'bg-[#0f121a]/90 border-[#262c3e] text-[#9b968a] hover:border-[#384157] hover:text-[#dedacf]'
+          }`}
+          title={somaticAwareness ? t.musicTheory.somaticOn : t.musicTheory.somaticOff}
+          aria-pressed={somaticAwareness}
+        >
+          <span className="relative flex items-center justify-center">
+            <Activity className={`w-3.5 h-3.5 transition-colors ${somaticAwareness ? 'text-[#c49750]' : 'text-[#737067]'}`} />
+            {somaticAwareness && isPlaying && (
+              <span className="absolute -inset-1 rounded-full bg-[#c49750]/40 animate-ping pointer-events-none" />
+            )}
+          </span>
+          <div className="flex flex-col text-left">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-medium leading-none">
+              {t.musicTheory.somaticTitle}
+            </span>
+            <span className="text-[9px] font-mono text-[#8c887d] leading-tight hidden sm:inline mt-0.5">
+              {somaticAwareness
+                ? (isPlaying ? (isDe ? 'Resonanz schwingt…' : 'Resonating…') : (isDe ? 'Feld aktiv' : 'Field active'))
+                : (isDe ? 'Pausiert' : 'Paused')}
+            </span>
+          </div>
+          {/* Micro switch knob */}
+          <div
+            className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
+              somaticAwareness ? 'bg-[#c49750]' : 'bg-[#222736]'
+            }`}
+          >
+            <div
+              className={`w-3 h-3 rounded-full transition-transform duration-200 ${
+                somaticAwareness ? 'translate-x-3 bg-black' : 'translate-x-0 bg-[#8c887d]'
+              }`}
+            />
+          </div>
+        </button>
+      </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         
@@ -617,6 +806,30 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                   <span>〰️ {t.musicTheory.synthInstrument}</span>
                 </button>
               </div>
+
+              {/* Quick Somatic Resonance Toggle */}
+              <button
+                type="button"
+                onClick={() => setSomaticAwareness((prev) => !prev)}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 border ${
+                  somaticAwareness
+                    ? 'bg-[#181d2c] border-[#c49750]/50 text-[#fbf9f5] shadow-sm'
+                    : 'bg-[#0c0e14] border-[#222736] text-[#8c887d] hover:text-[#dedacf]'
+                }`}
+                title={t.musicTheory.somaticHint}
+                aria-pressed={somaticAwareness}
+              >
+                <Activity className={`w-3 h-3 ${somaticAwareness ? 'text-[#c49750]' : 'text-[#6e6a60]'}`} />
+                <span className="text-[11px] font-mono hidden sm:inline">{t.musicTheory.somaticTitle}</span>
+                <span className="text-[11px] font-mono sm:hidden">Resonanz</span>
+                <span
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    somaticAwareness
+                      ? (isPlaying ? 'bg-[#c49750] animate-ping' : 'bg-[#c49750]')
+                      : 'bg-[#3b4356]'
+                  }`}
+                />
+              </button>
             </div>
 
             <div className="text-[11px] font-mono text-[#8c887d] flex items-center gap-2">
@@ -627,8 +840,10 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               />
               <span>
                 {isPlaying
-                  ? (isDe ? 'Akkord schwingt voll nach (Anschlag aktiv)' : 'Resonating sustained chord…')
-                  : (isDe ? 'Drücken für sofortigen Tastenanschlag' : 'Press any chord for instant acoustic strike')}
+                  ? (heldChordId
+                      ? (isDe ? 'Taste gehalten · Klavier klingt voll…' : 'Key held · Piano sounding…')
+                      : (isDe ? 'Rechtes Pedal aktiv · klingt 6s nach…' : 'Right pedal held · resonating for 6s…'))
+                  : (isDe ? 'Akkord anspielen (Rechtes Pedal hält den Klang 6s)' : 'Play chord (right pedal sustains for 6s)')}
               </span>
             </div>
           </div>
@@ -643,26 +858,30 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                   key={chord.id}
                   type="button"
                   onPointerDown={(e) => {
-                    if (e.button === 0) {
-                      e.preventDefault();
-                      handleTriggerChord(chord);
+                    if (e.pointerType === 'touch' || e.button === 0) {
+                      handleChordPress(chord);
                     }
                   }}
-                  onClick={() => {
-                    if (Date.now() - lastTriggerTimeRef.current < 350) return;
-                    handleTriggerChord(chord);
-                  }}
+                  onPointerUp={() => handleChordRelease(chord.id)}
+                  onPointerCancel={() => handleChordRelease(chord.id)}
+                  onPointerLeave={() => handleChordRelease(chord.id)}
                   onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+                      e.preventDefault();
+                      handleChordPress(chord);
+                    }
+                  }}
+                  onKeyUp={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      handleTriggerChord(chord);
+                      handleChordRelease(chord.id);
                     }
                   }}
-                  className={`p-3.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[96px] select-none ${
+                  className={`p-3.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[96px] select-none touch-manipulation ${
                     isSelected
                       ? 'border-[#c49750] bg-[#161a24] shadow-[0_0_20px_rgba(196,151,80,0.2)] ring-1 ring-[#c49750]/50 scale-[1.02]'
                       : 'border-[#222634] bg-[#12141c] hover:border-[#383f52] hover:bg-[#151822]'
-                  }`}
+                  } ${heldChordId === chord.id ? 'ring-2 ring-[#c49750]' : ''}`}
                 >
                   <div className="flex items-center justify-between gap-1 mb-2">
                     <span 
@@ -711,35 +930,65 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                       {selectedChord.name}
                     </h4>
                     <p className="text-xs text-[#a09c91] font-mono mt-0.5">
-                      {selectedChord.voicingLabel} · <span className="text-[#dedacf] font-semibold">{selectedChord.notes.join(' · ')}</span>
+                      {selectedChord.voicingLabel} · <span className="text-[#8c887d]">{isDe ? 'Noten: ' : 'Notes: '}</span><span className="text-[#dedacf] font-semibold">{selectedChord.notes.join(' · ')}</span>
                     </p>
                   </div>
 
-                  {/* Audio Play/Stop Button with instant strike */}
+                  {/* Audio Play/Stop Button with instant strike & hold */}
                   <button
                     type="button"
                     onPointerDown={(e) => {
-                      if (e.button === 0) {
-                        e.preventDefault();
-                        handleTogglePlay();
+                      if (e.pointerType === 'touch' || e.button === 0) {
+                        if (isPlaying) {
+                          stopAudio(false);
+                        } else {
+                          handleChordPress(selectedChord);
+                        }
                       }
                     }}
-                    onClick={() => {
-                      if (Date.now() - lastTriggerTimeRef.current < 350) return;
-                      handleTogglePlay();
+                    onPointerUp={() => {
+                      if (heldChordIdRef.current) {
+                        handleChordRelease(selectedChord.id);
+                      }
+                    }}
+                    onPointerCancel={() => {
+                      if (heldChordIdRef.current) {
+                        handleChordRelease(selectedChord.id);
+                      }
+                    }}
+                    onPointerLeave={() => {
+                      if (heldChordIdRef.current) {
+                        handleChordRelease(selectedChord.id);
+                      }
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
                         e.preventDefault();
-                        handleTogglePlay();
+                        if (isPlaying) {
+                          stopAudio(false);
+                        } else {
+                          handleChordPress(selectedChord);
+                        }
                       }
                     }}
-                    className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95"
+                    onKeyUp={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (heldChordIdRef.current) {
+                          handleChordRelease(selectedChord.id);
+                        }
+                      }
+                    }}
+                    className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95 touch-manipulation"
                     style={{
                       backgroundColor: selectedChord.color,
                       boxShadow: isPlaying ? `0 0 28px ${selectedChord.color}` : undefined
                     }}
-                    title={isPlaying ? 'Stop Sustain' : 'Play Acoustic Chord Strike'}
+                    title={
+                      isPlaying
+                        ? (isDe ? 'Klang anhalten (Pedal lösen)' : 'Stop sound (release pedal)')
+                        : (isDe ? 'Akkord anspielen (Pedal hält 6s)' : 'Play chord (pedal sustains 6s)')
+                    }
                   >
                     {isPlaying ? (
                       <VolumeX className="w-6 h-6 text-black animate-pulse" />
@@ -770,45 +1019,30 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1 text-[11px] text-[#736f64] font-mono">
-                  <div>
-                    <span className="text-[#969183]">{isDe ? 'Flügel-Stimmen: ' : 'Piano Voicing Notes: '}</span>
-                    <span className="text-[#dedacf]">{selectedChord.notes.join('  ·  ')}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#969183]">{isDe ? 'Grundfrequenzen: ' : 'Frequencies: '}</span>
-                    {selectedChord.frequencies.map((f) => Math.round(f) + ' Hz').join(' · ')}
-                  </div>
+                <div className="text-[12px] font-mono pt-1">
+                  <span className="text-[#969183]">{isDe ? 'Noten: ' : 'Notes: '}</span>
+                  <span className="text-[#dedacf] font-medium tracking-wide">{selectedChord.notes.join('  ·  ')}</span>
                 </div>
               </div>
 
               {/* Right Column: Sensation & Pedagogical Breakdown */}
-              <div className="lg:col-span-7 space-y-4 border-t lg:border-t-0 lg:border-l border-white/5 pt-6 lg:pt-0 lg:pl-8">
+              <div className="lg:col-span-7 space-y-5 border-t lg:border-t-0 lg:border-l border-white/5 pt-6 lg:pt-0 lg:pl-8">
                 
                 <div>
                   <h5 className="text-xs uppercase tracking-wider font-mono text-[#c49750] mb-1.5">
                     {isDe ? 'Wie es sich anfühlt (Sinnliche Wahrnehmung):' : 'How It Feels in the Body (Somatic Sensation):'}
                   </h5>
-                  <p className="text-base text-[#dedacf] font-serif italic leading-relaxed">
+                  <p className="text-base sm:text-lg text-[#dedacf] font-serif italic leading-relaxed">
                     “{isDe ? selectedChord.emotionalFeelingDe : selectedChord.emotionalFeeling}”
                   </p>
                 </div>
 
                 <div>
-                  <h5 className="text-xs uppercase tracking-wider font-mono text-[#a78bfa] mb-1">
+                  <h5 className="text-xs uppercase tracking-wider font-mono text-[#a78bfa] mb-1.5">
                     {isDe ? 'Akustisches Phänomen:' : 'Acoustic Phenomenon:'}
                   </h5>
                   <p className="text-xs sm:text-sm text-[#a8a499] font-light leading-relaxed">
                     {isDe ? selectedChord.acousticPhenomenonDe : selectedChord.acousticPhenomenon}
-                  </p>
-                </div>
-
-                <div>
-                  <h5 className="text-xs uppercase tracking-wider font-mono text-[#38bdf8] mb-1">
-                    {isDe ? 'Musikalische Referenzen & Meisterwerke:' : 'Musical Context & Masterwork References:'}
-                  </h5>
-                  <p className="text-xs text-[#908c81] font-mono leading-relaxed">
-                    {selectedChord.musicalReferences}
                   </p>
                 </div>
 

@@ -207,6 +207,11 @@ export interface Translations {
     pianoInstrument: string;
     synthInstrument: string;
     instrumentLabel: string;
+    somaticTitle: string;
+    somaticSubtitle: string;
+    somaticOn: string;
+    somaticOff: string;
+    somaticHint: string;
     audiencesTitle: string;
     producerBadge: string;
     producerTitle: string;
@@ -647,6 +652,11 @@ export const translations: Record<Language, Translations> = {
       pianoInstrument: 'Steinway Grand Piano',
       synthInstrument: 'Harmonic Pure Tones',
       instrumentLabel: 'Sound Timbre',
+      somaticTitle: 'Somatic Awareness',
+      somaticSubtitle: 'Physical Resonance Field',
+      somaticOn: 'Resonance Active',
+      somaticOff: 'Resonance Muted',
+      somaticHint: 'Visualizing acoustic vibration resonating through the body and surrounding space.',
       audiencesTitle: 'Who Learns Theory Here?',
       producerBadge: 'Producers & Beatmakers',
       producerTitle: 'Break Free from Generic Presets',
@@ -1085,6 +1095,11 @@ export const translations: Record<Language, Translations> = {
       pianoInstrument: 'Steinway-Konzertflügel',
       synthInstrument: 'Harmonische Sinustöne',
       instrumentLabel: 'Klangquelle',
+      somaticTitle: 'Somatische Resonanz',
+      somaticSubtitle: 'Physisches Resonanzfeld',
+      somaticOn: 'Resonanz Aktiv',
+      somaticOff: 'Resonanz Deaktiviert',
+      somaticHint: 'Visualisiert die physische Schwingung und Ausbreitung der Harmonien im Körper und Raum.',
       audiencesTitle: 'Für wen ist diese Musiktheorie?',
       producerBadge: 'Produzenten & Beatmaker',
       producerTitle: 'Frei von generischen Preset-Packs',
