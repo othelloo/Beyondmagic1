@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Check, RotateCcw, Volume2, VolumeX, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { saveSubscriber } from '../data/newsletterStore';
 
 interface SpiritualityExperienceProps {
   isActive: boolean;
@@ -108,7 +109,31 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
+    const cleanEmail = email.trim();
+    if (cleanEmail) {
+      // 1. Local backup
+      saveSubscriber(cleanEmail, 'Spirituality & Philosophy Premiere Waitlist', language);
+
+      // 2. Netlify Form submission
+      try {
+        const formData = new URLSearchParams();
+        formData.append('form-name', 'newsletter');
+        formData.append('bot-field', '');
+        formData.append('email', cleanEmail);
+        formData.append('interest', 'Spirituality & Philosophy Premiere Waitlist');
+        formData.append('language', language);
+
+        fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData.toString()
+        }).catch((err) => {
+          console.warn('Netlify newsletter submission notice:', err);
+        });
+      } catch (err) {
+        // quiet fallback
+      }
+
       setSubscribed(true);
     }
   };
@@ -394,7 +419,17 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubscribe} className="space-y-3">
+                <form
+                  onSubmit={handleSubscribe}
+                  name="newsletter"
+                  method="POST"
+                  data-netlify="true"
+                  className="space-y-3"
+                >
+                  <input type="hidden" name="form-name" value="newsletter" />
+                  <input type="hidden" name="bot-field" />
+                  <input type="hidden" name="interest" value="Spirituality & Philosophy Premiere Waitlist" />
+                  <input type="hidden" name="language" value={language} />
                   <label className="block text-xs uppercase tracking-wider text-[#8e8b80] font-mono">
                     {isDe ? 'Benachrichtigen, sobald die YouTube-Serie & der Essay erscheinen:' : 'Notify me when the YouTube series & introductory essay release:'}
                   </label>

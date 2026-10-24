@@ -23,14 +23,24 @@
     </script>
   </head>
   <body class="bg-[#0b0c0e] text-[#e8e6e1] antialiased selection:bg-[#c49750] selection:text-black font-sans">
-    <!-- Netlify form detection placeholder -->
-    <form name="inquiries" data-netlify="true" hidden>
+    <!-- Netlify form detection placeholders for static build scanner -->
+    <form name="inquiries" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="inquiries" />
+      <input type="text" name="bot-field" />
       <input type="text" name="name" />
       <input type="email" name="email" />
       <input type="text" name="discipline" />
       <input type="text" name="topic" />
       <textarea name="message"></textarea>
       <input type="text" name="audioLink" />
+    </form>
+
+    <form name="newsletter" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="newsletter" />
+      <input type="text" name="bot-field" />
+      <input type="email" name="email" />
+      <input type="text" name="interest" />
+      <input type="text" name="language" />
     </form>
 
     <!-- Instant 0ms Shell: Eliminates the black screen wait on mobile browsers -->

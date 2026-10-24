@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Activity } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 import { MusicalScoreChord } from './MusicalScoreChord';
@@ -239,9 +239,9 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const [activeChordId, setActiveChordId] = useState<string>('eb-maj7');
   const [heldChordId, setHeldChordId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [soundMode, setSoundMode] = useState<'piano' | 'synth'>('piano');
-  const [somaticAwareness, setSomaticAwareness] = useState<boolean>(true);
+  const soundMode = 'piano';
   const [studioTab, setStudioTab] = useState<'explore' | 'ear-training'>('explore');
+  const [isStudioOpen, setIsStudioOpen] = useState<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
@@ -265,32 +265,21 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     return audioContextRef.current;
   }, []);
 
-  // Pre-decode all acoustic piano samples on earliest interaction so first chord strikes with 0ms latency
+  // Pre-decode acoustic piano samples on-demand ONLY when the user opens the interactive studio
   useEffect(() => {
-    const handleInitialUserGesture = () => {
-      try {
-        const ctx = getAudioContext();
-        if (ctx.state === 'suspended') {
-          ctx.resume();
-        }
-        getPianoSamplesModule()
-          .then(({ preloadAllPianoSamples }) => {
-            preloadAllPianoSamples(ctx);
-          })
-          .catch(() => {});
-      } catch (_) {}
-      window.removeEventListener('pointerdown', handleInitialUserGesture);
-      window.removeEventListener('keydown', handleInitialUserGesture);
-    };
-
-    window.addEventListener('pointerdown', handleInitialUserGesture, { once: true });
-    window.addEventListener('keydown', handleInitialUserGesture, { once: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', handleInitialUserGesture);
-      window.removeEventListener('keydown', handleInitialUserGesture);
-    };
-  }, [getAudioContext]);
+    if (!isStudioOpen) return;
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      getPianoSamplesModule()
+        .then(({ preloadAllPianoSamples }) => {
+          preloadAllPianoSamples(ctx);
+        })
+        .catch(() => {});
+    } catch (_) {}
+  }, [isStudioOpen, getAudioContext]);
 
   // Clean up all active audio nodes safely
   const cleanupNodes = useCallback(() => {
@@ -781,74 +770,32 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
 
   return (
     <section id="music-theory" className="py-24 px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
-      {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound) */}
-      <SomaticResonanceCanvas
-        enabled={somaticAwareness}
-        isPlaying={isPlaying}
-        chordColor={selectedChord.color}
-        chordTension={selectedChord.tensionPercentage}
-        chordName={selectedChord.name}
-      />
+      {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound - active when studio is opened) */}
+      {isStudioOpen && (
+        <>
+          <SomaticResonanceCanvas
+            enabled={true}
+            isPlaying={isPlaying}
+            chordColor={selectedChord.color}
+            chordTension={selectedChord.tensionPercentage}
+            chordName={selectedChord.name}
+          />
 
-      {/* Background ambient lighting & somatic acoustic resonance field aura */}
-      <div 
-        className={`absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none transition-all duration-700 ${
-          somaticAwareness && isPlaying ? 'opacity-35 scale-110' : 'opacity-20 scale-100'
-        }`}
-        style={{ background: selectedChord.color }}
-      />
-      {somaticAwareness && (
-        <div 
-          className={`absolute bottom-1/4 left-1/4 w-[420px] h-[420px] rounded-full blur-[150px] pointer-events-none transition-all duration-1000 ${
-            isPlaying ? 'opacity-20 scale-125' : 'opacity-8 scale-90'
-          }`}
-          style={{ background: selectedChord.color }}
-        />
-      )}
-
-      {/* Floating Somatic Awareness Resonance Toggle (Sticky & responsive in Music Theory section) */}
-      <div className="sticky top-20 sm:top-24 z-30 flex justify-end max-w-7xl mx-auto px-2 sm:px-4 pointer-events-none mb-4 -mt-8 sm:-mt-12">
-        <button
-          type="button"
-          onClick={() => setSomaticAwareness((prev) => !prev)}
-          className={`pointer-events-auto group flex items-center gap-2.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border backdrop-blur-md transition-all duration-300 shadow-2xl select-none cursor-pointer ${
-            somaticAwareness
-              ? 'bg-[#121622]/95 border-[#c49750]/65 text-[#fbf9f5] shadow-[0_4px_24px_rgba(196,151,80,0.22)] ring-1 ring-[#c49750]/30'
-              : 'bg-[#0f121a]/90 border-[#262c3e] text-[#9b968a] hover:border-[#384157] hover:text-[#dedacf]'
-          }`}
-          title={somaticAwareness ? t.musicTheory.somaticOn : t.musicTheory.somaticOff}
-          aria-pressed={somaticAwareness}
-        >
-          <span className="relative flex items-center justify-center">
-            <Activity className={`w-3.5 h-3.5 transition-colors ${somaticAwareness ? 'text-[#c49750]' : 'text-[#737067]'}`} />
-            {somaticAwareness && isPlaying && (
-              <span className="absolute -inset-1 rounded-full bg-[#c49750]/40 animate-ping pointer-events-none" />
-            )}
-          </span>
-          <div className="flex flex-col text-left">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-medium leading-none">
-              {t.musicTheory.somaticTitle}
-            </span>
-            <span className="text-[9px] font-mono text-[#8c887d] leading-tight hidden sm:inline mt-0.5">
-              {somaticAwareness
-                ? (isPlaying ? (isDe ? 'Resonanz schwingt…' : 'Resonating…') : (isDe ? 'Feld aktiv' : 'Field active'))
-                : (isDe ? 'Pausiert' : 'Paused')}
-            </span>
-          </div>
-          {/* Micro switch knob */}
-          <div
-            className={`w-7 h-4 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
-              somaticAwareness ? 'bg-[#c49750]' : 'bg-[#222736]'
+          {/* Background ambient lighting & somatic acoustic resonance field aura */}
+          <div 
+            className={`absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none transition-all duration-700 ${
+              isPlaying ? 'opacity-35 scale-110' : 'opacity-20 scale-100'
             }`}
-          >
-            <div
-              className={`w-3 h-3 rounded-full transition-transform duration-200 ${
-                somaticAwareness ? 'translate-x-3 bg-black' : 'translate-x-0 bg-[#8c887d]'
-              }`}
-            />
-          </div>
-        </button>
-      </div>
+            style={{ background: selectedChord.color }}
+          />
+          <div 
+            className={`absolute bottom-1/4 left-1/4 w-[420px] h-[420px] rounded-full blur-[150px] pointer-events-none transition-all duration-1000 ${
+              isPlaying ? 'opacity-20 scale-125' : 'opacity-8 scale-90'
+            }`}
+            style={{ background: selectedChord.color }}
+          />
+        </>
+      )}
       
       <div className="max-w-7xl mx-auto relative z-10">
         
@@ -906,19 +853,15 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
           <div className="bg-[#12151e] border border-[#212633] rounded-2xl p-7 sm:p-9 hover:border-[#c49750]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group shadow-xl">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c49750] via-[#e5c17d] to-[#8a7bb8] opacity-80" />
             
-            <div>
+            <div className="flex-1 flex flex-col justify-start">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-mono text-[#c49750] uppercase tracking-wider">
-                  01 · {t.musicTheory.secretGardenTag}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#c49750] group-hover:bg-[#c49750] group-hover:text-black transition-colors">
+                <h3 className="text-2xl sm:text-3xl font-serif text-[#c49750] font-medium">
+                  {t.musicTheory.secretGardenTitle}
+                </h3>
+                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#c49750] group-hover:bg-[#c49750] group-hover:text-black transition-colors shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
               </div>
-
-              <h3 className="text-2xl sm:text-3xl font-serif text-[#f2eee9] font-medium mb-4">
-                {t.musicTheory.secretGardenTitle}
-              </h3>
 
               <p className="text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
                 {t.musicTheory.secretGardenIntro}
@@ -941,30 +884,27 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 p-6 sm:p-8 rounded-b-2xl">
-              <p className="text-lg sm:text-xl lg:text-2xl font-serif italic text-[#f3cf8a] font-light leading-relaxed">
+            {/* Bottom Quote Box: Aligned and sized identically to the right card's launchpad */}
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[135px] lg:h-[145px]">
+              <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#f3cf8a] font-light leading-relaxed">
                 “{t.musicTheory.secretGardenClosing}”
               </p>
             </div>
           </div>
 
           {/* Section 2: The Music Theory */}
-          <div className="bg-[#12151e] border border-[#212633] rounded-2xl p-7 sm:p-9 hover:border-[#38bdf8]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group shadow-xl">
+          <div className="bg-[#12151e] border border-[#212633] rounded-2xl p-7 sm:p-9 hover:border-[#38bdf8]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group shadow-xl h-full">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#38bdf8] via-[#818cf8] to-[#c49750] opacity-80" />
             
-            <div>
+            <div className="flex-1 flex flex-col justify-start">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-mono text-[#38bdf8] uppercase tracking-wider">
-                  02 · {t.musicTheory.theoryTag}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-colors">
+                <h3 className="text-2xl sm:text-3xl font-serif text-[#38bdf8] font-medium">
+                  {t.musicTheory.theoryTitle}
+                </h3>
+                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-colors shrink-0">
                   <Music className="w-4 h-4" />
                 </div>
               </div>
-
-              <h3 className="text-2xl sm:text-3xl font-serif text-[#f2eee9] font-medium mb-4">
-                {t.musicTheory.theoryTitle}
-              </h3>
 
               <p className="text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
                 {t.musicTheory.theoryIntro}
@@ -983,364 +923,356 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 </ul>
               </div>
             </div>
+
+            {/* Bottom Interactive Keys Launchpad - Identical height and alignment to the left card */}
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[135px] lg:h-[145px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudioTab('explore');
+                    setIsStudioOpen(true);
+                    setTimeout(() => {
+                      document.getElementById('harmonic-studio')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }}
+                  className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
+                >
+                  <Waves className="w-4 h-4 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span>{isDe ? 'Akkorde & Farben' : 'Explore Colors'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudioTab('ear-training');
+                    setIsStudioOpen(true);
+                    setTimeout(() => {
+                      document.getElementById('harmonic-studio')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }}
+                  className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
+                >
+                  <Headphones className="w-4 h-4 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span>{isDe ? 'Gehör testen' : 'Test Your Ear'}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
         </div>
 
         {/* Interactive Harmonic Color & Weight Studio */}
-        <div className="mb-20 bg-[#0e1118] border border-[#242938] rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/5">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1.5">
-                <Waves className="w-3.5 h-3.5 text-[#c49750]" />
-                <span>{t.musicTheory.interactiveTitle}</span>
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-serif text-[#fbf9f5] font-light">
-                {t.musicTheory.interactiveSubtitle}
-              </h3>
-            </div>
-            <div className="text-[11px] text-[#858175] font-mono max-w-xs text-left sm:text-right">
-              {t.musicTheory.interactiveHint}
-            </div>
-          </div>
-
-          {/* Studio Tab Switcher: Explore vs Test Your Ear */}
-          <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
-            <button
-              type="button"
-              onClick={() => {
-                setStudioTab('explore');
-                stopAudio(true);
-              }}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
-                studioTab === 'explore'
-                  ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
-                  : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
-              }`}
-            >
-              <Waves className="w-4 h-4" />
-              <span>{isDe ? '1. Harmonien Erforschen' : '1. Harmonic Explorer'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setStudioTab('ear-training');
-                stopAudio(true);
-              }}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
-                studioTab === 'ear-training'
-                  ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
-                  : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
-              }`}
-            >
-              <Music className="w-4 h-4" />
-              <span>{isDe ? '2. Gehör Testen (Quiz)' : '2. Test Your Ear'}</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">NEW</span>
-            </button>
-          </div>
-
-          {studioTab === 'ear-training' ? (
-            <EarTrainingStudio
-              chords={CHORD_PALETTE}
-              playChordFrequencies={playCustomFrequencies}
-              stopAudio={stopAudio}
-              isPlaying={isPlaying}
-              soundMode={soundMode}
-              isDe={isDe}
-            />
-          ) : (
-            <>
-              {/* Sound Timbre Selector & Real-Time Sustain Indicator */}
-              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-[#12151e] border border-[#202534] rounded-xl p-3 px-4">
-                <div className="flex items-center gap-2.5 text-xs font-mono text-[#a39f94]">
-                  <span className="text-[#c49750] font-medium">{t.musicTheory.instrumentLabel}:</span>
-                  <div className="inline-flex rounded-lg bg-[#0b0d13] p-1 border border-[#262c3c]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSoundMode('piano');
-                        playChord(selectedChord, 'piano');
-                      }}
-                      className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
-                        soundMode === 'piano'
-                          ? 'bg-[#c49750] text-black font-semibold shadow-sm'
-                          : 'text-[#9e9a8f] hover:text-[#fbf9f5]'
-                      }`}
-                    >
-                      <span>🎹 {t.musicTheory.pianoInstrument}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSoundMode('synth');
-                        playChord(selectedChord, 'synth');
-                      }}
-                      className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
-                        soundMode === 'synth'
-                          ? 'bg-[#c49750] text-black font-semibold shadow-sm'
-                          : 'text-[#9e9a8f] hover:text-[#fbf9f5]'
-                      }`}
-                    >
-                      <span>〰️ {t.musicTheory.synthInstrument}</span>
-                    </button>
-                  </div>
-
-                  {/* Quick Somatic Resonance Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setSomaticAwareness((prev) => !prev)}
-                    className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 border ${
-                      somaticAwareness
-                        ? 'bg-[#181d2c] border-[#c49750]/50 text-[#fbf9f5] shadow-sm'
-                        : 'bg-[#0c0e14] border-[#222736] text-[#8c887d] hover:text-[#dedacf]'
-                    }`}
-                    title={t.musicTheory.somaticHint}
-                    aria-pressed={somaticAwareness}
-                  >
-                    <Activity className={`w-3 h-3 ${somaticAwareness ? 'text-[#c49750]' : 'text-[#6e6a60]'}`} />
-                    <span className="text-[11px] font-mono hidden sm:inline">{t.musicTheory.somaticTitle}</span>
-                    <span className="text-[11px] font-mono sm:hidden">Resonanz</span>
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full transition-all ${
-                        somaticAwareness
-                          ? (isPlaying ? 'bg-[#c49750] animate-ping' : 'bg-[#c49750]')
-                          : 'bg-[#3b4356]'
-                      }`}
-                    />
-                  </button>
+        {isStudioOpen && (
+          <div id="harmonic-studio" className="mb-20 bg-[#0e1118] border border-[#242938] rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all duration-300">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/5">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1.5">
+                  <Waves className="w-3.5 h-3.5 text-[#c49750]" />
+                  <span>{t.musicTheory.interactiveTitle}</span>
                 </div>
+                <h3 className="text-2xl sm:text-3xl font-serif text-[#fbf9f5] font-light">
+                  {t.musicTheory.interactiveSubtitle}
+                </h3>
+              </div>
 
-                <div className="text-[11px] font-mono text-[#8c887d] flex items-center gap-2">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                      isPlaying ? 'bg-emerald-400 ring-4 ring-emerald-400/20 animate-pulse' : 'bg-[#32394c]'
-                    }`}
-                  />
-                  <span>
-                    {isPlaying
-                      ? (heldChordId
-                          ? (isDe ? 'Taste gehalten · Klavier klingt voll…' : 'Key held · Piano sounding…')
-                          : (isDe ? 'Rechtes Pedal aktiv · klingt 6s nach…' : 'Right pedal held · resonating for 6s…'))
-                      : (isDe ? 'Akkord anspielen (Rechtes Pedal hält den Klang 6s)' : 'Play chord (right pedal sustains for 6s)')}
-                  </span>
+              <div className="flex items-center gap-3 self-start sm:self-center">
+                <div className="text-[11px] text-[#858175] font-mono max-w-xs text-left sm:text-right hidden md:block">
+                  {t.musicTheory.interactiveHint}
                 </div>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopAudio(true);
+                    setIsStudioOpen(false);
+                  }}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-[#a29e92] hover:text-white bg-[#141722] hover:bg-[#1d2232] border border-[#282f40] transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                  title={isDe ? 'Studio schließen' : 'Close Studio'}
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>{isDe ? 'Studio schließen' : 'Close Studio'}</span>
+                </button>
               </div>
+            </div>
 
-              {/* Compact Chord Selector Ribbon without descriptions */}
-              <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 mb-8">
-                {CHORD_PALETTE.map((chord) => {
-                  const isSelected = chord.id === activeChordId;
-                  const isCurrentlyPlayingThis = isSelected && isPlaying;
-                  return (
-                    <button
-                      key={chord.id}
-                      type="button"
-                      onPointerDown={(e) => {
-                        if (e.pointerType === 'touch' || e.button === 0) {
-                          handleChordPress(chord);
-                        }
-                      }}
-                      onPointerUp={() => handleChordRelease(chord.id)}
-                      onPointerCancel={() => handleChordRelease(chord.id)}
-                      onPointerLeave={() => handleChordRelease(chord.id)}
-                      onKeyDown={(e) => {
-                        if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
-                          e.preventDefault();
-                          handleChordPress(chord);
-                        }
-                      }}
-                      onKeyUp={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleChordRelease(chord.id);
-                        }
-                      }}
-                      className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[62px] sm:min-h-[68px] select-none touch-manipulation ${
-                        isSelected
-                          ? 'border-[#c49750] bg-[#161a24] shadow-[0_0_20px_rgba(196,151,80,0.2)] ring-1 ring-[#c49750]/50 scale-[1.02]'
-                          : 'border-[#222634] bg-[#12141c] hover:border-[#383f52] hover:bg-[#151822]'
-                      } ${heldChordId === chord.id ? 'ring-2 ring-[#c49750]' : ''}`}
-                    >
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <span 
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 transition-transform ${
-                            isCurrentlyPlayingThis ? 'scale-125 ring-2 ring-white/50' : ''
-                          }`} 
-                          style={{ backgroundColor: chord.color }}
-                        />
-                        <span className="text-[10px] font-mono text-[#8c887d]">
-                          {chord.tensionPercentage}%
-                        </span>
-                      </div>
-                      <div className="font-serif text-xs sm:text-sm font-medium text-[#eeeae0] leading-snug flex items-center justify-between">
-                        <span className="truncate">{chord.name}</span>
-                        {isCurrentlyPlayingThis && (
-                          <span className="text-[10px] text-[#c49750] font-mono animate-pulse ml-1">●</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Studio Tab Switcher: Explore vs Test Your Ear */}
+            <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('explore');
+                  stopAudio(true);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                  studioTab === 'explore'
+                    ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
+                    : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
+                }`}
+              >
+                <Waves className="w-4 h-4" />
+                <span>{isDe ? '1. Harmonien Erforschen' : '1. Harmonic Explorer'}</span>
+              </button>
 
-              {/* Selected Chord Showcase & Acoustic Deep Dive */}
-              <div className="bg-[#141822] border border-[#282e3f] rounded-xl p-5 sm:p-7">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-                  
-                  {/* Left Column: Chord Identity & Playback + Compact Score on the Right */}
-                  <div className="lg:col-span-6 space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      
-                      {/* Chord Title & Playback Button */}
-                      <div className="space-y-2.5 flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('ear-training');
+                  stopAudio(true);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                  studioTab === 'ear-training'
+                    ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
+                    : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
+                }`}
+              >
+                <Music className="w-4 h-4" />
+                <span>{isDe ? '2. Gehör Testen' : '2. Test Your Ear'}</span>
+              </button>
+            </div>
+
+            {studioTab === 'ear-training' ? (
+              <EarTrainingStudio
+                chords={CHORD_PALETTE}
+                playChordFrequencies={playCustomFrequencies}
+                stopAudio={stopAudio}
+                isPlaying={isPlaying}
+                soundMode={soundMode}
+                isDe={isDe}
+              />
+            ) : (
+              <>
+
+                {/* Compact Chord Selector Ribbon without descriptions */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 mb-8">
+                  {CHORD_PALETTE.map((chord) => {
+                    const isSelected = chord.id === activeChordId;
+                    const isCurrentlyPlayingThis = isSelected && isPlaying;
+                    return (
+                      <button
+                        key={chord.id}
+                        type="button"
+                        onPointerDown={(e) => {
+                          if (e.pointerType === 'touch' || e.button === 0) {
+                            handleChordPress(chord);
+                          }
+                        }}
+                        onPointerUp={() => handleChordRelease(chord.id)}
+                        onPointerCancel={() => handleChordRelease(chord.id)}
+                        onPointerLeave={() => handleChordRelease(chord.id)}
+                        onKeyDown={(e) => {
+                          if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+                            e.preventDefault();
+                            handleChordPress(chord);
+                          }
+                        }}
+                        onKeyUp={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleChordRelease(chord.id);
+                          }
+                        }}
+                        className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[62px] sm:min-h-[68px] select-none touch-manipulation ${
+                          isSelected
+                            ? 'border-[#c49750] bg-[#161a24] shadow-[0_0_20px_rgba(196,151,80,0.2)] ring-1 ring-[#c49750]/50 scale-[1.02]'
+                            : 'border-[#222634] bg-[#12141c] hover:border-[#383f52] hover:bg-[#151822]'
+                        } ${heldChordId === chord.id ? 'ring-2 ring-[#c49750]' : ''}`}
+                      >
+                        <div className="flex items-center justify-between gap-1 mb-1">
                           <span 
-                            className="px-2.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider"
-                            style={{ backgroundColor: `${selectedChord.color}25`, color: selectedChord.color }}
-                          >
-                            {isDe ? selectedChord.archetypeDe : selectedChord.archetype}
+                            className={`w-2.5 h-2.5 rounded-full shrink-0 transition-transform ${
+                              isCurrentlyPlayingThis ? 'scale-125 ring-2 ring-white/50' : ''
+                            }`} 
+                            style={{ backgroundColor: chord.color }}
+                          />
+                          <span className="text-[10px] font-mono text-[#8c887d]">
+                            {chord.tensionPercentage}%
                           </span>
                         </div>
+                        <div className="font-serif text-xs sm:text-sm font-medium text-[#eeeae0] leading-snug flex items-center justify-between">
+                          <span className="truncate">{chord.name}</span>
+                          {isCurrentlyPlayingThis && (
+                            <span className="text-[10px] text-[#c49750] font-mono animate-pulse ml-1">●</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                        <div className="flex items-center gap-3.5">
-                          <h4 className="text-3xl sm:text-4xl font-serif text-[#fbf9f5] font-normal tracking-tight">
-                            {selectedChord.name}
-                          </h4>
+                {/* Selected Chord Showcase & Acoustic Deep Dive */}
+                <div className="bg-[#141822] border border-[#282e3f] rounded-xl p-5 sm:p-7">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+                    
+                    {/* Left Column: Chord Identity & Playback + Compact Score on the Right */}
+                    <div className="lg:col-span-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        
+                        {/* Chord Title & Playback Button */}
+                        <div className="space-y-2.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="px-2.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider"
+                              style={{ backgroundColor: `${selectedChord.color}25`, color: selectedChord.color }}
+                            >
+                              {isDe ? selectedChord.archetypeDe : selectedChord.archetype}
+                            </span>
+                          </div>
 
-                          {/* Audio Play/Stop Button with instant strike & hold */}
-                          <button
-                            type="button"
-                            onPointerDown={(e) => {
-                              if (e.pointerType === 'touch' || e.button === 0) {
-                                if (isPlaying) {
-                                  stopAudio(false);
-                                } else {
-                                  handleChordPress(selectedChord);
+                          <div className="flex items-center gap-3.5">
+                            <h4 className="text-3xl sm:text-4xl font-serif text-[#fbf9f5] font-normal tracking-tight">
+                              {selectedChord.name}
+                            </h4>
+
+                            {/* Audio Play/Stop Button with instant strike & hold */}
+                            <button
+                              type="button"
+                              onPointerDown={(e) => {
+                                if (e.pointerType === 'touch' || e.button === 0) {
+                                  if (isPlaying) {
+                                    stopAudio(false);
+                                  } else {
+                                    handleChordPress(selectedChord);
+                                  }
                                 }
-                              }
-                            }}
-                            onPointerUp={() => {
-                              if (heldChordIdRef.current) {
-                                handleChordRelease(selectedChord.id);
-                              }
-                            }}
-                            onPointerCancel={() => {
-                              if (heldChordIdRef.current) {
-                                handleChordRelease(selectedChord.id);
-                              }
-                            }}
-                            onPointerLeave={() => {
-                              if (heldChordIdRef.current) {
-                                handleChordRelease(selectedChord.id);
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
-                                e.preventDefault();
-                                if (isPlaying) {
-                                  stopAudio(false);
-                                } else {
-                                  handleChordPress(selectedChord);
-                                }
-                              }
-                            }}
-                            onKeyUp={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
+                              }}
+                              onPointerUp={() => {
                                 if (heldChordIdRef.current) {
                                   handleChordRelease(selectedChord.id);
                                 }
+                              }}
+                              onPointerCancel={() => {
+                                if (heldChordIdRef.current) {
+                                  handleChordRelease(selectedChord.id);
+                                }
+                              }}
+                              onPointerLeave={() => {
+                                if (heldChordIdRef.current) {
+                                  handleChordRelease(selectedChord.id);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+                                  e.preventDefault();
+                                  if (isPlaying) {
+                                    stopAudio(false);
+                                  } else {
+                                    handleChordPress(selectedChord);
+                                  }
+                                }
+                              }}
+                              onKeyUp={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  if (heldChordIdRef.current) {
+                                    handleChordRelease(selectedChord.id);
+                                  }
+                                }
+                              }}
+                              className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95 touch-manipulation"
+                              style={{
+                                backgroundColor: selectedChord.color,
+                                boxShadow: isPlaying ? `0 0 28px ${selectedChord.color}` : undefined
+                              }}
+                              title={
+                                isPlaying
+                                  ? (isDe ? 'Klang anhalten' : 'Stop sound')
+                                  : (isDe ? 'Akkord anspielen' : 'Play chord')
                               }
-                            }}
-                            className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95 touch-manipulation"
-                            style={{
-                              backgroundColor: selectedChord.color,
-                              boxShadow: isPlaying ? `0 0 28px ${selectedChord.color}` : undefined
-                            }}
-                            title={
-                              isPlaying
-                                ? (isDe ? 'Klang anhalten (Pedal lösen)' : 'Stop sound (release pedal)')
-                                : (isDe ? 'Akkord anspielen (Pedal hält 6s)' : 'Play chord (pedal sustains 6s)')
-                            }
-                          >
-                            {isPlaying ? (
-                              <VolumeX className="w-5 h-5 text-black animate-pulse" />
-                            ) : (
-                              <Volume2 className="w-5 h-5 text-black group-hover:scale-110 transition-transform" />
-                            )}
-                          </button>
+                            >
+                              {isPlaying ? (
+                                <VolumeX className="w-5 h-5 text-black animate-pulse" />
+                              ) : (
+                                <Volume2 className="w-5 h-5 text-black group-hover:scale-110 transition-transform" />
+                              )}
+                            </button>
+                          </div>
+
+                          <p className="text-xs text-[#a09c91] font-mono leading-relaxed">
+                            {selectedChord.voicingLabel}
+                          </p>
                         </div>
 
-                        <p className="text-xs text-[#a09c91] font-mono leading-relaxed">
-                          {selectedChord.voicingLabel}
+                        {/* Compact Square Musical Score (Positioned on the right of the chord) */}
+                        <div className="shrink-0 flex items-center justify-center sm:justify-end">
+                          <MusicalScoreChord
+                            notes={selectedChord.notes}
+                            chordName={selectedChord.name}
+                            color={selectedChord.color}
+                            isDe={isDe}
+                          />
+                        </div>
+
+                      </div>
+
+                      {/* Gravitational Tension Gauge */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-xs font-mono">
+                          <span className="text-[#8c887d]">
+                            {isDe ? 'Harmonische Gravitation / Spannung:' : 'Harmonic Tension / Gravitational Pull:'}
+                          </span>
+                          <span className="font-semibold" style={{ color: selectedChord.color }}>
+                            {isDe ? selectedChord.tensionLabelDe : selectedChord.tensionLabel}
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-[#1e2330] overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${selectedChord.tensionPercentage}%`,
+                              backgroundColor: selectedChord.color 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Sensation & Pedagogical Breakdown */}
+                    <div className="lg:col-span-6 space-y-4 border-t lg:border-t-0 lg:border-l border-white/5 pt-5 lg:pt-0 lg:pl-7">
+                      
+                      <div>
+                        <h5 className="text-xs uppercase tracking-wider font-mono text-[#c49750] mb-1.5">
+                          {isDe ? 'Wie es sich anfühlt (Sinnliche Wahrnehmung):' : 'How It Feels in the Body (Somatic Sensation):'}
+                        </h5>
+                        <p className="text-base sm:text-lg text-[#dedacf] font-serif italic leading-relaxed">
+                          “{isDe ? selectedChord.emotionalFeelingDe : selectedChord.emotionalFeeling}”
                         </p>
                       </div>
 
-                      {/* Compact Square Musical Score (Positioned on the right of the chord) */}
-                      <div className="shrink-0 flex items-center justify-center sm:justify-end">
-                        <MusicalScoreChord
-                          notes={selectedChord.notes}
-                          chordName={selectedChord.name}
-                          color={selectedChord.color}
-                          isDe={isDe}
-                        />
+                      <div>
+                        <h5 className="text-xs uppercase tracking-wider font-mono text-[#a78bfa] mb-1.5">
+                          {isDe ? 'Akustisches Phänomen:' : 'Acoustic Phenomenon:'}
+                        </h5>
+                        <p className="text-xs sm:text-sm text-[#a8a499] font-light leading-relaxed">
+                          {isDe ? selectedChord.acousticPhenomenonDe : selectedChord.acousticPhenomenon}
+                        </p>
                       </div>
 
-                    </div>
-
-                    {/* Gravitational Tension Gauge */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-[#8c887d]">
-                          {isDe ? 'Harmonische Gravitation / Spannung:' : 'Harmonic Tension / Gravitational Pull:'}
-                        </span>
-                        <span className="font-semibold" style={{ color: selectedChord.color }}>
-                          {isDe ? selectedChord.tensionLabelDe : selectedChord.tensionLabel}
-                        </span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-[#1e2330] overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${selectedChord.tensionPercentage}%`,
-                            backgroundColor: selectedChord.color 
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Sensation & Pedagogical Breakdown */}
-                  <div className="lg:col-span-6 space-y-4 border-t lg:border-t-0 lg:border-l border-white/5 pt-5 lg:pt-0 lg:pl-7">
-                    
-                    <div>
-                      <h5 className="text-xs uppercase tracking-wider font-mono text-[#c49750] mb-1.5">
-                        {isDe ? 'Wie es sich anfühlt (Sinnliche Wahrnehmung):' : 'How It Feels in the Body (Somatic Sensation):'}
-                      </h5>
-                      <p className="text-base sm:text-lg text-[#dedacf] font-serif italic leading-relaxed">
-                        “{isDe ? selectedChord.emotionalFeelingDe : selectedChord.emotionalFeeling}”
-                      </p>
-                    </div>
-
-                    <div>
-                      <h5 className="text-xs uppercase tracking-wider font-mono text-[#a78bfa] mb-1.5">
-                        {isDe ? 'Akustisches Phänomen:' : 'Acoustic Phenomenon:'}
-                      </h5>
-                      <p className="text-xs sm:text-sm text-[#a8a499] font-light leading-relaxed">
-                        {isDe ? selectedChord.acousticPhenomenonDe : selectedChord.acousticPhenomenon}
-                      </p>
                     </div>
 
                   </div>
-
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-        </div>
+            {/* Bottom Collapse Button */}
+            <div className="mt-8 pt-4 border-t border-white/5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  stopAudio(true);
+                  setIsStudioOpen(false);
+                }}
+                className="text-xs font-mono text-[#8c887d] hover:text-[#c49750] transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+                <span>{isDe ? 'Studio verbergen' : 'Collapse Studio'}</span>
+              </button>
+            </div>
+
+          </div>
+        )}
 
         {/* 3 Learner Profiles Grid */}
         <div className="mb-14">

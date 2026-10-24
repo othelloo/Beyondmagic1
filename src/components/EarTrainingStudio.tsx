@@ -10,7 +10,10 @@ import {
   Flame,
   Timer,
   Sparkles,
-  Award
+  Award,
+  Medal,
+  X,
+  History
 } from 'lucide-react';
 import { MusicalScoreChord } from './MusicalScoreChord';
 
@@ -37,26 +40,74 @@ interface EarTrainingStudioProps {
   isDe?: boolean;
 }
 
-// Transpose semitone names
-const SEMITONE_OFFSETS = [-4, -3, -2, -1, 0, 1, 2, 3, 4];
+export interface LeaderboardEntry {
+  id: string;
+  rank?: number;
+  score: number;
+  timeSeconds: number;
+  avgReactionTime: number; // in seconds
+  mistakes: number;
+  accuracy: number;
+  date: string;
+}
+
+// Transpose semitone names (Always random root)
+const SEMITONE_OFFSETS = [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6];
 const TARGET_STREAK = 10;
+
+// Note transposition utilities
+const MIDI_NOTE_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+function noteToMidi(noteStr: string): number {
+  const match = noteStr.match(/^([A-G])(b|#)?([1-5])$/);
+  if (!match) return 60;
+  const step = match[1];
+  const acc = match[2] || '';
+  const oct = parseInt(match[3], 10);
+  const base: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  let m = (oct + 1) * 12 + base[step];
+  if (acc === 'b') m -= 1;
+  if (acc === '#') m += 1;
+  return m;
+}
+
+function midiToNote(midi: number): string {
+  const noteIndex = ((midi % 12) + 12) % 12;
+  const oct = Math.floor(midi / 12) - 1;
+  return `${MIDI_NOTE_NAMES[noteIndex]}${oct}`;
+}
+
+function transposeNotes(notes: string[], shift: number): string[] {
+  if (shift === 0) return notes;
+  return notes.map(n => midiToNote(noteToMidi(n) + shift));
+}
 
 // Format seconds into MM:SS
 function formatTime(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
+  const secs = Math.floor(totalSeconds % 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 // Format seconds into friendly speech like "1m 14s"
 function formatTimeFriendly(totalSeconds: number, isDe: boolean): string {
   const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
+  const secs = (totalSeconds % 60).toFixed(1);
   if (mins === 0) {
     return isDe ? `${secs} Sek.` : `${secs}s`;
   }
   return isDe ? `${mins} Min. ${secs} Sek.` : `${mins}m ${secs}s`;
 }
+
+// Benchmark records for new visitors
+const DEFAULT_LEADERBOARD: LeaderboardEntry[] = [
+  { id: '1', score: 11420, timeSeconds: 18.2, avgReactionTime: 1.8, mistakes: 0, accuracy: 100, date: 'Oct 24' },
+  { id: '2', score: 10650, timeSeconds: 22.4, avgReactionTime: 2.2, mistakes: 0, accuracy: 100, date: 'Oct 24' },
+  { id: '3', score: 9840, timeSeconds: 26.5, avgReactionTime: 2.6, mistakes: 0, accuracy: 100, date: 'Oct 23' },
+  { id: '4', score: 9150, timeSeconds: 31.0, avgReactionTime: 2.9, mistakes: 1, accuracy: 91, date: 'Oct 23' },
+  { id: '5', score: 8640, timeSeconds: 35.8, avgReactionTime: 3.3, mistakes: 1, accuracy: 91, date: 'Oct 22' },
+  { id: '6', score: 7920, timeSeconds: 42.1, avgReactionTime: 3.8, mistakes: 2, accuracy: 83, date: 'Oct 21' },
+];
 
 export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
   chords,
@@ -68,48 +119,58 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
 }) => {
   const [currentChordIndex, setCurrentChordIndex] = useState<number>(0);
   const [semitoneShift, setSemitoneShift] = useState<number>(0);
-  const [allowTransposition, setAllowTransposition] = useState<boolean>(true);
   const [playbackStyle, setPlaybackStyle] = useState<'block' | 'arpeggio'>('block');
   const [options, setOptions] = useState<EarTrainingChordItem[]>([]);
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  // 10-Streak Session Tracking
   const [streak, setStreak] = useState<number>(0);
   const [bestStreak, setBestStreak] = useState<number>(0);
-  const [totalAttempts, setTotalAttempts] = useState<number>(0);
-  const [totalCorrect, setTotalCorrect] = useState<number>(0);
-
-  // 10-Streak Challenge Timer State
-  const [timerSeconds, setTimerSeconds] = useState<number>(0);
-  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const [mistakesInCurrentRun, setMistakesInCurrentRun] = useState<number>(0);
+  const [accumulatedStreakTime, setAccumulatedStreakTime] = useState<number>(0);
+  const [streakPointsEarned, setStreakPointsEarned] = useState<number[]>([]);
   const [hasCompleted10, setHasCompleted10] = useState<boolean>(false);
-  const [isNewRecord, setIsNewRecord] = useState<boolean>(false);
-  const [lastCompletionTime, setLastCompletionTime] = useState<number | null>(null);
-  const [best10Time, setBest10Time] = useState<number | null>(() => {
-    try {
-      const saved = localStorage.getItem('beyondMagic_best10StreakTime');
-      return saved ? parseInt(saved, 10) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [lastRunResult, setLastRunResult] = useState<LeaderboardEntry | null>(null);
+  const [isNewHighScore, setIsNewHighScore] = useState<boolean>(false);
 
+  // Per-Chord Recognition Timer State
+  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const [roundElapsedSec, setRoundElapsedSec] = useState<number>(0);
+  const [lastChordReactionTime, setLastChordReactionTime] = useState<number | null>(null);
+
+  // All-time Top 10 Leaderboard State
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('beyondMagic_top10EarScores');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_LEADERBOARD;
+  });
+  const [showLeaderboard, setShowLeaderboard] = useState<boolean>(false);
+
+  const roundStartTimeRef = useRef<number>(0);
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentChord = chords[currentChordIndex] || chords[0];
+  const transposedNotes = transposeNotes(currentChord.notes, semitoneShift);
 
-  // Live timer interval for active 10-streak attempt
+  // Live timer interval: Starts when audio begins, stops when answered
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isTimerRunning && !hasCompleted10) {
+    if (isTimerRunning && !hasAnswered) {
       interval = setInterval(() => {
-        setTimerSeconds(prev => prev + 1);
-      }, 1000);
+        if (roundStartTimeRef.current > 0) {
+          const elapsed = (Date.now() - roundStartTimeRef.current) / 1000;
+          setRoundElapsedSec(elapsed);
+        }
+      }, 50);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isTimerRunning, hasCompleted10]);
+  }, [isTimerRunning, hasAnswered]);
 
   // Calculate transposed frequencies
   const getTransposedFreqs = useCallback((chord: EarTrainingChordItem, shift: number) => {
@@ -124,15 +185,17 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
     setSelectedAnswerId(null);
     setHasAnswered(false);
     setIsCorrect(null);
+    setLastChordReactionTime(null);
+    setRoundElapsedSec(0);
+    setIsTimerRunning(false);
+    roundStartTimeRef.current = 0;
 
     // Pick a random chord
     const nextIndex = Math.floor(Math.random() * chords.length);
     setCurrentChordIndex(nextIndex);
 
-    // Pick a random transposition shift if enabled
-    const nextShift = allowTransposition 
-      ? SEMITONE_OFFSETS[Math.floor(Math.random() * SEMITONE_OFFSETS.length)]
-      : 0;
+    // Pick a random transposition shift (always random root!)
+    const nextShift = SEMITONE_OFFSETS[Math.floor(Math.random() * SEMITONE_OFFSETS.length)];
     setSemitoneShift(nextShift);
 
     const targetChord = chords[nextIndex];
@@ -146,23 +209,27 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
     const roundOptions = [targetChord, ...distractors].sort(() => 0.5 - Math.random());
     setOptions(roundOptions);
 
-    // Auto-play the new chord with a tiny delay
+    // Auto-play the new chord with a tiny delay and start the timer when sound begins
     if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
     autoPlayTimerRef.current = setTimeout(() => {
-      const freqs = allowTransposition
-        ? targetChord.frequencies.map(f => Number((f * Math.pow(2, nextShift / 12)).toFixed(2)))
-        : targetChord.frequencies;
+      const freqs = targetChord.frequencies.map(f => Number((f * Math.pow(2, nextShift / 12)).toFixed(2)));
       playChordFrequencies(freqs, soundMode, playbackStyle === 'arpeggio');
-    }, 150);
-  }, [allowTransposition, chords, playbackStyle, playChordFrequencies, soundMode, stopAudio]);
+
+      // The timer begins the instant the chord is played!
+      roundStartTimeRef.current = Date.now();
+      setIsTimerRunning(true);
+    }, 160);
+  }, [chords, playbackStyle, playChordFrequencies, soundMode, stopAudio]);
 
   // Restart 10-streak challenge
   const handleRestartChallenge = () => {
     setStreak(0);
-    setTimerSeconds(0);
-    setIsTimerRunning(false);
+    setMistakesInCurrentRun(0);
+    setAccumulatedStreakTime(0);
+    setStreakPointsEarned([]);
     setHasCompleted10(false);
-    setIsNewRecord(false);
+    setIsNewHighScore(false);
+    setLastRunResult(null);
     setupNewRound();
   };
 
@@ -176,66 +243,106 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
     };
   }, [chords.length, options.length, setupNewRound]);
 
-  // Play current challenge sound
+  // Replay current challenge sound
   const handleListen = useCallback((styleOverride?: 'block' | 'arpeggio') => {
     const style = styleOverride || playbackStyle;
-    const freqs = getTransposedFreqs(currentChord, allowTransposition ? semitoneShift : 0);
+    const freqs = getTransposedFreqs(currentChord, semitoneShift);
     playChordFrequencies(freqs, soundMode, style === 'arpeggio');
-  }, [allowTransposition, currentChord, getTransposedFreqs, playbackStyle, playChordFrequencies, semitoneShift, soundMode]);
+
+    // If timer wasn't started yet, ensure it is running
+    if (!hasAnswered && roundStartTimeRef.current === 0) {
+      roundStartTimeRef.current = Date.now();
+      setIsTimerRunning(true);
+    }
+  }, [currentChord, getTransposedFreqs, hasAnswered, playbackStyle, playChordFrequencies, semitoneShift, soundMode]);
 
   // Handle user's selection
   const handleSelectAnswer = (option: EarTrainingChordItem) => {
     if (hasAnswered) return;
 
-    // Start timer on first question if not running
-    if (!isTimerRunning && !hasCompleted10) {
-      setIsTimerRunning(true);
-    }
+    // Stop timer immediately at the exact moment of answering
+    const now = Date.now();
+    const reactionTime = roundStartTimeRef.current > 0 
+      ? Math.max(0.1, (now - roundStartTimeRef.current) / 1000)
+      : 1.0;
 
+    setIsTimerRunning(false);
+    setLastChordReactionTime(reactionTime);
+    setRoundElapsedSec(reactionTime);
     setSelectedAnswerId(option.id);
     setHasAnswered(true);
-    setTotalAttempts(prev => prev + 1);
 
     const correct = option.id === currentChord.id;
     setIsCorrect(correct);
 
     if (correct) {
-      const newStreak = streak + 1;
-      setStreak(newStreak);
-      setTotalCorrect(prev => prev + 1);
-      if (newStreak > bestStreak) setBestStreak(newStreak);
+      // Speed scoring formula: faster recognition = more points (max 1,200 pts per chord)
+      const chordPoints = Math.max(200, Math.round(1250 - reactionTime * 85));
+      const nextStreak = streak + 1;
+      const nextAccumulatedTime = accumulatedStreakTime + reactionTime;
+      const nextPoints = [...streakPointsEarned, chordPoints];
 
-      // Check if user reached the 10-streak milestone!
-      if (newStreak >= TARGET_STREAK && !hasCompleted10) {
-        setIsTimerRunning(false);
+      setStreak(nextStreak);
+      setAccumulatedStreakTime(nextAccumulatedTime);
+      setStreakPointsEarned(nextPoints);
+
+      if (nextStreak > bestStreak) {
+        setBestStreak(nextStreak);
+      }
+
+      // Check if user completed the 10-streak challenge!
+      if (nextStreak >= TARGET_STREAK && !hasCompleted10) {
         setHasCompleted10(true);
-        const finalTime = timerSeconds;
-        setLastCompletionTime(finalTime);
 
-        // Check if new personal best record
-        if (best10Time === null || finalTime < best10Time) {
-          setIsNewRecord(true);
-          setBest10Time(finalTime);
+        // System formula: takes into consideration both total recognition time and mistakes count!
+        // Points from speed minus mistake penalties
+        const totalRawPoints = nextPoints.reduce((acc, p) => acc + p, 0);
+        const mistakePenalty = mistakesInCurrentRun * 350;
+        const finalCompositeScore = Math.max(500, Math.round(totalRawPoints - mistakePenalty));
+        const avgReaction = Number((nextAccumulatedTime / TARGET_STREAK).toFixed(2));
+        const totalAttempts = TARGET_STREAK + mistakesInCurrentRun;
+        const accuracy = Math.round((TARGET_STREAK / totalAttempts) * 100);
+
+        const newResult: LeaderboardEntry = {
+          id: Date.now().toString(),
+          score: finalCompositeScore,
+          timeSeconds: Number(nextAccumulatedTime.toFixed(1)),
+          avgReactionTime: avgReaction,
+          mistakes: mistakesInCurrentRun,
+          accuracy,
+          date: new Date().toLocaleDateString(isDe ? 'de-DE' : 'en-US', { day: 'numeric', month: 'short' })
+        };
+
+        setLastRunResult(newResult);
+
+        // Update Leaderboard Top 10
+        setLeaderboard((prevBoard) => {
+          const updated = [...prevBoard, newResult]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+
           try {
-            localStorage.setItem('beyondMagic_best10StreakTime', finalTime.toString());
+            localStorage.setItem('beyondMagic_top10EarScores', JSON.stringify(updated));
           } catch {}
-        } else {
-          setIsNewRecord(false);
-        }
+
+          const isTop3 = updated.slice(0, 3).some(item => item.id === newResult.id);
+          setIsNewHighScore(isTop3);
+          return updated;
+        });
       }
     } else {
-      // Mistake breaks the streak - reset streak & timer for the next run toward 10
+      // Mistake penalty: recorded in mistake count
+      setMistakesInCurrentRun(prev => prev + 1);
+      // Mistake breaks the active streak toward 10
       setStreak(0);
-      setTimerSeconds(0);
-      setIsTimerRunning(false);
-      setHasCompleted10(false);
-      setIsNewRecord(false);
+      setAccumulatedStreakTime(0);
+      setStreakPointsEarned([]);
     }
   };
 
   return (
     <div className="space-y-8">
-      {/* Top Banner: Rules & Stats */}
+      {/* Top Banner: Rules & Real-Time Stats */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#121622] border border-[#232a3b] shadow-xl">
         <div>
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1">
@@ -247,12 +354,12 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
           </h4>
           <p className="text-xs text-[#a09c91] font-light mt-1 max-w-xl leading-relaxed">
             {isDe 
-              ? 'Höre genau hin: Dur, Moll, Septimen, Vermindert oder Übermäßig? Trainiere dein Gehör auf die emotionale Gravitation statt auf auswendig gelernte Töne.' 
-              : 'Listen closely: Major, Minor, Seventh, Diminished, or Augmented? Train your ear on harmonic weight and tension rather than memorized absolute pitch.'}
+              ? 'Immer zufällige Grundtöne: Trainiere dein Gehör auf Klangfarbe, Intervallspannung und Gravitation. Schnelle Erkennung und null Fehler bringen die höchste Punktzahl.' 
+              : 'Always random roots: Train your ear on emotional color, tension, and interval density. Rapid recognition and zero mistakes produce the highest all-time score.'}
           </p>
         </div>
 
-        {/* Score & Streak & 10-Streak Timer Counters */}
+        {/* Live Counters & Top 10 High Scores Button */}
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
           
           {/* 10-Streak Counter */}
@@ -269,82 +376,156 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
             </div>
           </div>
 
-          {/* 10-Streak Timer */}
+          {/* Mistakes Counter */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0c0e15] border border-white/5 text-center">
-            <Timer className={`w-4 h-4 ${isTimerRunning ? 'text-[#c49750] animate-pulse' : 'text-[#8c887d]'}`} />
+            <XCircle className={`w-4 h-4 ${mistakesInCurrentRun > 0 ? 'text-rose-400' : 'text-[#6e6a60]'}`} />
             <div className="text-left">
               <div className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">
-                {isDe ? '10er-Timer' : '10-Streak Timer'}
+                {isDe ? 'Fehler' : 'Mistakes'}
               </div>
-              <div className="text-sm font-mono font-bold text-[#fbf9f5] flex items-center gap-1.5">
-                <span className={isTimerRunning ? 'text-[#ffd56b]' : 'text-[#dedacf]'}>
-                  {formatTime(timerSeconds)}
+              <div className="text-sm font-mono font-bold text-[#fbf9f5]">
+                <span className={mistakesInCurrentRun > 0 ? 'text-rose-400' : 'text-emerald-400'}>
+                  {mistakesInCurrentRun}
                 </span>
-                {best10Time !== null && (
-                  <span className="text-[10px] font-normal text-[#8c887d]" title={isDe ? 'Beste 10er-Zeit' : 'Best 10-Streak Time'}>
-                    ⚡ {formatTime(best10Time)}
-                  </span>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Score Counter */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0c0e15] border border-white/5 text-center">
-            <Trophy className="w-4 h-4 text-[#c49750]" />
+          {/* Leaderboard Button */}
+          <button
+            type="button"
+            onClick={() => setShowLeaderboard(prev => !prev)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#171b26] hover:bg-[#202636] border border-[#c49750]/40 text-[#fbf9f5] transition-all cursor-pointer shadow-md group"
+            title={isDe ? 'Allzeit-Bestenliste der Top 10 Scores ansehen' : 'View all-time Top 10 high scores'}
+          >
+            <Trophy className="w-4 h-4 text-[#c49750] group-hover:scale-110 transition-transform" />
             <div className="text-left">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">
-                {isDe ? 'Treffer' : 'Score'}
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[#c49750]">
+                {isDe ? 'Bestenliste' : 'Leaderboard'}
               </div>
-              <div className="text-sm font-mono font-bold text-[#c49750]">
-                {totalAttempts > 0 ? `${Math.round((totalCorrect / totalAttempts) * 100)}%` : '—'}
-                <span className="text-[10px] font-normal text-[#8c887d] ml-1">({totalCorrect}/{totalAttempts})</span>
+              <div className="text-xs font-mono font-bold text-white flex items-center gap-1">
+                <span>Top 10</span>
+                <span className="text-[10px] text-[#8c887d]">({leaderboard[0]?.score?.toLocaleString() || '11,420'})</span>
               </div>
             </div>
-          </div>
+          </button>
 
         </div>
       </div>
 
+      {/* Top 10 All-Time Best Scores Drawer / Modal */}
+      {showLeaderboard && (
+        <div className="p-6 rounded-2xl bg-[#0d1017] border border-[#c49750]/40 shadow-2xl relative overflow-hidden animate-fade-in">
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
+            <div className="flex items-center gap-2.5">
+              <Medal className="w-5 h-5 text-[#c49750]" />
+              <h5 className="font-serif text-lg sm:text-xl text-[#fbf9f5] font-light">
+                {isDe ? 'Allzeit-Bestenliste (Top 10 Scores)' : 'All-Time Best Scores (Top 10)'}
+              </h5>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard(false)}
+              className="p-1.5 rounded-lg text-[#8c887d] hover:text-white bg-[#141824] border border-[#252c3c] cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <p className="text-xs text-[#a09c91] font-mono mb-4">
+            {isDe
+              ? 'Bewertungssystem: Belohnt rasante Reaktionszeit pro Akkord und zieht Strafpunkte für falsche Antworten ab.'
+              : 'Scoring system: Rewards split-second ear recognition speed and deducts penalty points for mistakes.'}
+          </p>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono">
+              <thead>
+                <tr className="border-b border-white/5 text-[#8c887d] uppercase tracking-wider text-[10px]">
+                  <th className="pb-2.5 pl-2">#</th>
+                  <th className="pb-2.5">{isDe ? 'Punkte' : 'Score'}</th>
+                  <th className="pb-2.5">{isDe ? 'Ø Erkennungszeit' : 'Avg Reaction'}</th>
+                  <th className="pb-2.5">{isDe ? 'Gesamtzeit' : 'Total Time'}</th>
+                  <th className="pb-2.5">{isDe ? 'Fehler' : 'Mistakes'}</th>
+                  <th className="pb-2.5 pr-2">{isDe ? 'Datum' : 'Date'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {leaderboard.map((entry, idx) => (
+                  <tr key={entry.id || idx} className={`hover:bg-white/[0.02] ${idx < 3 ? 'text-[#fbf9f5]' : 'text-[#b0ac9f]'}`}>
+                    <td className="py-2.5 pl-2 font-bold">
+                      {idx === 0 ? '🥇 1.' : idx === 1 ? '🥈 2.' : idx === 2 ? '🥉 3.' : `${idx + 1}.`}
+                    </td>
+                    <td className="py-2.5 font-bold text-[#c49750]">
+                      {entry.score.toLocaleString()} <span className="text-[10px] text-[#8c887d] font-normal">pts</span>
+                    </td>
+                    <td className="py-2.5 text-[#38bdf8]">
+                      {entry.avgReactionTime.toFixed(1)}s
+                    </td>
+                    <td className="py-2.5">
+                      {formatTime(entry.timeSeconds)}
+                    </td>
+                    <td className="py-2.5">
+                      <span className={entry.mistakes === 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400'}>
+                        {entry.mistakes === 0 ? (isDe ? '0 Fehler (Perfekt)' : '0 (Clean)') : `${entry.mistakes} ${isDe ? 'Fehler' : 'mistakes'}`}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-2 text-[#736f65]">
+                      {entry.date}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* 10-Streak Milestone Celebration Card */}
-      {hasCompleted10 && (
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-[#191e13] via-[#141b24] to-[#1d1622] border-2 border-[#d4af37]/60 shadow-[0_0_35px_rgba(212,175,55,0.25)] flex flex-col sm:flex-row items-center justify-between gap-5 animate-fade-in">
+      {hasCompleted10 && lastRunResult && (
+        <div className="p-6 rounded-2xl bg-gradient-to-r from-[#171c14] via-[#141b24] to-[#1c1422] border-2 border-[#d4af37]/60 shadow-[0_0_35px_rgba(212,175,55,0.25)] flex flex-col sm:flex-row items-center justify-between gap-6 animate-fade-in">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center shrink-0 shadow-lg">
-              <Award className="w-6 h-6 text-[#ffd56b] animate-bounce" />
+            <div className="w-14 h-14 rounded-full bg-[#d4af37]/20 border border-[#d4af37] flex items-center justify-center shrink-0 shadow-lg">
+              <Award className="w-7 h-7 text-[#ffd56b] animate-bounce" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h5 className="font-serif text-xl sm:text-2xl text-[#fdf497] font-medium tracking-tight">
-                  {isDe ? '🏆 10er-Serie Vollendet!' : '🏆 10-Streak Mastered!'}
+                  {isDe ? '🏆 10er-Serie Meisterhaft Vollendet!' : '🏆 10-Streak Mastered!'}
                 </h5>
-                {isNewRecord && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#ffd56b] text-black tracking-wider uppercase animate-pulse">
-                    {isDe ? 'Neuer Rekord!' : 'New Record!'}
+                {isNewHighScore && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#ffd56b] text-black tracking-wider uppercase animate-pulse">
+                    {isDe ? 'Top 3 Score!' : 'Top 3 Score!'}
                   </span>
                 )}
               </div>
               <p className="text-xs sm:text-sm text-[#dedacf] font-light mt-1">
                 {isDe 
-                  ? `Du hast 10 Akkorde in Folge in ${formatTimeFriendly(lastCompletionTime ?? timerSeconds, true)} fehlerfrei identifiziert!`
-                  : `You accurately identified 10 consecutive chord colors in ${formatTimeFriendly(lastCompletionTime ?? timerSeconds, false)}!`}
-                {best10Time !== null && (
-                  <span className="text-[#ffd56b] font-mono ml-2">
-                    ({isDe ? 'Beste Zeit:' : 'Personal Best:'} {formatTime(best10Time)})
-                  </span>
-                )}
+                  ? `Endstand: ${lastRunResult.score.toLocaleString()} Punkte · Ø ${lastRunResult.avgReactionTime.toFixed(1)}s pro Akkord · ${lastRunResult.mistakes} Fehler.`
+                  : `Final Score: ${lastRunResult.score.toLocaleString()} points · Avg ${lastRunResult.avgReactionTime.toFixed(1)}s per chord · ${lastRunResult.mistakes} mistakes.`}
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleRestartChallenge}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>{isDe ? 'Neue 10er-Serie starten' : 'Play Again / Beat Record'}</span>
-          </button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard(true)}
+              className="px-4 py-2.5 rounded-xl border border-[#c49750]/50 bg-[#161a26] text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Trophy className="w-3.5 h-3.5 text-[#c49750]" />
+              <span>{isDe ? 'Rangliste' : 'Rankings'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleRestartChallenge}
+              className="px-5 py-2.5 rounded-xl bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shrink-0"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>{isDe ? 'Nochmal spielen' : 'Play Again'}</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -357,31 +538,16 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
           style={{ backgroundColor: hasAnswered ? (isCorrect ? '#10b981' : '#f43f5e') : '#c49750' }}
         />
 
-        {/* Interactive Controls Bar: Sound mode, Arpeggio, Transposition */}
+        {/* Interactive Controls Bar: Always Random Root indicator & Playback Style */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-6 mb-6 border-b border-white/5 text-xs font-mono">
           
-          {/* Transposition Toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              setAllowTransposition(prev => !prev);
-              setupNewRound();
-            }}
-            className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 cursor-pointer ${
-              allowTransposition
-                ? 'bg-[#181f2f] border-[#c49750]/50 text-[#fbf9f5]'
-                : 'bg-[#0f121a] border-[#222736] text-[#8c887d]'
-            }`}
-            title={isDe ? 'Transponiert den Grundton zufällig, damit das Ohr die Klangfarbe und nicht die Tonhöhe lernt' : 'Transposes the root randomly so the ear trains on chord color, not fixed pitch'}
-          >
-            <Shuffle className={`w-3.5 h-3.5 ${allowTransposition ? 'text-[#c49750]' : 'text-[#6e6a60]'}`} />
-            <span>
-              {isDe 
-                ? (allowTransposition ? 'Zufällige Tonhöhe: AKTIV' : 'Feste Tonhöhe (Referenz)') 
-                : (allowTransposition ? 'Random Root: ON' : 'Fixed Pitch: OFF')}
+          {/* Always Random Root Badge */}
+          <div className="px-3 py-1.5 rounded-lg border border-[#c49750]/40 bg-[#121622] text-[#dedacf] flex items-center gap-2 select-none">
+            <Shuffle className="w-3.5 h-3.5 text-[#c49750]" />
+            <span className="font-semibold text-[#f5eedf]">
+              {isDe ? 'Zufälliger Grundton: IMMER AKTIV' : 'Random Root: ALWAYS ACTIVE'}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full ${allowTransposition ? 'bg-[#c49750]' : 'bg-[#3b4356]'}`} />
-          </button>
+          </div>
 
           {/* Playback style: Block vs Arpeggio */}
           <div className="inline-flex rounded-lg bg-[#0b0d13] p-1 border border-[#262c3c]">
@@ -415,38 +581,59 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
             </button>
           </div>
 
-          {/* Sound Instrument Indicator */}
-          <div className="text-[11px] text-[#8c887d] flex items-center gap-1.5">
-            <span>{isDe ? 'Klang:' : 'Sound:'}</span>
-            <span className="text-[#c49750] uppercase font-bold">{soundMode === 'piano' ? 'Piano 88' : 'Harmonic Synth'}</span>
-          </div>
-
         </div>
 
-        {/* Centerpiece: Big Listen & Replay Trigger */}
-        <div className="flex flex-col items-center justify-center my-6 space-y-4 text-center">
+        {/* Centerpiece: Audio Trigger on Left + Musical Score on Right upon Answer */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 my-6 py-2">
           
-          <button
-            type="button"
-            onClick={() => handleListen()}
-            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-[#c49750] via-[#ffd56b] to-[#fae082] text-black flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.35)] hover:shadow-[0_0_55px_rgba(212,175,55,0.55)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group"
-            title={isDe ? 'Akkord noch einmal anhören' : 'Replay challenge chord'}
-          >
-            <Volume2 className={`w-9 h-9 sm:w-11 sm:h-11 transition-transform ${isPlaying ? 'scale-125 animate-pulse' : 'group-hover:scale-110'}`} />
-          </button>
+          {/* Left: Big Audio Replay Button & Labels */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <button
+              type="button"
+              onClick={() => handleListen()}
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-[#c49750] via-[#ffd56b] to-[#fae082] text-black flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.35)] hover:shadow-[0_0_55px_rgba(212,175,55,0.55)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group shrink-0"
+              title={isDe ? 'Akkord noch einmal anhören' : 'Replay challenge chord'}
+            >
+              <Volume2 className={`w-9 h-9 sm:w-11 sm:h-11 transition-transform ${isPlaying ? 'scale-125 animate-pulse' : 'group-hover:scale-110'}`} />
+            </button>
 
-          <div className="space-y-1">
-            <div className="text-xs font-mono uppercase tracking-widest text-[#d4af37]">
-              {isPlaying 
-                ? (isDe ? '● Klang schwingt...' : '● Chord Ringing...') 
-                : (isDe ? 'Klicke zum Anhören' : 'Click to Replay Chord')}
-            </div>
-            <div className="text-[11px] text-[#8c887d] font-mono">
-              {allowTransposition 
-                ? (isDe ? 'Transponiert · Höre auf Terzen & Septimen' : 'Transposed · Focus on color & interval density')
-                : (isDe ? 'Originaltonhöhe' : 'Concert Pitch Reference')}
+            <div className="space-y-1">
+              <div className="text-xs font-mono uppercase tracking-widest text-[#d4af37]">
+                {isPlaying 
+                  ? (isDe ? '● Klang schwingt...' : '● Chord Ringing...') 
+                  : (isDe ? 'Klicke zum Anhören' : 'Click to Replay Chord')}
+              </div>
+              <div className="text-[11px] text-[#8c887d] font-mono">
+                {isDe ? 'Transponiert · Höre auf Klangfarbe & Intervalldichte' : 'Transposed · Focus on color & interval density'}
+              </div>
+
+              {/* Live Recognition Stopwatch for this chord */}
+              <div className="pt-1.5 flex items-center justify-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#0c0e15] border border-white/10 text-[11px] font-mono text-[#c49750] flex items-center gap-1.5">
+                  <Timer className={`w-3 h-3 ${isTimerRunning ? 'animate-spin' : ''}`} />
+                  {hasAnswered && lastChordReactionTime !== null
+                    ? (isDe ? `Erkannt in ${lastChordReactionTime.toFixed(1)}s` : `Recognized in ${lastChordReactionTime.toFixed(1)}s`)
+                    : `${roundElapsedSec.toFixed(1)}s`}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Right of the Replay: Musical Score Staff that appears when answer is chosen */}
+          {hasAnswered && (
+            <div className="animate-fade-in flex flex-col items-center p-3 sm:p-4 rounded-xl bg-[#0c0e15]/90 border border-[#c49750]/30 shadow-xl shrink-0">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[#d4af37] mb-1.5 flex items-center gap-1.5">
+                <span>🎼</span>
+                <span>{isDe ? 'Gespielte Partitur' : 'Actual Transposed Score'}</span>
+              </div>
+              <MusicalScoreChord
+                notes={transposedNotes}
+                chordName={currentChord.name}
+                color={currentChord.color}
+                isDe={isDe}
+              />
+            </div>
+          )}
 
         </div>
 
@@ -546,19 +733,6 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
                 <span>{isDe ? 'Nächster Akkord' : 'Next Chord'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-            </div>
-
-            {/* Frameless Golden Score of the Answer */}
-            <div className="p-4 rounded-xl bg-[#0d1017]/80 border border-white/5 flex flex-col items-center">
-              <div className="text-[11px] font-mono uppercase tracking-wider text-[#d4af37] text-center mb-2">
-                {isDe ? 'Partitur-Auflösung' : 'Score Analysis'}
-              </div>
-              <MusicalScoreChord
-                notes={currentChord.notes}
-                chordName={currentChord.name}
-                color={currentChord.color}
-                isDe={isDe}
-              />
             </div>
 
           </div>

@@ -51,6 +51,7 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
       try {
         const formData = new URLSearchParams();
         formData.append('form-name', 'inquiries');
+        formData.append('bot-field', '');
         formData.append('name', name);
         formData.append('email', email);
         formData.append('discipline', discipline);
@@ -62,7 +63,9 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: formData.toString()
-        }).catch(() => {});
+        }).catch((err) => {
+          console.warn('Form submission notice:', err);
+        });
       } catch (err) {
         // quiet fallback
       }

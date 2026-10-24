@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Youtube, Check, Bell, Flame, Compass, Feather } from 'lucide-react';
+import { saveSubscriber } from '../data/newsletterStore';
 
 interface SpiritualityPreviewProps {
   isOpen: boolean;
@@ -14,7 +15,29 @@ export const SpiritualityPreview: React.FC<SpiritualityPreviewProps> = ({ isOpen
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
+    const cleanEmail = email.trim();
+    if (cleanEmail) {
+      saveSubscriber(cleanEmail, 'Spirituality & Philosophy Premiere Waitlist', 'en');
+
+      try {
+        const formData = new URLSearchParams();
+        formData.append('form-name', 'newsletter');
+        formData.append('bot-field', '');
+        formData.append('email', cleanEmail);
+        formData.append('interest', 'Spirituality & Philosophy Premiere Waitlist');
+        formData.append('language', 'en');
+
+        fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData.toString()
+        }).catch((err) => {
+          console.warn('Netlify newsletter notice:', err);
+        });
+      } catch (err) {
+        // quiet fallback
+      }
+
       setSubmitted(true);
     }
   };
@@ -105,7 +128,16 @@ export const SpiritualityPreview: React.FC<SpiritualityPreviewProps> = ({ isOpen
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form
+                onSubmit={handleSubmit}
+                name="newsletter"
+                method="POST"
+                data-netlify="true"
+                className="space-y-3"
+              >
+                <input type="hidden" name="form-name" value="newsletter" />
+                <input type="hidden" name="bot-field" />
+                <input type="hidden" name="interest" value="Spirituality & Philosophy Premiere Waitlist" />
                 <label className="block text-xs uppercase tracking-wider text-[#8e8b80] font-mono">
                   Notify me when the YouTube series & essays launch:
                 </label>
