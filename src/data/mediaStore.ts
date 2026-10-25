@@ -65,6 +65,22 @@ export function deleteCustomVideo(id: string): void {
   saveVideos(updated);
 }
 
+export function reorderVideos(fromIndex: number, toIndex: number): void {
+  const current = [...getStoredVideos()];
+  if (fromIndex < 0 || fromIndex >= current.length || toIndex < 0 || toIndex >= current.length) return;
+  const [moved] = current.splice(fromIndex, 1);
+  current.splice(toIndex, 0, moved);
+  saveVideos(current);
+}
+
+export function moveVideo(id: string, direction: 'up' | 'down'): void {
+  const current = getStoredVideos();
+  const index = current.findIndex((v) => v.id === id);
+  if (index === -1) return;
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  reorderVideos(index, targetIndex);
+}
+
 export function getStoredPhotos(): PhotoItem[] {
   let list: PhotoItem[] = BUNDLED_GALLERY_PHOTOS;
   if (typeof window !== 'undefined') {
@@ -144,8 +160,40 @@ export function addCustomPhotosBatch(newPhotos: PhotoItem[]): void {
 
 export function deleteCustomPhoto(id: string): void {
   const current = getStoredPhotos();
-  const updated = current.filter((p) => p.id !== id);
+  const updated = current.filter((v) => v.id !== id);
   savePhotos(updated);
+}
+
+export function reorderPhotos(fromIndex: number, toIndex: number): void {
+  const current = [...getStoredPhotos()];
+  if (fromIndex < 0 || fromIndex >= current.length || toIndex < 0 || toIndex >= current.length) return;
+  const [moved] = current.splice(fromIndex, 1);
+  current.splice(toIndex, 0, moved);
+  savePhotos(current);
+}
+
+export function movePhoto(id: string, direction: 'up' | 'down'): void {
+  const current = getStoredPhotos();
+  const index = current.findIndex((p) => p.id === id);
+  if (index === -1) return;
+  const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  reorderPhotos(index, targetIndex);
+}
+
+const STORAGE_KEY_ADMIN_PASSWORD = 'verisme_admin_password_v1';
+
+export function getAdminPassword(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(STORAGE_KEY_ADMIN_PASSWORD) || '';
+}
+
+export function setAdminPassword(password: string): void {
+  if (typeof window === 'undefined') return;
+  if (!password) {
+    localStorage.removeItem(STORAGE_KEY_ADMIN_PASSWORD);
+  } else {
+    localStorage.setItem(STORAGE_KEY_ADMIN_PASSWORD, password);
+  }
 }
 
 export function resetMediaToDefaults(): void {

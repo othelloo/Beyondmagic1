@@ -6,9 +6,10 @@ import { BeyondMagicNavbarLogo } from './BeyondMagicNavbarLogo';
 interface FooterProps {
   onOpenInquiry: (topic?: string) => void;
   onOpenSpirituality: () => void;
+  onOpenAdmin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpirituality }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpirituality, onOpenAdmin }) => {
   const { language, t } = useLanguage();
   const isDe = language === 'de';
 
@@ -121,8 +122,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
 
         {/* Bottom Bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#676358] gap-4">
-          <div>
-            © {new Date().getFullYear()} Beyond <span className="magic-word">Magic</span> · Abdellah Lasri. {t.footer.copyright}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onOpenAdmin}
+              className="text-[#676358] hover:text-[#c49750] transition-colors cursor-pointer"
+              title="Secret Admin Access (/admin)"
+              aria-label="Secret Admin Access"
+            >
+              ©
+            </button>
+            <span>
+              {new Date().getFullYear()} Beyond <span className="magic-word">Magic</span> · Abdellah Lasri. {t.footer.copyright}
+            </span>
           </div>
 
           <div className="flex items-center gap-6">

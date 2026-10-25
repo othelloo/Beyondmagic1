@@ -214,138 +214,106 @@ export const PhotoGallery: React.FC = () => {
   };
 
   return (
-    <div className="mb-20">
+    <div className="bg-[#0e1118]/90 border border-[#212532] rounded-2xl p-4 sm:p-5 flex flex-col h-[520px] sm:h-[550px] shadow-xl">
       
-      {/* OWNER SETUP BOX (Visible only when not locked) */}
-      {!isLocked && (
-        <div className="mb-8 p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[#c49750]/60 bg-gradient-to-r from-[#121622] to-[#0d0f17] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xl">
-          <div className="space-y-1">
-            <div className="text-xs uppercase tracking-wider font-mono text-[#c49750] font-semibold flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              <span>{isDe ? 'Eigentümer-Setup: Galerie-Fotos synchronisieren' : 'Owner Setup: Sync Gallery Photos'}</span>
-            </div>
-            <p className="text-xs text-[#cfcac0]">
-              {isDe
-                ? 'Wählen Sie Ihre 39 Originalfotos von Ihrem Computer aus. Sie werden direkt als permanente Dateien auf dem Server gespeichert.'
-                : 'Select your 39 original photos from your computer. They will be saved directly as permanent files in the repository.'}
-            </p>
-            {uploadStatus && (
-              <p className="text-xs text-[#c49750] font-mono mt-1 font-medium">{uploadStatus}</p>
-            )}
+      {/* Compact Fixed Header */}
+      <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#21242d]">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-[#c49750] font-medium mb-0.5 flex items-center gap-1.5">
+            <Camera className="w-3.5 h-3.5" />
+            <span>{isDe ? 'Fotografien' : 'Photographs'}</span>
           </div>
+          <h3 className="text-xl sm:text-2xl font-serif text-[#f4f2ec] font-normal">
+            {isDe ? 'Fotogalerie' : 'Photo Gallery'}
+          </h3>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <label className="px-5 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg cursor-pointer transition-all flex items-center gap-2 shadow-lg active:scale-95">
-              <Upload className="w-4 h-4 text-black" />
-              <span>{uploadProgress ? `${uploadProgress.current}/${uploadProgress.total}...` : (isDe ? 'Alle 39 Fotos auswählen' : 'Select All 39 Photos')}</span>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                className="hidden"
-                onChange={handleOwnerUpload}
-              />
+        {/* Gallery Action */}
+        <div className="flex items-center gap-2">
+          {displayPhotos.length > 0 && (
+            <button
+              onClick={openFullGallery}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-mono uppercase tracking-wider text-[#dedacf] bg-[#171b26] hover:bg-[#202635] border border-[#2d3345] transition-all cursor-pointer"
+            >
+              <Images className="w-3 h-3 text-[#c49750]" />
+              <span>{isDe ? `Alle (${displayPhotos.length})` : `All (${displayPhotos.length})`}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* OWNER SETUP BOX (Visible only when unlocked) */}
+      {!isLocked && (
+        <div className="shrink-0 my-2 p-3 rounded-lg border border-dashed border-[#c49750]/60 bg-[#121622] flex items-center justify-between gap-2 text-xs">
+          <div className="text-[11px] text-[#cfcac0] truncate">
+            {isDe ? 'Fotos synchronisieren' : 'Sync photos to server'}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <label className="px-2.5 py-1 bg-[#c49750] text-black text-[10px] font-semibold uppercase rounded cursor-pointer">
+              <span>{uploadProgress ? `${uploadProgress.current}/${uploadProgress.total}` : 'Upload'}</span>
+              <input type="file" multiple accept="image/*" className="hidden" onChange={handleOwnerUpload} />
             </label>
-
             <button
               onClick={() => {
                 setIsLocked(true);
                 try { localStorage.setItem('verisme_gallery_locked', 'true'); } catch {}
               }}
-              className="px-3.5 py-2.5 bg-[#1b202e] hover:bg-[#252b3d] text-[#c49750] hover:text-[#d8a85c] text-xs font-mono rounded-lg border border-[#c49750]/40 transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Lock and hide uploader permanently for public visitors"
+              className="text-[10px] text-[#c49750]"
             >
-              <Lock className="w-3.5 h-3.5" />
-              <span>{isDe ? 'Sperren & Ausblenden' : 'Lock & Hide'}</span>
+              <Lock className="w-3 h-3" />
             </button>
           </div>
         </div>
       )}
 
-      {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4 border-b border-[#21242d] pb-6">
-        <div>
-          <div className="text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-1 flex items-center gap-2">
-            <Camera className="w-3.5 h-3.5" />
-            <span>{isDe ? 'Fotografien' : 'Photographs'}</span>
-          </div>
-          <h3 className="text-2xl sm:text-3xl font-serif text-[#f4f2ec] font-normal">
-            {isDe ? 'Fotogalerie' : 'Photo Gallery'}
-          </h3>
-          <p className="text-xs sm:text-sm text-[#8c887d] mt-1">
-            {isDe ? 'Bühnenauftritte, Proben und Momente im Studio.' : 'Stage performances, rehearsals, and studio moments.'}
-          </p>
+      {/* IF NO PHOTOS: Elegant Empty Notice */}
+      {displayPhotos.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-2">
+          <Camera className="w-6 h-6 text-[#c49750]" />
+          <h4 className="text-sm font-serif text-white font-medium">
+            {isDe ? 'Fotografien folgen in Kürze' : 'Photographs Coming Soon'}
+          </h4>
         </div>
+      ) : (
+        /* SCROLLABLE GRID OF ALL PHOTOS: Exact matching size to Video Gallery */
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-1.5 pt-3 pb-2 min-h-0">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            {displayPhotos.map((photo, idx) => renderPhotoCard(photo, idx, 'preview'))}
+          </div>
+        </div>
+      )}
 
-        {/* Gallery Action */}
+      {/* Fixed Footer Bar */}
+      <div className="shrink-0 pt-3 border-t border-white/5 flex items-center justify-between text-[11px]">
+        <span className="font-mono text-[#8c887d]">
+          {isDe
+            ? `${displayPhotos.length} Fotos · Scrollen oder Anklicken`
+            : `${displayPhotos.length} Photos · Scroll or click to browse`}
+        </span>
+
         <div className="flex items-center gap-3">
+          <button
+            onClick={openFullGallery}
+            className="inline-flex items-center gap-1.5 font-mono uppercase tracking-wider text-[#c49750] hover:text-[#d8a85c] transition-colors cursor-pointer"
+          >
+            <Images className="w-3.5 h-3.5" />
+            <span>{isDe ? 'Ganze Fotogalerie öffnen →' : 'Open Full Gallery →'}</span>
+          </button>
+
           {isLocked && (
             <button
               onClick={() => {
                 setIsLocked(false);
                 try { localStorage.removeItem('verisme_gallery_locked'); } catch {}
               }}
-              className="text-[11px] font-mono text-[#777367] hover:text-[#c49750] transition-colors flex items-center gap-1 cursor-pointer mr-2"
+              className="text-[10px] font-mono text-[#6e6a60] hover:text-[#c49750] transition-colors flex items-center gap-1 cursor-pointer"
               title="Manage photos"
             >
-              <Lock className="w-3 h-3 text-[#c49750]/60" />
-              <span>{isDe ? 'Fotos verwalten' : 'Manage Photos'}</span>
-            </button>
-          )}
-          {displayPhotos.length > 6 && (
-            <button
-              onClick={() => setIsFullGalleryOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider text-[#dedacf] bg-[#171b26] hover:bg-[#202635] border border-[#2d3345] transition-all cursor-pointer"
-            >
-              <Images className="w-3.5 h-3.5 text-[#c49750]" />
-              <span>{isDe ? `Alle anzeigen (${displayPhotos.length})` : `View All (${displayPhotos.length})`}</span>
+              <Lock className="w-2.5 h-2.5 text-[#c49750]/60" />
             </button>
           )}
         </div>
       </div>
-
-      {/* IF NO PHOTOS: Elegant Empty Notice */}
-      {displayPhotos.length === 0 ? (
-        <div className="p-12 rounded-2xl border border-[#272b35] bg-gradient-to-br from-[#12151d] to-[#0a0c10] text-center flex flex-col items-center justify-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#1b202a] text-[#c49750] flex items-center justify-center border border-[#c49750]/30 shadow-lg">
-            <Camera className="w-6 h-6" />
-          </div>
-          <h4 className="text-lg font-serif text-white font-medium">
-            {isDe ? 'Fotografien folgen in Kürze' : 'Photographs Coming Soon'}
-          </h4>
-          <p className="text-xs text-[#9a968b] max-w-md mx-auto leading-relaxed">
-            {isDe ? 'Neue Aufnahmen von Produktionen und Meisterkursen werden in Kürze kuratiert.' : 'Selected captures from international productions and masterclasses.'}
-          </p>
-        </div>
-      ) : (
-        /* CURATED PREVIEW OF REAL PHOTOS (NO TEXT OVERLAY) */
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {curatedPreviews.map((photo, idx) => renderPhotoCard(photo, idx, 'preview'))}
-          </div>
-
-          {displayPhotos.length > 12 && (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-              <button
-                onClick={() => setIsInlineExpanded(!isInlineExpanded)}
-                className="px-5 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider text-[#c49750] hover:text-[#d8a85c] bg-[#141822] hover:bg-[#1a202d] border border-[#c49750]/30 transition-all cursor-pointer shadow-sm"
-              >
-                <span>
-                  {isInlineExpanded
-                    ? (isDe ? 'Weniger anzeigen (Erste 12)' : 'Show Less (First 12)')
-                    : (isDe ? `Alle ${displayPhotos.length} Fotos anzeigen` : `Show All ${displayPhotos.length} Photos on Page`)}
-                </span>
-              </button>
-              <button
-                onClick={openFullGallery}
-                className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#a09c91] hover:text-[#c49750] border-b border-[#a09c91]/30 hover:border-[#c49750] pb-1 cursor-pointer transition-colors"
-              >
-                <span>{isDe ? `Vollbild-Galerie öffnen (${displayPhotos.length}) →` : `Open Full-Screen Grid (${displayPhotos.length}) →`}</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* FULL-SCREEN PHOTO ARCHIVE MODAL (NO TEXT OVERLAYS) */}
       {isFullGalleryOpen && typeof document !== 'undefined' && createPortal(

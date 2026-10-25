@@ -15,12 +15,14 @@ import { LanguageProvider } from './context/LanguageContext';
 // On-demand lazy modals and heavy overlays
 const InquiryModal = lazy(() => import('./components/InquiryModal').then(m => ({ default: m.InquiryModal })));
 const SpiritualityExperience = lazy(() => import('./components/SpiritualityExperience').then(m => ({ default: m.SpiritualityExperience })));
+const MediaManagerModal = lazy(() => import('./components/MediaManagerModal').then(m => ({ default: m.MediaManagerModal })));
 
 function MainApp() {
   const [inquiryOpen, setInquiryOpen] = useState(false);
   const [inquiryTopic, setInquiryTopic] = useState('General Masterclass Consultation');
   const [spiritualityActive, setSpiritualityActive] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   useEffect(() => {
     // Dismiss pre-shell overlay smoothly when React mounts
@@ -30,6 +32,37 @@ function MainApp() {
         win.__dismissShell();
       }
     }
+  }, []);
+
+  useEffect(() => {
+    // Check if visiting /admin or #admin
+    const checkAdminRoute = () => {
+      if (typeof window === 'undefined') return;
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || path.startsWith('/admin/') || hash === '#admin') {
+        setIsAdminOpen(true);
+      }
+    };
+
+    checkAdminRoute();
+    window.addEventListener('popstate', checkAdminRoute);
+    window.addEventListener('hashchange', checkAdminRoute);
+
+    // Discrete keyboard shortcut: Ctrl+Shift+A or Cmd+Shift+A
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setIsAdminOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('popstate', checkAdminRoute);
+      window.removeEventListener('hashchange', checkAdminRoute);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -50,6 +83,24 @@ function MainApp() {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  const handleCloseAdmin = () => {
+    setIsAdminOpen(false);
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || path.startsWith('/admin/') || hash === '#admin') {
+        window.history.pushState(null, '', '/');
+      }
+    }
+  };
+
+  const handleOpenAdmin = () => {
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', '/admin');
+    }
+    setIsAdminOpen(true);
   };
 
   return (
@@ -113,6 +164,7 @@ function MainApp() {
           <Footer
             onOpenInquiry={handleOpenInquiry}
             onOpenSpirituality={() => setSpiritualityActive(true)}
+            onOpenAdmin={handleOpenAdmin}
           />
         </main>
       </div>
@@ -147,6 +199,16 @@ function MainApp() {
           <SpiritualityExperience
             isActive={spiritualityActive}
             onClose={() => setSpiritualityActive(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Secret Studio Admin / Media Manager (/admin or #admin) */}
+      {isAdminOpen && (
+        <Suspense fallback={null}>
+          <MediaManagerModal
+            isOpen={isAdminOpen}
+            onClose={handleCloseAdmin}
           />
         </Suspense>
       )}

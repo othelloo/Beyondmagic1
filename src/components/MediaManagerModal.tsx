@@ -1,16 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { X, Youtube, Image, Plus, Check, Trash2, Copy, Sparkles, AlertCircle, RefreshCw, Camera, Upload, Inbox, Mail, MessageSquare, ExternalLink } from 'lucide-react';
+import {
+  X,
+  Youtube,
+  Image as ImageIcon,
+  Plus,
+  Check,
+  Trash2,
+  Copy,
+  Sparkles,
+  RefreshCw,
+  Camera,
+  Upload,
+  Inbox,
+  Mail,
+  MessageSquare,
+  ExternalLink,
+  ArrowUp,
+  ArrowDown,
+  Lock,
+  Unlock,
+  KeyRound,
+  ShieldCheck,
+  Eye,
+  EyeOff
+} from 'lucide-react';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
 import {
   getStoredVideos,
   getStoredPhotos,
   addCustomVideo,
   deleteCustomVideo,
+  moveVideo,
   addCustomPhoto,
   deleteCustomPhoto,
+  movePhoto,
   resetMediaToDefaults,
-  getStoredPortrait,
-  savePortrait
+  onMediaChange,
+  savePortrait,
+  getAdminPassword,
+  setAdminPassword
 } from '../data/mediaStore';
 import { getStoredInquiries, deleteInquiry, onInquiriesChange, InquiryMessage } from '../data/inquiryStore';
 import { VideoItem, PhotoItem } from '../types';
@@ -21,15 +49,47 @@ interface MediaManagerModalProps {
 }
 
 export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'inbox' | 'youtube' | 'photo' | 'export'>('inbox');
+  const [activeTab, setActiveTab] = useState<'inbox' | 'youtube' | 'photo' | 'security' | 'export'>('youtube');
   const [inquiries, setInquiries] = useState<InquiryMessage[]>(getStoredInquiries());
+  const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos());
+  const [photos, setPhotos] = useState<PhotoItem[]>(getStoredPhotos());
 
+  // Password / Authentication state
+  const [storedPassword, setStoredPasswordState] = useState<string>(getAdminPassword());
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(!getAdminPassword());
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // New password management in Security tab
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordSaveSuccess, setPasswordSaveSuccess] = useState(false);
+
+  // Synchronize with external changes
   useEffect(() => {
-    const unsub = onInquiriesChange(() => {
+    const unsubInquiries = onInquiriesChange(() => {
       setInquiries(getStoredInquiries());
     });
-    return unsub;
+    const unsubMedia = onMediaChange(() => {
+      setVideos(getStoredVideos());
+      setPhotos(getStoredPhotos());
+    });
+    return () => {
+      unsubInquiries();
+      unsubMedia();
+    };
   }, []);
+
+  // When modal opens, check if password is required
+  useEffect(() => {
+    if (isOpen) {
+      const pwd = getAdminPassword();
+      setStoredPasswordState(pwd);
+      if (!pwd) {
+        setIsUnlocked(true);
+      }
+    }
+  }, [isOpen]);
 
   // Video Form
   const [videoUrl, setVideoUrl] = useState('');
@@ -50,6 +110,42 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
   const [photoAddedSuccess, setPhotoAddedSuccess] = useState(false);
   const [portraitSuccess, setPortraitSuccess] = useState(false);
 
+  // Export Copied State
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  if (!isOpen) return null;
+
+  // Real-time preview of parsed YouTube ID
+  const detectedYtId = getYouTubeId(videoUrl);
+  const detectedThumb = detectedYtId ? getYouTubeThumbnail(detectedYtId) : null;
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === storedPassword) {
+      setIsUnlocked(true);
+      setPasswordError(false);
+      setPasswordInput('');
+    } else {
+      setPasswordError(true);
+    }
+  };
+
+  const handleSaveNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminPassword(newPassword.trim());
+    setStoredPasswordState(newPassword.trim());
+    setPasswordSaveSuccess(true);
+    setTimeout(() => setPasswordSaveSuccess(false), 3000);
+  };
+
+  const handleClearPassword = () => {
+    setAdminPassword('');
+    setStoredPasswordState('');
+    setNewPassword('');
+    setPasswordSaveSuccess(true);
+    setTimeout(() => setPasswordSaveSuccess(false), 3000);
+  };
+
   const handlePortraitUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -65,17 +161,22 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
     reader.readAsDataURL(file);
   };
 
-  // Export Copied State
-  const [copiedCode, setCopiedCode] = useState(false);
-
-  if (!isOpen) return null;
-
-  const currentVideos = getStoredVideos();
-  const currentPhotos = getStoredPhotos();
-
-  // Real-time preview of parsed YouTube ID
-  const detectedYtId = getYouTubeId(videoUrl);
-  const detectedThumb = detectedYtId ? getYouTubeThumbnail(detectedYtId) : null;
+  const handlePhotoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        setPhotoUrl(dataUrl);
+        if (!photoTitle) {
+          const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          setPhotoTitle(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleAddVideo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +194,7 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
     };
 
     addCustomVideo(newVideo);
+    setVideos(getStoredVideos());
     setVideoAddedSuccess(true);
     setVideoUrl('');
     setVideoTitle('');
@@ -117,6 +219,7 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
     };
 
     addCustomPhoto(newPhoto);
+    setPhotos(getStoredPhotos());
     setPhotoAddedSuccess(true);
     setPhotoUrl('');
     setPhotoTitle('');
@@ -128,11 +231,11 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
   };
 
   const generateExportCode = () => {
-    return `// Paste this into src/data/content.ts to make your added media permanent for Netlify!
+    return `// Paste this into src/data/content.ts to make your media changes permanent in git/repo!
 
-export const PHOTOS_COLLECTION: PhotoItem[] = ${JSON.stringify(currentPhotos, null, 2)};
+export const PHOTOS_COLLECTION: PhotoItem[] = ${JSON.stringify(photos, null, 2)};
 
-export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(currentVideos, null, 2)};
+export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)};
 `;
   };
 
@@ -146,577 +249,851 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(currentVideos, nu
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="relative max-w-2xl w-full bg-[#111319] border border-[#2b303d] rounded-2xl shadow-2xl overflow-hidden my-6 flex flex-col max-h-[90vh]"
+        className="relative max-w-3xl w-full bg-[#111319] border border-[#2b303d] rounded-2xl shadow-2xl overflow-hidden my-4 sm:my-6 flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-[#0d0f14] shrink-0">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#c49750]" />
-            <span className="text-xs uppercase font-mono tracking-widest text-[#f0ede6]">
-              Simple Media Manager
-            </span>
+        {/* Modal Top Header */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/10 bg-[#0d0f14] shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-[#c49750]/15 border border-[#c49750]/40 flex items-center justify-center text-[#c49750]">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono uppercase tracking-widest text-[#f0ede6] font-semibold">
+                  Studio Admin
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#c49750]/20 text-[#c49750] border border-[#c49750]/30">
+                  /admin
+                </span>
+                {!storedPassword ? (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Unlock className="w-2.5 h-2.5" />
+                    <span>Unlocked (No PIN set)</span>
+                  </span>
+                ) : (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>Password Protected</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#8e8a7f] mt-0.5">
+                Add, delete & reorder videos and gallery photos without editing code
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#9c978b] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label="Close"
+            className="p-1.5 rounded-lg text-[#9c978b] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Close Admin"
+            title="Close (/admin)"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-[#20232c] bg-[#141720] px-6 shrink-0 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('inbox')}
-            className={`py-3 px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
-              activeTab === 'inbox'
-                ? 'border-[#c49750] text-[#c49750] font-semibold'
-                : 'border-transparent text-[#8e8b80] hover:text-white'
-            }`}
-          >
-            <Inbox className="w-3.5 h-3.5 text-[#c49750]" />
-            <span>Messages / Inquiries</span>
-            <span className="ml-1 px-1.5 py-0.2 bg-[#c49750]/20 text-[#c49750] text-[10px] font-mono rounded">
-              {inquiries.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('youtube')}
-            className={`py-3 px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
-              activeTab === 'youtube'
-                ? 'border-[#c49750] text-[#c49750] font-semibold'
-                : 'border-transparent text-[#8e8b80] hover:text-white'
-            }`}
-          >
-            <Youtube className="w-3.5 h-3.5 text-red-500" />
-            <span>Add YouTube Link</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('photo')}
-            className={`py-3 px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
-              activeTab === 'photo'
-                ? 'border-[#c49750] text-[#c49750] font-semibold'
-                : 'border-transparent text-[#8e8b80] hover:text-white'
-            }`}
-          >
-            <Image className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Add Photo</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('export')}
-            className={`py-3 px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
-              activeTab === 'export'
-                ? 'border-[#c49750] text-[#c49750] font-semibold'
-                : 'border-transparent text-[#8e8b80] hover:text-white'
-            }`}
-          >
-            <Copy className="w-3.5 h-3.5 text-amber-300" />
-            <span>Permanent Netlify Code</span>
-          </button>
-        </div>
-
-        {/* Tab Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6">
-
-          {/* TAB 0: INBOX & MESSAGES */}
-          {activeTab === 'inbox' && (
-            <div className="space-y-6">
-              {/* Delivery Explainer Card */}
-              <div className="p-4 bg-gradient-to-br from-[#121620] to-[#0e1017] border border-[#c49750]/30 rounded-xl space-y-2">
-                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750]">
-                  <Mail className="w-4 h-4" />
-                  <span>Where messages go</span>
-                </div>
-                <p className="text-xs text-[#d1cdc2] leading-relaxed">
-                  When a student or producer fills out the form on your website:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-                  <div className="p-3 bg-black/40 rounded-lg border border-white/5">
-                    <strong className="text-white block mb-0.5">1. Studio Inbox (Right Here)</strong>
-                    <span className="text-[#9c978b]">
-                      Every inquiry is instantly recorded and viewable below with the student's name, email, role, and audio sample link.
-                    </span>
-                  </div>
-                  <div className="p-3 bg-black/40 rounded-lg border border-white/5">
-                    <strong className="text-white block mb-0.5">2. Direct to <span className="text-[#c49750]">beeyondmagic@protonmail.com</span></strong>
-                    <span className="text-[#9c978b]">
-                      When your site is deployed to Netlify, Netlify Forms automatically captures submissions and sends an instant email notification directly to your Proton Mail inbox.
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages List */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs text-[#8c887d] font-mono">
-                  <span>RECEIVED MESSAGES ({inquiries.length})</span>
-                  <span>Newest first</span>
-                </div>
-
-                {inquiries.length === 0 ? (
-                  <div className="p-12 text-center border border-dashed border-[#222632] rounded-xl space-y-2">
-                    <MessageSquare className="w-8 h-8 text-[#4a4f5d] mx-auto" />
-                    <p className="text-sm font-medium text-[#b5b1a6]">No messages received yet</p>
-                    <p className="text-xs text-[#716e66]">
-                      When someone books a lesson or submits an audio/video sample from the contact modal, it will appear here.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {inquiries.map((inq) => (
-                      <div
-                        key={inq.id}
-                        className="p-4 bg-[#11141c] border border-[#232734] rounded-xl hover:border-[#c49750]/40 transition-all space-y-2.5"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-white text-sm">{inq.name}</span>
-                            <span className="text-[#c49750] font-mono text-[11px] bg-[#c49750]/10 px-2 py-0.5 rounded">
-                              {inq.topic}
-                            </span>
-                            <span className="text-[#8c887d] text-[11px]">({inq.discipline})</span>
-                          </div>
-                          <span className="text-[11px] text-[#716e66] font-mono">{inq.date}</span>
-                        </div>
-
-                        <p className="text-xs text-[#d1cdbf] whitespace-pre-wrap leading-relaxed bg-black/30 p-3 rounded-lg border border-white/5">
-                          {inq.message || '(No text message)'}
-                        </p>
-
-                        {inq.audioLink && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-[#8c887d]">Audio/Video link:</span>
-                            <a
-                              href={inq.audioLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[#c49750] underline hover:text-white flex items-center gap-1 font-mono text-[11px]"
-                            >
-                              <span>{inq.audioLink}</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between pt-1 border-t border-white/5">
-                          <a
-                            href={`mailto:${inq.email}?subject=${encodeURIComponent(`Re: ${inq.topic} - Studio Abdellah Lasri`)}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#c49750] hover:bg-[#d8a85c] text-black font-semibold text-xs rounded transition-colors"
-                          >
-                            <Mail className="w-3.5 h-3.5" />
-                            <span>Reply to {inq.email}</span>
-                          </a>
-
-                          <button
-                            onClick={() => deleteInquiry(inq.id)}
-                            className="p-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-white/5 rounded transition-colors flex items-center gap-1 font-mono"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+        {/* LOCKED SCREEN (Only shown if a password was previously set and not yet unlocked) */}
+        {!isUnlocked && storedPassword ? (
+          <div className="p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-5">
+            <div className="w-14 h-14 rounded-full bg-[#181c26] border border-[#c49750]/40 flex items-center justify-center text-[#c49750]">
+              <Lock className="w-6 h-6" />
             </div>
-          )}
-
-          {/* TAB 1: YOUTUBE */}
-          {activeTab === 'youtube' && (
-            <div className="space-y-6">
-              <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-xs text-[#b8b5ab] leading-relaxed">
-                <strong className="text-white block mb-1">How YouTube links work:</strong>
-                Simply paste any standard YouTube URL (e.g., <code className="text-[#c49750]">https://www.youtube.com/watch?v=...</code> or <code className="text-[#c49750]">https://youtu.be/...</code>). The site automatically grabs the video thumbnail and embeds the player directly into your video library!
-              </div>
-
-              {videoAddedSuccess && (
-                <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
-                  <Check className="w-4 h-4 shrink-0 text-emerald-400" />
-                  <span>Your video was added! You can now watch it in the Video Gallery and Featured Video player.</span>
-                </div>
-              )}
-
-              <form onSubmit={handleAddVideo} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                    YouTube URL *
-                  </label>
-                  <input
-                    type="url"
-                    required
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                    className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                  />
-                </div>
-
-                {/* Instant Live Preview of Detected Thumbnail */}
-                {detectedThumb && (
-                  <div className="flex items-center gap-3 p-3 bg-black/60 border border-[#c49750]/30 rounded-lg">
-                    <img
-                      src={detectedThumb}
-                      alt="YouTube Thumbnail Preview"
-                      className="w-24 aspect-video object-cover rounded border border-white/10"
-                    />
-                    <div className="text-xs">
-                      <span className="text-emerald-400 font-medium block">✓ YouTube video recognized!</span>
-                      <span className="text-[#8c887d] text-[11px]">Video ID: {detectedYtId}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Video Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={videoTitle}
-                      onChange={(e) => setVideoTitle(e.target.value)}
-                      placeholder="e.g. Singing Don José in Carmen"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Category *
-                    </label>
-                    <select
-                      value={videoCategory}
-                      onChange={(e) => setVideoCategory(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white focus:outline-none focus:border-[#c49750]"
-                    >
-                      <option value="opera">Singing in Opera & Recitals</option>
-                      <option value="composition">My Own Music & Compositions</option>
-                      <option value="teaching">Future: Lessons & Method</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Duration (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={videoDuration}
-                      onChange={(e) => setVideoDuration(e.target.value)}
-                      placeholder="e.g. 05:30"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Description / Note
-                    </label>
-                    <input
-                      type="text"
-                      value={videoDescription}
-                      onChange={(e) => setVideoDescription(e.target.value)}
-                      placeholder="e.g. Live stage performance at Opéra de Paris"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Video to Website</span>
-                </button>
-              </form>
-
-              {/* List of currently active videos with delete button */}
-              <div className="pt-4 border-t border-white/10">
-                <div className="text-xs uppercase font-mono text-[#8c887d] mb-3">
-                  Current Videos in Gallery ({currentVideos.length}):
-                </div>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {currentVideos.map((v) => (
-                    <div
-                      key={v.id}
-                      className="flex items-center justify-between p-2.5 bg-black/40 rounded-lg border border-white/5 text-xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Youtube className="w-4 h-4 text-red-400 shrink-0" />
-                        <span className="text-[#dedacf] truncate">{v.title}</span>
-                        <span className="text-[10px] text-[#78756d] uppercase font-mono shrink-0">({v.category})</span>
-                      </div>
-                      <button
-                        onClick={() => deleteCustomVideo(v.id)}
-                        className="text-red-400 hover:text-red-300 p-1 cursor-pointer shrink-0"
-                        title="Delete video"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-white">Admin Access</h3>
+              <p className="text-xs text-[#8e8a7f] max-w-sm">
+                Enter your secret password to manage videos, photos, and messages.
+              </p>
             </div>
-          )}
 
-          {/* TAB 2: PHOTO */}
-          {activeTab === 'photo' && (
-            <div className="space-y-6">
-              {/* Main Portrait Section */}
-              <div className="p-4 bg-[#181b24] border border-[#c49750]/40 rounded-xl">
-                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1 font-semibold">
-                  <Camera className="w-4 h-4" />
-                  <span>Main First-Page Portrait Photo</span>
-                </div>
-                <p className="text-xs text-[#b8b5ab] mb-3">
-                  Upload your real photograph directly from your computer. It will replace the image in the Hero section and Biography immediately.
-                </p>
-
-                {portraitSuccess ? (
-                  <div className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span>Your real portrait has been updated across the website!</span>
-                  </div>
-                ) : (
-                  <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg cursor-pointer transition-all shadow-md">
-                    <Upload className="w-3.5 h-3.5 text-black" />
-                    <span>Select Portrait File From Computer</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handlePortraitUpload}
-                    />
-                  </label>
-                )}
-              </div>
-
-              <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-xs text-[#b8b5ab] leading-relaxed">
-                <strong className="text-white block mb-1">Add Stage & Behind-the-Scenes Photos:</strong>
-                You can paste an online image link (from Cloudinary, Imgur, Dropbox, etc.), or if hosting on Netlify, put your image in the <code className="text-[#c49750]">/public/images/</code> folder and use <code className="text-[#c49750]">/images/my-photo.jpg</code>.
-              </div>
-
-              {photoAddedSuccess && (
-                <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
-                  <Check className="w-4 h-4 shrink-0 text-emerald-400" />
-                  <span>Photo added successfully! It is now visible in the Photo Gallery and Lightbox.</span>
-                </div>
-              )}
-
-              <form onSubmit={handleAddPhoto} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                    Image URL or Path *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={photoUrl}
-                    onChange={(e) => setPhotoUrl(e.target.value)}
-                    placeholder="https://... or /src/assets/images/... or /images/..."
-                    className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Photo Title *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={photoTitle}
-                      onChange={(e) => setPhotoTitle(e.target.value)}
-                      placeholder="e.g. Werther Act II"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Collection / Category *
-                    </label>
-                    <select
-                      value={photoCategory}
-                      onChange={(e) => setPhotoCategory(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white focus:outline-none focus:border-[#c49750]"
-                    >
-                      <option value="production">Singing in Productions</option>
-                      <option value="behind_the_scenes">Behind the Scenes (Miscellaneous)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Venue / Context
-                    </label>
-                    <input
-                      type="text"
-                      value={photoVenue}
-                      onChange={(e) => setPhotoVenue(e.target.value)}
-                      placeholder="e.g. Grand Théâtre de Genève"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Role (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={photoRole}
-                      onChange={(e) => setPhotoRole(e.target.value)}
-                      placeholder="e.g. Faust"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                      Year
-                    </label>
-                    <input
-                      type="text"
-                      value={photoYear}
-                      onChange={(e) => setPhotoYear(e.target.value)}
-                      placeholder="e.g. 2024"
-                      className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#9c988c] mb-1.5">
-                    Caption
-                  </label>
-                  <input
-                    type="text"
-                    value={photoCaption}
-                    onChange={(e) => setPhotoCaption(e.target.value)}
-                    placeholder="Short description of this moment"
-                    className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Photo to Gallery</span>
-                </button>
-              </form>
-
-              {/* List of currently active photos */}
-              <div className="pt-4 border-t border-white/10">
-                <div className="text-xs uppercase font-mono text-[#8c887d] mb-3">
-                  Current Photos in Gallery ({currentPhotos.length}):
-                </div>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {currentPhotos.map((p, idx) => (
-                    <div
-                      key={`manager-photo-${p.id}-${idx}`}
-                      className="flex items-center justify-between p-2.5 bg-black/40 rounded-lg border border-white/5 text-xs"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <Image className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span className="text-[#dedacf] truncate">{p.title}</span>
-                        <span className="text-[10px] text-[#78756d] uppercase font-mono shrink-0">
-                          ({p.category === 'production' ? 'Production' : 'Behind Scenes'})
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => deleteCustomPhoto(p.id)}
-                        className="text-red-400 hover:text-red-300 p-1 cursor-pointer shrink-0"
-                        title="Delete photo"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: EXPORT / CODE FOR NETLIFY */}
-          {activeTab === 'export' && (
-            <div className="space-y-5">
-              <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-xs text-[#b8b5ab] leading-relaxed">
-                <strong className="text-white block mb-1">Permanent Netlify Setup:</strong>
-                Anything you add in this manager is saved in your browser right now. To make it permanent for everyone on your live Netlify website, copy the code below and paste it into <code className="text-[#c49750]">src/data/content.ts</code> in your project files!
-              </div>
-
+            <form onSubmit={handleUnlock} className="w-full max-w-xs space-y-3">
               <div className="relative">
-                <pre className="p-4 bg-black/80 border border-white/10 rounded-xl text-[11px] font-mono text-[#dedacf] overflow-x-auto max-h-64 leading-tight">
-                  {generateExportCode()}
-                </pre>
-                <button
-                  onClick={handleCopyCode}
-                  className="absolute top-3 right-3 px-3 py-1.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold rounded flex items-center gap-1.5 shadow-md cursor-pointer transition-colors"
-                >
-                  {copiedCode ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-black" />
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Code</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              <div className="pt-2 flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    if (window.confirm('Reset all photos and videos back to original defaults?')) {
-                      resetMediaToDefaults();
-                    }
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoFocus
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs text-red-400/80 hover:text-red-300 transition-colors cursor-pointer"
+                  placeholder="Enter password..."
+                  className={`w-full px-4 py-2.5 bg-black/60 border rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none ${
+                    passwordError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#2b303d] focus:border-[#c49750]'
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8e8a7f] hover:text-white"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Reset to Original Demo Media</span>
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {passwordError && (
+                <p className="text-[11px] text-red-400 font-mono">Incorrect password. Please try again.</p>
+              )}
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow-md"
+              >
+                Unlock Studio
+              </button>
+            </form>
+          </div>
+        ) : (
+          <>
+            {/* Tab Navigation */}
+            <div className="flex border-b border-[#20232c] bg-[#141720] px-4 sm:px-6 shrink-0 overflow-x-auto gap-1">
+              <button
+                onClick={() => setActiveTab('youtube')}
+                className={`py-3 px-3 sm:px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'youtube'
+                    ? 'border-[#c49750] text-[#c49750] font-semibold'
+                    : 'border-transparent text-[#8e8b80] hover:text-white'
+                }`}
+              >
+                <Youtube className="w-3.5 h-3.5 text-red-500" />
+                <span>Videos ({videos.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('photo')}
+                className={`py-3 px-3 sm:px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'photo'
+                    ? 'border-[#c49750] text-[#c49750] font-semibold'
+                    : 'border-transparent text-[#8e8b80] hover:text-white'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Photos ({photos.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('inbox')}
+                className={`py-3 px-3 sm:px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'inbox'
+                    ? 'border-[#c49750] text-[#c49750] font-semibold'
+                    : 'border-transparent text-[#8e8b80] hover:text-white'
+                }`}
+              >
+                <Inbox className="w-3.5 h-3.5 text-[#c49750]" />
+                <span>Inbox</span>
+                <span className="ml-1 px-1.5 py-0.2 bg-[#c49750]/20 text-[#c49750] text-[10px] font-mono rounded">
+                  {inquiries.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`py-3 px-3 sm:px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'security'
+                    ? 'border-[#c49750] text-[#c49750] font-semibold'
+                    : 'border-transparent text-[#8e8b80] hover:text-white'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Password / PIN</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('export')}
+                className={`py-3 px-3 sm:px-4 text-xs font-medium border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                  activeTab === 'export'
+                    ? 'border-[#c49750] text-[#c49750] font-semibold'
+                    : 'border-transparent text-[#8e8b80] hover:text-white'
+                }`}
+              >
+                <Copy className="w-3.5 h-3.5 text-amber-300" />
+                <span>Permanent Code</span>
+              </button>
             </div>
-          )}
 
-        </div>
+            {/* Tab Content Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
 
-        {/* Modal Footer */}
-        <div className="px-6 py-3.5 border-t border-white/10 bg-[#0d0f14] flex items-center justify-between shrink-0 text-xs text-[#8c887d]">
-          <span>Netlify-ready single page site</span>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs font-medium cursor-pointer transition-colors"
-          >
-            Done
-          </button>
-        </div>
+              {/* TAB 1: YOUTUBE VIDEOS (ADD + REORDER + DELETE) */}
+              {activeTab === 'youtube' && (
+                <div className="space-y-6">
+                  {/* Notice */}
+                  <div className="p-3.5 bg-black/40 border border-white/10 rounded-xl text-xs text-[#b8b5ab] leading-relaxed flex items-start gap-3">
+                    <Youtube className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white block mb-0.5">Add or Reorder YouTube Videos</strong>
+                      <span>
+                        Paste any YouTube link below. In the list below, use the <span className="text-[#c49750] font-mono">↑</span> and <span className="text-[#c49750] font-mono">↓</span> buttons to arrange which videos appear first in your gallery!
+                      </span>
+                    </div>
+                  </div>
+
+                  {videoAddedSuccess && (
+                    <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
+                      <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+                      <span>Video added! It is now active in your Video Gallery and Featured Video spotlight.</span>
+                    </div>
+                  )}
+
+                  {/* Add Video Form */}
+                  <form onSubmit={handleAddVideo} className="p-4 bg-[#141720]/80 border border-[#232734] rounded-xl space-y-3.5">
+                    <div className="text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
+                      Add New YouTube Video
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                        YouTube URL *
+                      </label>
+                      <input
+                        type="url"
+                        required
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                        className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                      />
+                    </div>
+
+                    {/* Instant Live Preview of Detected Thumbnail */}
+                    {detectedThumb && (
+                      <div className="flex items-center gap-3 p-2.5 bg-black/60 border border-[#c49750]/40 rounded-lg">
+                        <img
+                          src={detectedThumb}
+                          alt="Thumbnail Preview"
+                          className="w-24 aspect-video object-cover rounded border border-white/10"
+                        />
+                        <div className="text-xs">
+                          <span className="text-emerald-400 font-medium block">✓ YouTube video recognized</span>
+                          <span className="text-[#8c887d] text-[11px] font-mono">ID: {detectedYtId}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Video Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={videoTitle}
+                          onChange={(e) => setVideoTitle(e.target.value)}
+                          placeholder="e.g. Singing Don José in Carmen"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Category *
+                        </label>
+                        <select
+                          value={videoCategory}
+                          onChange={(e) => setVideoCategory(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white focus:outline-none focus:border-[#c49750]"
+                        >
+                          <option value="opera">Singing in Opera & Recitals</option>
+                          <option value="composition">My Own Music & Compositions</option>
+                          <option value="teaching">Lessons & Technique</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Duration (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={videoDuration}
+                          onChange={(e) => setVideoDuration(e.target.value)}
+                          placeholder="e.g. 05:30"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Description (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={videoDescription}
+                          onChange={(e) => setVideoDescription(e.target.value)}
+                          placeholder="e.g. Live stage performance"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Video to Gallery</span>
+                    </button>
+                  </form>
+
+                  {/* Reorder and Delete List */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between text-xs font-mono text-[#8c887d]">
+                      <span>CURRENT VIDEOS ({videos.length}) — USE ARROWS TO REORDER</span>
+                      <span className="text-[11px]">Top video appears first</span>
+                    </div>
+
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {videos.map((v, index) => {
+                        const ytId = v.youtubeId || getYouTubeId(v.youtubeUrl || '');
+                        const thumb = v.thumbnail || (ytId ? getYouTubeThumbnail(ytId) : null);
+
+                        return (
+                          <div
+                            key={v.id}
+                            className="flex items-center justify-between p-2.5 bg-[#12151d] rounded-xl border border-white/5 hover:border-[#c49750]/30 transition-all gap-3 text-xs"
+                          >
+                            {/* Position Badge & Thumbnail */}
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="w-5 text-center font-mono text-[11px] text-[#6d6a60] shrink-0">
+                                {index + 1}
+                              </span>
+                              {thumb ? (
+                                <img
+                                  src={thumb}
+                                  alt={v.title}
+                                  className="w-14 aspect-video object-cover rounded border border-white/10 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-14 aspect-video bg-black/60 rounded flex items-center justify-center shrink-0">
+                                  <Youtube className="w-4 h-4 text-red-500" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <div className="text-white font-medium truncate">{v.title}</div>
+                                <div className="text-[10px] text-[#8c887d] font-mono flex items-center gap-2">
+                                  <span className="text-[#c49750] uppercase">{v.category}</span>
+                                  {v.duration && <span>· {v.duration}</span>}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions: Move Up, Move Down, Delete */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => moveVideo(v.id, 'up')}
+                                className="p-1.5 rounded hover:bg-white/10 text-[#9c978b] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                title="Move video up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={index === videos.length - 1}
+                                onClick={() => moveVideo(v.id, 'down')}
+                                className="p-1.5 rounded hover:bg-white/10 text-[#9c978b] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                title="Move video down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                              <div className="w-px h-4 bg-white/10 mx-0.5" />
+                              <button
+                                type="button"
+                                onClick={() => deleteCustomVideo(v.id)}
+                                className="p-1.5 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                                title="Delete video"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: PHOTOS (ADD + COMPUTER UPLOAD + REORDER + PORTRAIT) */}
+              {activeTab === 'photo' && (
+                <div className="space-y-6">
+                  {/* Main Portrait Section */}
+                  <div className="p-4 bg-[#141720]/80 border border-[#c49750]/40 rounded-xl space-y-2.5">
+                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
+                      <Camera className="w-4 h-4" />
+                      <span>Main First-Page Portrait Photo</span>
+                    </div>
+                    <p className="text-xs text-[#b8b5ab]">
+                      Select an image file from your computer. It instantly updates the main portrait in the Hero section and Biography.
+                    </p>
+
+                    {portraitSuccess ? (
+                      <div className="p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-lg text-xs text-emerald-300 flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-400" />
+                        <span>Your main portrait was successfully updated!</span>
+                      </div>
+                    ) : (
+                      <label className="inline-flex items-center gap-2 px-4 py-2 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold uppercase tracking-wider rounded-lg cursor-pointer transition-all shadow-md">
+                        <Upload className="w-3.5 h-3.5 text-black" />
+                        <span>Select Portrait File From Computer</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePortraitUpload}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {photoAddedSuccess && (
+                    <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
+                      <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+                      <span>Photo added successfully! It is now visible in the Photo Gallery and Lightbox.</span>
+                    </div>
+                  )}
+
+                  {/* Add Photo Form */}
+                  <form onSubmit={handleAddPhoto} className="p-4 bg-[#141720]/80 border border-[#232734] rounded-xl space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
+                        Add Photo to Gallery
+                      </span>
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-[11px] cursor-pointer transition-colors">
+                        <Upload className="w-3 h-3 text-[#c49750]" />
+                        <span>Or upload file from computer</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handlePhotoFileUpload}
+                        />
+                      </label>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                        Image URL or Local Path *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={photoUrl}
+                        onChange={(e) => setPhotoUrl(e.target.value)}
+                        placeholder="https://... or /src/assets/images/... or uploaded file"
+                        className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                      />
+                    </div>
+
+                    {/* Preview of Photo being added */}
+                    {photoUrl && (
+                      <div className="flex items-center gap-3 p-2 bg-black/60 border border-[#c49750]/30 rounded-lg">
+                        <img
+                          src={photoUrl}
+                          alt="Preview"
+                          className="w-16 h-16 object-cover rounded border border-white/10"
+                        />
+                        <div className="text-xs text-[#9c978b]">
+                          <span className="text-emerald-400 block font-medium">✓ Photo ready</span>
+                          <span className="text-[11px] truncate max-w-xs block">{photoTitle || 'Enter title below'}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Photo Title *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={photoTitle}
+                          onChange={(e) => setPhotoTitle(e.target.value)}
+                          placeholder="e.g. Werther Act II"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Collection / Category *
+                        </label>
+                        <select
+                          value={photoCategory}
+                          onChange={(e) => setPhotoCategory(e.target.value as any)}
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white focus:outline-none focus:border-[#c49750]"
+                        >
+                          <option value="production">Singing in Productions</option>
+                          <option value="behind_the_scenes">Behind the Scenes (Miscellaneous)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Venue / Context
+                        </label>
+                        <input
+                          type="text"
+                          value={photoVenue}
+                          onChange={(e) => setPhotoVenue(e.target.value)}
+                          placeholder="e.g. Opéra de Paris"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Role (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={photoRole}
+                          onChange={(e) => setPhotoRole(e.target.value)}
+                          placeholder="e.g. Faust"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Year
+                        </label>
+                        <input
+                          type="text"
+                          value={photoYear}
+                          onChange={(e) => setPhotoYear(e.target.value)}
+                          placeholder="e.g. 2024"
+                          className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Photo to Gallery</span>
+                    </button>
+                  </form>
+
+                  {/* Reorder and Delete List */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between text-xs font-mono text-[#8c887d]">
+                      <span>CURRENT PHOTOS ({photos.length}) — USE ARROWS TO REORDER</span>
+                      <span className="text-[11px]">Top photo appears first</span>
+                    </div>
+
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {photos.map((p, index) => (
+                        <div
+                          key={`photo-item-${p.id}-${index}`}
+                          className="flex items-center justify-between p-2.5 bg-[#12151d] rounded-xl border border-white/5 hover:border-[#c49750]/30 transition-all gap-3 text-xs"
+                        >
+                          {/* Position Badge & Thumbnail */}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-5 text-center font-mono text-[11px] text-[#6d6a60] shrink-0">
+                              {index + 1}
+                            </span>
+                            <img
+                              src={p.image}
+                              alt={p.title}
+                              className="w-12 h-12 object-cover rounded border border-white/10 shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="text-white font-medium truncate">{p.title}</div>
+                              <div className="text-[10px] text-[#8c887d] font-mono flex items-center gap-2">
+                                <span className="text-[#c49750] uppercase">
+                                  {p.category === 'production' ? 'Production' : 'Behind Scenes'}
+                                </span>
+                                {p.venueOrContext && <span className="truncate">· {p.venueOrContext}</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions: Move Up, Move Down, Delete */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              onClick={() => movePhoto(p.id, 'up')}
+                              className="p-1.5 rounded hover:bg-white/10 text-[#9c978b] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              title="Move photo up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === photos.length - 1}
+                              onClick={() => movePhoto(p.id, 'down')}
+                              className="p-1.5 rounded hover:bg-white/10 text-[#9c978b] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              title="Move photo down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <div className="w-px h-4 bg-white/10 mx-0.5" />
+                            <button
+                              type="button"
+                              onClick={() => deleteCustomPhoto(p.id)}
+                              className="p-1.5 rounded hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                              title="Delete photo"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: INBOX & RECEIVED MESSAGES */}
+              {activeTab === 'inbox' && (
+                <div className="space-y-6">
+                  {/* Delivery Explainer Card */}
+                  <div className="p-4 bg-gradient-to-br from-[#121620] to-[#0e1017] border border-[#c49750]/30 rounded-xl space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750]">
+                      <Mail className="w-4 h-4" />
+                      <span>Form Inquiries & Audio Submissions</span>
+                    </div>
+                    <p className="text-xs text-[#d1cdc2] leading-relaxed">
+                      Every submission sent through the website contact modal is archived here and (when deployed to Netlify) forwarded to your email address:
+                    </p>
+                    <div className="p-3 bg-black/40 rounded-lg border border-white/5 text-xs text-[#9c978b]">
+                      Direct destination: <strong className="text-[#c49750]">beeyondmagic@protonmail.com</strong>
+                    </div>
+                  </div>
+
+                  {/* Messages List */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs text-[#8c887d] font-mono">
+                      <span>RECEIVED MESSAGES ({inquiries.length})</span>
+                      <span>Newest first</span>
+                    </div>
+
+                    {inquiries.length === 0 ? (
+                      <div className="p-12 text-center border border-dashed border-[#222632] rounded-xl space-y-2">
+                        <MessageSquare className="w-8 h-8 text-[#4a4f5d] mx-auto" />
+                        <p className="text-sm font-medium text-[#b5b1a6]">No messages received yet</p>
+                        <p className="text-xs text-[#716e66]">
+                          When someone books a lesson or submits an audition sample, it will appear here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        {inquiries.map((inq) => (
+                          <div
+                            key={inq.id}
+                            className="p-4 bg-[#11141c] border border-[#232734] rounded-xl hover:border-[#c49750]/40 transition-all space-y-2.5"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-white text-sm">{inq.name}</span>
+                                <span className="text-[#c49750] font-mono text-[11px] bg-[#c49750]/10 px-2 py-0.5 rounded">
+                                  {inq.topic}
+                                </span>
+                                <span className="text-[#8c887d] text-[11px]">({inq.discipline})</span>
+                              </div>
+                              <span className="text-[11px] text-[#716e66] font-mono">{inq.date}</span>
+                            </div>
+
+                            <p className="text-xs text-[#d1cdbf] whitespace-pre-wrap leading-relaxed bg-black/30 p-3 rounded-lg border border-white/5">
+                              {inq.message || '(No text message)'}
+                            </p>
+
+                            {inq.audioLink && (
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-[#8c887d]">Audio/Video link:</span>
+                                <a
+                                  href={inq.audioLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[#c49750] underline hover:text-white flex items-center gap-1 font-mono text-[11px]"
+                                >
+                                  <span>{inq.audioLink}</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1 border-t border-white/5">
+                              <a
+                                href={`mailto:${inq.email}?subject=${encodeURIComponent(`Re: ${inq.topic} - Studio Abdellah Lasri`)}`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#c49750] hover:bg-[#d8a85c] text-black font-semibold text-xs rounded transition-colors"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                <span>Reply to {inq.email}</span>
+                              </a>
+
+                              <button
+                                onClick={() => deleteInquiry(inq.id)}
+                                className="p-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-white/5 rounded transition-colors flex items-center gap-1 font-mono"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: SECURITY & PASSWORD (DECIDE LATER OR SET NOW) */}
+              {activeTab === 'security' && (
+                <div className="space-y-5">
+                  <div className="p-4 bg-black/40 border border-[#2b303d] rounded-xl space-y-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-[#c49750]" />
+                      <span className="text-xs font-mono uppercase tracking-wider text-white font-semibold">
+                        Secret /admin Password
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#b8b5ab] leading-relaxed">
+                      You can set a password whenever you decide to lock this page. Right now, it is unlocked so you can access it freely.
+                    </p>
+
+                    <div className="p-3 bg-[#11141c] rounded-lg border border-white/5 flex items-center justify-between text-xs">
+                      <span className="text-[#8c887d]">Current status:</span>
+                      {storedPassword ? (
+                        <span className="text-amber-400 font-mono flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5" /> Protected with secret password
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400 font-mono flex items-center gap-1">
+                          <Unlock className="w-3.5 h-3.5" /> Open / Unlocked (no password set)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {passwordSaveSuccess && (
+                    <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
+                      <Check className="w-4 h-4 text-emerald-400" />
+                      <span>Password setting saved successfully!</span>
+                    </div>
+                  )}
+
+                  {/* Set or Change Password Form */}
+                  <form onSubmit={handleSaveNewPassword} className="p-4 bg-[#141720]/80 border border-[#232734] rounded-xl space-y-3.5">
+                    <div className="text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
+                      {storedPassword ? 'Change Password' : 'Set a Password (When Ready)'}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                        New Password or PIN
+                      </label>
+                      <input
+                        type="text"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="e.g. BeyondMagic2026 or 4829..."
+                        className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                      <button
+                        type="submit"
+                        disabled={!newPassword.trim()}
+                        className="w-full sm:w-auto px-5 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] disabled:opacity-40 text-black text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
+                      >
+                        Save Password
+                      </button>
+
+                      {storedPassword && (
+                        <button
+                          type="button"
+                          onClick={handleClearPassword}
+                          className="w-full sm:w-auto px-4 py-2.5 bg-white/5 hover:bg-red-500/20 text-[#d1cdc2] hover:text-red-300 text-xs rounded-lg transition-colors cursor-pointer"
+                        >
+                          Remove Password (Keep Open)
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* TAB 5: EXPORT / CODE FOR NETLIFY */}
+              {activeTab === 'export' && (
+                <div className="space-y-5">
+                  <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-xs text-[#b8b5ab] leading-relaxed">
+                    <strong className="text-white block mb-1">Permanent Netlify Setup:</strong>
+                    All additions and order changes you make here take effect immediately in your browser. If you want these media items baked into your git repository code for all visitors across all browsers, click below to copy the code:
+                  </div>
+
+                  <div className="relative">
+                    <pre className="p-4 bg-black/80 border border-white/10 rounded-xl text-[11px] font-mono text-[#dedacf] overflow-x-auto max-h-64 leading-tight">
+                      {generateExportCode()}
+                    </pre>
+                    <button
+                      onClick={handleCopyCode}
+                      className="absolute top-3 right-3 px-3 py-1.5 bg-[#c49750] hover:bg-[#d8a85c] text-black text-xs font-semibold rounded flex items-center gap-1.5 shadow-md cursor-pointer transition-colors"
+                    >
+                      {copiedCode ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-black" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy Code</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Reset all photos and videos back to original defaults?')) {
+                          resetMediaToDefaults();
+                        }
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs text-red-400/80 hover:text-red-300 transition-colors cursor-pointer"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      <span>Reset to Original Defaults</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 sm:px-6 py-3.5 border-t border-white/10 bg-[#0d0f14] flex items-center justify-between shrink-0 text-xs text-[#8c887d]">
+              <div className="flex items-center gap-2">
+                <span>Secret link:</span>
+                <code className="text-[#c49750] font-mono bg-black/40 px-2 py-0.5 rounded text-[11px]">
+                  yoursite.com/admin
+                </code>
+              </div>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-[#c49750] hover:bg-[#d8a85c] text-black font-semibold rounded-lg text-xs cursor-pointer transition-colors"
+              >
+                Close & Return to Site
+              </button>
+            </div>
+          </>
+        )}
 
       </div>
     </div>

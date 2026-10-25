@@ -12,11 +12,11 @@ export const MediaSection: React.FC<MediaSectionProps> = ({ onOpenInquiry }) => 
   const isDe = language === 'de';
 
   return (
-    <section id="gallery" className="py-24 px-6 bg-[#0b0c0e] border-t border-[#1e222a]">
+    <section id="gallery" className="py-16 sm:py-20 px-6 bg-[#0b0c0e] border-t border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-6">
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-2">
               <span>{t.media.badge}</span>
@@ -41,11 +41,18 @@ export const MediaSection: React.FC<MediaSectionProps> = ({ onOpenInquiry }) => 
           </div>
         </div>
 
-        {/* Video Gallery (Opera singing, live stage, repertoire) */}
-        <VideoGallery onOpenInquiry={onOpenInquiry} />
+        {/* Side-by-Side Media Grid: Videos on the left, Photo Gallery Preview on the right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Video Archive */}
+          <div className="lg:col-span-6 xl:col-span-6">
+            <VideoGallery onOpenInquiry={onOpenInquiry} />
+          </div>
 
-        {/* Photo Galleries (Singing in Productions & Behind the Scenes) */}
-        <PhotoGallery />
+          {/* Right Column: Photo Gallery Preview */}
+          <div className="lg:col-span-6 xl:col-span-6">
+            <PhotoGallery />
+          </div>
+        </div>
 
       </div>
     </section>
