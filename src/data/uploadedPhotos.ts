@@ -1,6 +1,7 @@
 import { PhotoItem } from '../types';
 
 export const INITIAL_ARCHIVE_PHOTOS: PhotoItem[] = [
+  { id: 'photo-faure-lasri', title: 'With Gabriel Fauré (Belle Époque Salon)', category: 'production', image: '/images/faure_and_lasri.jpg', caption: 'In the Parisian salon with Gabriel Fauré at the Érard grand piano', venueOrContext: 'Parisian Salon · Belle Époque', year: '1895' },
   { id: 'photo-1', title: '', category: 'production', image: '/images/onstage/image_11.jpeg', caption: '', venueOrContext: '', year: '' },
   { id: 'photo-2', title: '', category: 'production', image: '/images/onstage/musique-classique-abdellah-lasri.jpg', caption: '', venueOrContext: '', year: '' },
   { id: 'photo-3', title: '', category: 'production', image: '/images/onstage/photo_4.JPG', caption: '', venueOrContext: '', year: '' },

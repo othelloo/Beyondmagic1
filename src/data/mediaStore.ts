@@ -7,7 +7,7 @@ import { getStoredPortrait, STORAGE_KEY_PORTRAIT, MEDIA_CHANGE_EVENT, onPortrait
 export { getStoredPortrait, onPortraitChange };
 
 const STORAGE_KEY_VIDEOS = 'verisme_custom_videos_v5';
-const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v9';
+const STORAGE_KEY_PHOTOS = 'verisme_custom_photos_v10';
 
 export async function savePortrait(dataUrl: string): Promise<void> {
   if (typeof window === 'undefined') return;

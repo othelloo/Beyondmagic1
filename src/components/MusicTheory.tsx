@@ -822,16 +822,25 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
           <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-[#c49750] via-[#d4af37] to-[#8a7bb8]" />
           
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-3xl">
+            <div className="space-y-4 max-w-3xl">
               <p className="text-xs uppercase tracking-widest text-[#c49750] font-mono">
                 {isDe ? 'Die Atelier-Philosophie' : 'The Atelier Pedagogy'}
               </p>
-              <p className="font-serif text-base sm:text-lg lg:text-xl text-[#dedacf] leading-relaxed font-light">
-                {t.musicTheory.quoteText}
-              </p>
-              {t.musicTheory.quoteAuthor ? (
-                <p className="text-xs sm:text-sm text-[#9c988e] font-sans">
-                  {t.musicTheory.quoteAuthor}
+              
+              <div className="border-l-2 border-[#c49750]/50 pl-4 py-1 space-y-2">
+                <blockquote className="font-serif italic text-base sm:text-lg lg:text-xl text-[#f3efe4] leading-relaxed">
+                  &ldquo;{t.musicTheory.quoteText}&rdquo;
+                </blockquote>
+                {t.musicTheory.quoteAuthor ? (
+                  <p className="text-xs sm:text-sm text-[#c49750] font-sans font-medium tracking-wide">
+                    — {t.musicTheory.quoteAuthor}
+                  </p>
+                ) : null}
+              </div>
+
+              {t.musicTheory.quoteReflection ? (
+                <p className="font-serif text-sm sm:text-base text-[#dedacf]/90 leading-relaxed font-light pl-4">
+                  {t.musicTheory.quoteReflection}
                 </p>
               ) : null}
             </div>

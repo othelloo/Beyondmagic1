@@ -191,6 +191,7 @@ export interface Translations {
     subtitle: string;
     quoteText: string;
     quoteAuthor: string;
+    quoteReflection?: string;
     secretGardenTag: string;
     secretGardenTitle: string;
     secretGardenIntro: string;
@@ -324,7 +325,7 @@ export const translations: Record<Language, Translations> = {
       highlights: {
         location: 'NRW (Cologne/Düsseldorf/Essen) · Berlin · Online Worldwide',
         credentials: 'CNSMDP Paris Valedictorian · Staatsoper Berlin Young Artist',
-        stages: 'Operalia finalist · Aalto Stage Prize for Young Artists'
+        stages: 'Operalia finalist · Aalto Stage Award for Young Artists'
       },
       ctaPrimary: 'Book a Lesson / Inquire',
       ctaMethod: 'Explore The Method ↓',
@@ -621,8 +622,9 @@ export const translations: Record<Language, Translations> = {
       badge: 'emotion-first pedagogy',
       title: 'Music Theory: Sound, Harmonic Perception & Color',
       subtitle: '',
-      quoteText: 'Before there were scores, there was listening. Music is a language you already understand: a rising line lifts you, a slow chord settles you, a sudden silence makes you hold your breath. My lessons begin there, with how the music affects you. Once you can recognise that feeling, notation stops being a code to decipher and becomes a simple way to write down what you already hear.',
-      quoteAuthor: '',
+      quoteText: 'Some people wish above all to conform to the rules, I wish only to render what I can hear. There is no theory. You have only to listen. Pleasure is the law.',
+      quoteAuthor: 'Claude Debussy',
+      quoteReflection: 'Music is a language you already understand: a rising line lifts you, a slow chord settles you, a sudden silence makes you hold your breath. My lessons begin there, with how the music affects you. Once you can recognise that feeling, notation stops being a code to decipher and becomes a simple way to write down what you already hear.',
       secretGardenTag: '1 · The Secret Garden',
       secretGardenTitle: 'The Secret Garden',
       secretGardenIntro: 'Call it your secret garden, your DIY garage, or simply your private place. It is the space where you and your music get to know each other. Here you learn to feel the many nuances and colours of a sound, then examine them under a microscope until a vague impression becomes a clearly distinct feeling.',
@@ -767,7 +769,7 @@ export const translations: Record<Language, Translations> = {
       highlights: {
         location: 'NRW (Köln / Düsseldorf / Essen) · Berlin · Online weltweit',
         credentials: 'CNSMDP Paris Jahrgangsbester · Staatsoper Berlin Opernstudio',
-        stages: 'Operalia finalist · Aalto Stage Prize for Young Artists'
+        stages: 'Operalia finalist · Aalto Stage Award for Young Artists'
       },
       ctaPrimary: 'Stunde anfragen / Buchen',
       ctaMethod: 'Die Methode entdecken ↓',
@@ -1064,8 +1066,9 @@ export const translations: Record<Language, Translations> = {
       badge: 'Emotions-zuerst-Pädagogik',
       title: 'Musiktheorie: Klang, harmonische Wahrnehmung & Farbe',
       subtitle: '',
-      quoteText: 'Bevor es Partituren gab, gab es das Hören. Musik ist eine Sprache, die Sie bereits verstehen: Eine aufsteigende Linie hebt Sie empor, ein getragener Akkord beruhigt, eine plötzliche Stille lässt Sie den Atem anhalten. Genau dort setzt mein Unterricht an – bei der Wirkung der Musik auf Sie. Sobald Sie dieses Empfinden erkennen, hört die Notation auf, ein zu entschlüsselnder Code zu sein, und wird zu einem einfachen Weg, das aufzuschreiben, was Sie bereits hören.',
-      quoteAuthor: '',
+      quoteText: 'Manche möchten sich vor allem an die Regeln halten, ich möchte nur wiedergeben, was ich hören kann. Es gibt keine Theorie. Man muss nur zuhören. Das Vergnügen ist das Gesetz.',
+      quoteAuthor: 'Claude Debussy',
+      quoteReflection: 'Musik ist eine Sprache, die Sie bereits verstehen: Eine aufsteigende Linie hebt Sie empor, ein getragener Akkord beruhigt, eine plötzliche Stille lässt Sie den Atem anhalten. Genau dort setzt mein Unterricht an – bei der Wirkung der Musik auf Sie. Sobald Sie dieses Empfinden erkennen, hört die Notation auf, ein zu entschlüsselnder Code zu sein, und wird zu einem einfachen Weg, das aufzuschreiben, was Sie bereits hören.',
       secretGardenTag: '1 · Der persönliche Klangraum',
       secretGardenTitle: 'The Secret Garden (Der geheime Garten)',
       secretGardenIntro: 'Nennen Sie es Ihren geheimen Garten, Ihre eigene Klangwerkstatt oder einfach Ihren ganz privaten Ort. Es ist der Raum, in dem Sie und Ihre Musik einander kennenlernen. Hier lernen Sie, die feinsten Nuancen und Farben eines Klanges zu spüren und sie unter dem Mikroskop zu betrachten, bis aus einer vagen Ahnung ein glasklares Empfinden wird.',
