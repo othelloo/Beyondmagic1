@@ -69,25 +69,25 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
       return;
     }
 
-    // Doubled timing sequence:
-    // 0ms - 4000ms: Negative color inversion across the site (4 full seconds)
+    // Faster 2.5s timing sequence:
+    // 0ms - 2500ms: Negative color inversion across the site (2.5 seconds)
     setPhase('negative');
 
-    // 4000ms: Negative inversion settles -> Yin-Yang rises, turning (pure black & white)
+    // 2500ms: Negative inversion settles -> Yin-Yang rises, turning (pure black & white)
     const timerRising = setTimeout(() => {
       setPhase('rising');
-    }, 4000);
+    }, 2500);
 
-    // 7600ms (4000 + 3600): Reaches center -> splits along the S-curve line & colors bloom in!
+    // 5000ms (2500 + 2500): Reaches center -> splits along the S-curve line & colors bloom in!
     const timerSplitting = setTimeout(() => {
       setPhase('splitting');
       playSacredBell();
-    }, 7600);
+    }, 5000);
 
-    // 10000ms (7600 + 2400): Text "who are you?" & manifesto fully unveiled with rich colors
+    // 6800ms (5000 + 1800): Text "who are you?" & manifesto fully unveiled with rich colors
     const timerRevealed = setTimeout(() => {
       setPhase('revealed');
-    }, 10000);
+    }, 6800);
 
     return () => {
       clearTimeout(timerRising);
@@ -101,10 +101,10 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
     setTimeout(() => {
       setPhase('splitting');
       playSacredBell();
-    }, 3600);
+    }, 2500);
     setTimeout(() => {
       setPhase('revealed');
-    }, 6000);
+    }, 4300);
   };
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -156,12 +156,12 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
         backdropFilter: phase === 'negative' ? 'none' : 'blur(16px)'
       }}
     >
-      {/* 4-Second Negative Inversion Indicator */}
+      {/* Negative Inversion Indicator — without duration text */}
       {phase === 'negative' && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-pulse">
           <div className="bg-black/90 text-white border border-[#c49750] px-6 py-3 rounded-full text-xs font-mono tracking-widest uppercase shadow-2xl flex items-center gap-3">
             <span className="w-2.5 h-2.5 rounded-full bg-[#c49750] animate-ping" />
-            <span>Entering Inverted Consciousness (4s)...</span>
+            <span>{isDe ? 'Eintauchen in das Resonanzbewusstsein...' : 'Entering Inverted Consciousness...'}</span>
           </div>
         </div>
       )}
@@ -206,16 +206,13 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
             </button>
           )}
 
+          {/* Highlighted Return to Atelier button without duration */}
           <button
             onClick={onClose}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-all shadow-xl cursor-pointer ${
-              isColorBloomed
-                ? 'bg-white text-black hover:bg-[#d4af37]'
-                : 'bg-white text-black hover:bg-zinc-200'
-            }`}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#c49750] hover:bg-[#d8a85c] text-black shadow-[0_0_25px_rgba(196,151,80,0.5)] ring-2 ring-[#c49750]/60 hover:scale-105 transition-all cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to Atelier (4s)</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>{isDe ? 'Zurück zum Atelier' : 'Return to Atelier'}</span>
           </button>
         </div>
       </div>
@@ -242,7 +239,7 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
             <div
               className="relative w-72 h-72 sm:w-80 sm:h-80"
               style={{
-                animation: phase === 'rising' ? 'yinyangRiseAndTurn 3.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' : 'none'
+                animation: phase === 'rising' ? 'yinyangRiseAndTurn 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards' : 'none'
               }}
             >
               <svg
@@ -339,19 +336,25 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
             </div>
 
             <div className="space-y-4 text-xs sm:text-sm text-[#c8c4b7] font-light leading-relaxed">
-              <div className="p-4 bg-white/[0.04] border-l-2 border-[#d4af37] rounded-r-lg">
-                <p className="text-sm font-serif italic text-white">
+              <div className="p-5 sm:p-7 bg-gradient-to-r from-[#d4af37]/20 via-white/[0.05] to-transparent border-l-4 border-[#d4af37] rounded-r-xl shadow-xl my-4">
+                <p className="text-lg sm:text-2xl font-serif italic text-white leading-snug tracking-wide">
                   {isDe ? (
                     <>
-                      &ldquo;Im Musikunterricht lautet die Frage: <span className="text-[#d4af37]">Wie berührt mich diese Musik?</span>
-                      <br />
-                      Hier stellen wir die tiefere Frage: <span className="text-[#d4af37]">Warum berührt sie mich genau so?</span>&rdquo;
+                      &ldquo;Im Musikunterricht lautet die Frage:{' '}
+                      <span className="text-[#f5d58c] font-normal not-italic">Wie berührt mich diese Musik?</span>
+                      <span className="block mt-2.5 text-white">
+                        Hier stellen wir die tiefere Frage:{' '}
+                        <span className="text-[#f5d58c] font-normal not-italic">Warum berührt sie mich genau so?</span>&rdquo;
+                      </span>
                     </>
                   ) : (
                     <>
-                      &ldquo;In my music lessons, we ask: <span className="text-[#d4af37]">How does this music affect me?</span>
-                      <br />
-                      Here, we ask the deeper question: <span className="text-[#d4af37]">Why does it affect me that way?</span>&rdquo;
+                      &ldquo;In my music lessons, we ask:{' '}
+                      <span className="text-[#f5d58c] font-normal not-italic">How does this music affect me?</span>
+                      <span className="block mt-2.5 text-white">
+                        Here, we ask the deeper question:{' '}
+                        <span className="text-[#f5d58c] font-normal not-italic">Why does it affect me that way?</span>&rdquo;
+                      </span>
                     </>
                   )}
                 </p>
@@ -454,14 +457,14 @@ export const SpiritualityExperience: React.FC<SpiritualityExperienceProps> = ({
             </div>
 
             {/* Bottom Actions */}
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[#8c887d]">
-              <span>Beyond <span className="magic-word font-medium">Magic</span> · Sacred Acoustics</span>
+            <div className="mt-8 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8c887d]">
+              <span><span className="text-white font-medium">Beyond</span> <span className="magic-word font-medium">Magic</span> · Sacred Acoustics</span>
               <button
                 onClick={onClose}
-                className="text-[#d4af37] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#c49750]/20 hover:bg-[#c49750] text-[#f5d58c] hover:text-black border border-[#c49750]/60 hover:border-[#c49750] font-semibold text-xs tracking-wider transition-all shadow-md cursor-pointer hover:scale-105"
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{isDe ? 'Zurück zum Atelier (4s Übergang)' : 'Return to Atelier (4s Transition)'}</span>
+                <ArrowLeft className="w-4 h-4" />
+                <span>{isDe ? 'Zurück zum Atelier' : 'Return to Atelier'}</span>
               </button>
             </div>
 

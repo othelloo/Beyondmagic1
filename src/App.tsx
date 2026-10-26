@@ -81,7 +81,13 @@ function MainApp() {
   const handleScrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const header = document.querySelector('header');
+      const headerHeight = header ? Math.min(header.offsetHeight, 64) : 52;
+      const elementTop = el.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({
+        top: Math.max(0, Math.round(elementTop - headerHeight)),
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -111,16 +117,17 @@ function MainApp() {
         onOpenSpirituality={() => setSpiritualityActive(true)}
       />
 
-      {/* Main Website Container - Only apply filter during spirituality mode */}
+      {/* Main Website Container - Smooth 2.5s filter transition during spirituality mode */}
       <div
-        className="min-h-screen bg-[#0b0c0e] text-[#e8e6e1] selection:bg-[#c49750] selection:text-black"
+        className="min-h-screen bg-[#0b0c0e] text-[#e8e6e1] selection:bg-[#c49750] selection:text-black transition-[filter] duration-[2500ms] ease-in-out"
         style={
           spiritualityActive
             ? {
                 filter: 'invert(1) hue-rotate(180deg)',
-                transition: 'filter 4000ms cubic-bezier(0.4, 0, 0.2, 1)',
               }
-            : undefined
+            : {
+                filter: 'none',
+              }
         }
       >
         <main>

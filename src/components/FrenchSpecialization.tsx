@@ -15,11 +15,11 @@ export const FrenchSpecialization: React.FC<FrenchSpecializationProps> = ({ onOp
   const activeCourse = SPECIALIZED_COURSES.find((c) => c.id === activeCourseId) || SPECIALIZED_COURSES[2];
 
   return (
-    <section id="specializations" className="py-20 px-6 bg-[#0b0c0e]">
+    <section id="specializations" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0b0c0e]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-12">
+        <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-3">
             <span>{t.french.badge}</span>
           </div>

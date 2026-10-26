@@ -58,7 +58,7 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
   };
 
   return (
-    <section id="studio-spotlight" className="py-20 px-6 bg-[#0e1014] border-y border-[#1e222a]">
+    <section id="studio-spotlight" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0e1014] border-y border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}

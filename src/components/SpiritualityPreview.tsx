@@ -84,9 +84,12 @@ export const SpiritualityPreview: React.FC<SpiritualityPreviewProps> = ({ isOpen
             </p>
           </div>
 
-          <div className="p-4 bg-[#171a22] rounded-xl border border-white/5 space-y-2 text-xs text-[#cfccc3] leading-relaxed">
-            <div className="font-serif italic text-sm text-[#f2eee9]">
-              &ldquo;In my music lessons, we train to ask: <span className="text-[#c49750]">How does this sound affect me?</span> But in this upcoming series, we ask the deeper, inescapable question: <span className="text-[#c49750]">Why does this affect me that way?</span>&rdquo;
+          <div className="p-5 bg-gradient-to-r from-[#c49750]/15 via-white/[0.04] to-transparent rounded-xl border-l-4 border-[#c49750] text-[#cfccc3] leading-relaxed my-2 shadow-lg">
+            <div className="font-serif italic text-base sm:text-xl text-[#f2eee9] leading-snug">
+              &ldquo;In my music lessons, we ask: <span className="text-[#f5d58c] font-normal not-italic">How does this music affect me?</span>
+              <span className="block mt-2 text-white">
+                Here, we ask the deeper question: <span className="text-[#f5d58c] font-normal not-italic">Why does it affect me that way?</span>&rdquo;
+              </span>
             </div>
           </div>
 
@@ -167,7 +170,7 @@ export const SpiritualityPreview: React.FC<SpiritualityPreviewProps> = ({ isOpen
 
         {/* Footer */}
         <div className="px-6 py-3.5 bg-[#0c0e14] border-t border-white/5 flex items-center justify-between text-xs text-[#7d796e]">
-          <span>Beyond <span className="magic-word font-medium">Magic</span> · Forthcoming Chapter</span>
+          <span><span className="text-white font-medium">Beyond</span> <span className="magic-word font-medium">Magic</span> · Forthcoming Chapter</span>
           <button
             onClick={onClose}
             className="text-[#c49750] hover:underline cursor-pointer"

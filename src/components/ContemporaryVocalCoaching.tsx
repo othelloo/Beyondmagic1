@@ -123,10 +123,10 @@ export const ContemporaryVocalCoaching: React.FC<ContemporaryVocalCoachingProps>
   return (
     <section 
       id="vocal-coaching" 
-      className="py-20 px-4 sm:px-6 bg-gradient-to-b from-[#0b0c0e] via-[#0e1118] to-[#0b0c0e] border-t border-[#1e2330] relative overflow-hidden"
+      className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-gradient-to-b from-[#0b0c0e] via-[#0e1118] to-[#0b0c0e] border-t border-[#1e2330] relative overflow-hidden"
     >
       {/* Anchor for alternate #singing navigation */}
-      <div id="singing" className="absolute -top-24 left-0 pointer-events-none" />
+      <div id="singing" className="absolute top-0 left-0 pointer-events-none" />
 
       {/* Subtle ambient glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#c49750]/5 rounded-full blur-[150px] pointer-events-none -z-10" />

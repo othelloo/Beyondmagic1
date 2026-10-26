@@ -12,7 +12,7 @@ export const MediaSection: React.FC<MediaSectionProps> = ({ onOpenInquiry }) => 
   const isDe = language === 'de';
 
   return (
-    <section id="gallery" className="py-16 sm:py-20 px-6 bg-[#0b0c0e] border-t border-[#1e222a]">
+    <section id="gallery" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0b0c0e] border-t border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}

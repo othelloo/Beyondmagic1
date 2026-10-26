@@ -132,7 +132,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
               ©
             </button>
             <span>
-              {new Date().getFullYear()} Beyond <span className="magic-word">Magic</span> · Abdellah Lasri. {t.footer.copyright}
+              {new Date().getFullYear()} <span className="text-white font-medium">Beyond</span> <span className="magic-word">Magic</span> · Abdellah Lasri. {t.footer.copyright}
             </span>
           </div>
 

@@ -127,10 +127,11 @@ export const MusicalScoreChord: React.FC<MusicalScoreChordProps> = ({
   const goldStroke = '#c49750';
 
   return (
-    <div className="flex items-center justify-center select-none shrink-0">
+    <div className="w-full h-full flex items-center justify-center select-none">
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-32 h-32 sm:w-36 sm:h-36 aspect-square overflow-visible"
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full h-full aspect-square overflow-visible"
         style={{ filter: 'drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45))' }}
         aria-label={`Musical score of ${chordName}`}
       >
@@ -221,11 +222,16 @@ export const MusicalScoreChord: React.FC<MusicalScoreChordProps> = ({
           const xOffset = isSecondInterval && idx % 2 === 1 ? 10 : 0;
           const curX = noteX + xOffset;
 
+          // Stagger accidental horizontally if vertically close to another accidental to prevent overlap
+          const prevAccidentalNote = parsedNotes.slice(0, idx).reverse().find((p) => p.accidental !== '');
+          const isAccidentalCollision = prevAccidentalNote && Math.abs(prevAccidentalNote.y - n.y) <= 6;
+          const accStagger = isAccidentalCollision ? -4.5 : 0;
+
           return (
             <g key={`note-${idx}`}>
               {/* Authentic Classical Engraved Flat Sign (♭) with slender vertical stem & arched belly */}
               {n.accidental === 'b' && (
-                <g transform={`translate(${curX - 13.5}, ${n.y})`}>
+                <g transform={`translate(${curX - 13.5 + accStagger}, ${n.y})`}>
                   {/* Slender, tall vertical line stem */}
                   <line
                     x1="0"
@@ -251,7 +257,7 @@ export const MusicalScoreChord: React.FC<MusicalScoreChordProps> = ({
 
               {/* Double Flat (𝄫) - Two engraved flats paired */}
               {n.accidental === 'bb' && (
-                <g transform={`translate(${curX - 18}, ${n.y})`}>
+                <g transform={`translate(${curX - 18 + accStagger}, ${n.y})`}>
                   {/* First flat */}
                   <line
                     x1="0"
@@ -295,7 +301,7 @@ export const MusicalScoreChord: React.FC<MusicalScoreChordProps> = ({
               {/* Sharp Sign (♯) */}
               {n.accidental === '#' && (
                 <text
-                  x={curX - 12}
+                  x={curX - 12 + accStagger}
                   y={n.y + 4.0}
                   fill={goldStroke}
                   fontSize="14"

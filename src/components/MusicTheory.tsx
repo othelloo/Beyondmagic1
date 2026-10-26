@@ -20,7 +20,8 @@ interface MusicTheoryProps {
 
 interface ChordPaletteItem {
   id: string;
-  name: string;
+  name: string; // Pure chord nature, e.g. 'Major', 'Major 7th', 'Minor 9th'
+  shortBadge: string; // Compact nature symbol, e.g. 'Maj', 'maj7', 'maj9', 'm7', etc.
   chordType: string;
   chordTypeDe: string;
   voicingLabel: string;
@@ -43,9 +44,10 @@ interface ChordPaletteItem {
 const CHORD_PALETTE: ChordPaletteItem[] = [
   {
     id: 'c-major',
-    name: 'C Major',
-    chordType: 'Major Triad',
-    chordTypeDe: 'Dur-Dreiklang',
+    name: 'Major',
+    shortBadge: 'Maj',
+    chordType: 'Major',
+    chordTypeDe: 'Dur',
     voicingLabel: 'Root · Major 3rd · Perfect 5th · Octave',
     archetype: 'Pure Light & Grounded Certainty',
     archetypeDe: 'Reines Licht & Geerdete Gewissheit',
@@ -63,8 +65,31 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     musicalReferences: 'Opening of Beethoven Symphony No. 5 finale, traditional hymn resolutions, clean acoustic anthems.',
   },
   {
+    id: 'maj-9',
+    name: 'Major 9th',
+    shortBadge: 'maj9',
+    chordType: 'Major 9th (maj9)',
+    chordTypeDe: 'Großer Nonenakkord (maj9)',
+    voicingLabel: 'Root · Major 3rd · Perfect 5th · Major 7th · 9th',
+    archetype: 'Impressionist Dawn & Blooming Warmth',
+    archetypeDe: 'Impressionistisches Morgenlicht & Blühende Wärme',
+    frequencies: [174.61, 220.00, 261.63, 329.63, 392.00], // F3, A3, C4, E4, G4
+    notes: ['F3', 'A3', 'C4', 'E4', 'G4'],
+    color: '#34d399',
+    bgGlow: 'rgba(52, 211, 153, 0.18)',
+    tensionPercentage: 25,
+    tensionLabel: 'Pastoral Serenity (25% Tension)',
+    tensionLabelDe: 'Pastorale Gelassenheit (25% Spannung)',
+    emotionalFeeling: 'Sunlight breaking through morning mist over water lilies. The high 9th gives the rich major 7th an open, blossoming horizon without an ounce of heaviness.',
+    emotionalFeelingDe: 'Sonnenstrahlen, die den Morgennebel über Seerosen durchbrechen. Die None verleiht dem Septakkord eine blühende Weite ohne jede Schwere.',
+    acousticPhenomenon: 'Stacked consonant thirds up to the 9th harmonize directly with the natural overtone series, creating an airy acoustic glow in the room.',
+    acousticPhenomenonDe: 'Konsonant geschichtete Terzen bis zur None harmonieren direkt mit den Obertönen des Grundtons und erzeugen ein silbriges Aufblühen im Raum.',
+    musicalReferences: 'Ravel (Daphnis et Chloé), Fauré (Pavane), Bill Evans, modern impressionist scoring.',
+  },
+  {
     id: 'eb-maj7',
-    name: 'E♭maj7',
+    name: 'Major 7th',
+    shortBadge: 'maj7',
     chordType: 'Major 7th (maj7)',
     chordTypeDe: 'Großer Septakkord (maj7)',
     voicingLabel: 'Root · Major 3rd · 5th · Leading Major 7th',
@@ -77,57 +102,16 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     tensionPercentage: 35,
     tensionLabel: 'Tender Floating (35% Tension)',
     tensionLabelDe: 'Zartes Schweben (35% Spannung)',
-    emotionalFeeling: 'Looking at an old photograph with a warm, wistful smile. The high major 7th (D) hovers a semitone below the E♭ octave, smiling through tears.',
-    emotionalFeelingDe: 'Der Blick auf ein altes Foto mit einem wehmütigen Lächeln. Die große Septime (D) schwebt zart unter der Es-Oktave und lächelt durch Tränen.',
-    acousticPhenomenon: 'The velvet clash between deep bass E♭ and ethereal leading tone D generates a luminous harmonic shimmer without harshness.',
-    acousticPhenomenonDe: 'Die feine Reibung zwischen Grundton Es und der großen Septime D erzeugt ein silbriges Flirren ohne jede Härte.',
+    emotionalFeeling: 'Looking at an old photograph with a warm, wistful smile. The high major 7th hovers a semitone below the octave, smiling through tears.',
+    emotionalFeelingDe: 'Der Blick auf ein altes Foto mit einem wehmütigen Lächeln. Die große Septime schwebt zart unter der Oktave und lächelt durch Tränen.',
+    acousticPhenomenon: 'The velvet clash between deep bass fundamental and ethereal leading tone generates a luminous harmonic shimmer without harshness.',
+    acousticPhenomenonDe: 'Die feine Reibung zwischen Grundton und der großen Septime erzeugt ein silbriges Flirren ohne jede Härte.',
     musicalReferences: 'Debussy (Clair de lune), Ravel (Daphnis), Bill Evans, Brazilian Bossa Nova (Jobim), modern dream-pop.',
   },
   {
-    id: 'a-min9',
-    name: 'Am9',
-    chordType: 'Minor 9th (m9)',
-    chordTypeDe: 'Moll-Nonakkord (m9)',
-    voicingLabel: 'Minor 3rd · 5th · Minor 7th · Natural 9th',
-    archetype: 'Midnight Introspection & Deep Vulnerability',
-    archetypeDe: 'Mitternächtliche Tiefe & Verwundbarkeit',
-    frequencies: [110.00, 130.81, 164.81, 196.00, 246.94], // A2, C3, E3, G3, B3
-    notes: ['A2', 'C3', 'E3', 'G3', 'B3'],
-    color: '#38bdf8',
-    bgGlow: 'rgba(56, 189, 248, 0.18)',
-    tensionPercentage: 50,
-    tensionLabel: 'Reflective Gravitas (50% Tension)',
-    tensionLabelDe: 'Nachdenkliche Tiefe (50% Spannung)',
-    emotionalFeeling: 'A late-night rain on window glass. The 9th (B) hangs above the dark minor triad like a lantern in fog, turning sadness into luxury.',
-    emotionalFeelingDe: 'Nächtlicher Regen an einer Fensterscheibe. Die None schwebt wie eine Laterne im Nebel über dem Moll-Dreiklang.',
-    acousticPhenomenon: 'Stacking thirds up to the 9th provides rich harmonic density that breathes with warm low-frequency chest resonance.',
-    acousticPhenomenonDe: 'Die Terzenschichtung bis zur None verleiht dem Akkord eine seidige Dichte, die atmet, ohne den Grundton zu ersticken.',
-    musicalReferences: 'Neo-Soul, Robert Glasper, Chopin Ballades, modern French electronic music, cinematic scoring.',
-  },
-  {
-    id: 'g-dom7',
-    name: 'G7 (V7)',
-    chordType: 'Dominant 7th (V7)',
-    chordTypeDe: 'Dominant-Septakkord (V7)',
-    voicingLabel: 'Root · Major 3rd · 5th · Minor 7th (Tritone Core)',
-    archetype: 'Kinetic Urgency & Gravitational Cliffhanger',
-    archetypeDe: 'Kinetische Dringlichkeit & Gravitationssog',
-    frequencies: [98.00, 123.47, 146.83, 174.61], // G2, B2, D3, F3
-    notes: ['G2', 'B2', 'D3', 'F3'],
-    color: '#f97316',
-    bgGlow: 'rgba(249, 115, 22, 0.2)',
-    tensionPercentage: 88,
-    tensionLabel: 'High Gravitational Pull (88% Tension)',
-    tensionLabelDe: 'Hohe Schwerkraft (88% Spannung)',
-    emotionalFeeling: 'Your chest tightens. The music is leaning forward over a cliff, demanding release into C Major. You cannot stay here forever.',
-    emotionalFeelingDe: 'Die Brust spannt sich an. Die Musik lehnt sich über einen Abgrund und verlangt Erlösung in C-Dur. Hier kann man nicht verharren.',
-    acousticPhenomenon: 'The internal tritone between B and F (3 whole tones) creates acoustic friction that pulls magnetically toward C and E.',
-    acousticPhenomenonDe: 'Der interne Tritonus zwischen H und F erzeugt eine magnetische Reibung, die unweigerlich nach C und E strebt.',
-    musicalReferences: 'Verdi & Puccini cadences, Motown gospel turnarounds, classical symphonic climaxes, blues turnarounds.',
-  },
-  {
     id: 'f-min7',
-    name: 'Fm7',
+    name: 'Minor 7th',
+    shortBadge: 'm7',
     chordType: 'Minor 7th (m7)',
     chordTypeDe: 'Moll-Septakkord (m7)',
     voicingLabel: 'Root · Minor 3rd · Perfect 5th · Minor 7th',
@@ -140,15 +124,60 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     tensionPercentage: 40,
     tensionLabel: 'Soft Lyrical Float (40% Tension)',
     tensionLabelDe: 'Sanftes Lyrisches Schweben (40% Spannung)',
-    emotionalFeeling: 'Warm espresso on a rainy morning. The minor 7th (E♭) softens the dark F-minor triad into luxurious, conversational introspection.',
-    emotionalFeelingDe: 'Warmer Kaffee an einem verregneten Morgen. Die kleine Septime (Es) nimmt dem f-Moll-Dreiklang die Schwere und verwandelt Trauer in intime Eleganz.',
-    acousticPhenomenon: 'Four-part balance: the rich minor third (F-A♭) combined with the open seventh (F-E♭) provides spacious, non-aggressive acoustic warmth.',
+    emotionalFeeling: 'Warm espresso on a rainy morning. The minor 7th softens the dark minor triad into luxurious, conversational introspection.',
+    emotionalFeelingDe: 'Warmer Kaffee an einem verregneten Morgen. Die kleine Septime nimmt dem Moll-Dreiklang die Schwere und verwandelt Trauer in intime Eleganz.',
+    acousticPhenomenon: 'Four-part balance: the rich minor third combined with the open seventh provides spacious, non-aggressive acoustic warmth.',
     acousticPhenomenonDe: 'Ausgewogene Vierstimmigkeit: Die Mollterz verbindet sich mit der weichen kleinen Septime zu einem samtigen, resonanten Raumklang.',
     musicalReferences: 'Kind of Blue (Miles Davis), Bill Evans, modern R&B ballads, French chanson, Chopin Ballade No. 4.',
   },
   {
+    id: 'dom7-sus4',
+    name: '7sus4',
+    shortBadge: '7sus4',
+    chordType: 'Dominant 7th Sus4 (7sus4)',
+    chordTypeDe: 'Dominant 7. sus4 (7sus4)',
+    voicingLabel: 'Root · Perfect 4th · Perfect 5th · Minor 7th',
+    archetype: 'The Ethereal Cathedral & Weightless Float',
+    archetypeDe: 'Die Ätherische Kathedrale & Schwereloses Schweben',
+    frequencies: [98.00, 130.81, 146.83, 174.61], // G2, C3, D3, F3
+    notes: ['G2', 'C3', 'D3', 'F3'],
+    color: '#06b6d4',
+    bgGlow: 'rgba(6, 182, 212, 0.20)',
+    tensionPercentage: 48,
+    tensionLabel: 'Suspended Levitation (48% Tension)',
+    tensionLabelDe: 'Schwebende Erwartung (48% Spannung)',
+    emotionalFeeling: 'Standing under the soaring vaults of a Gothic cathedral. The absence of a third leaves the space wide open, hovering between question and eternity.',
+    emotionalFeelingDe: 'Unter den hoch aufragenden Gewölben einer gotischen Kathedrale. Das Fehlen einer Terz lässt den Raum vollkommen offen, schwebend zwischen Frage und Ewigkeit.',
+    acousticPhenomenon: 'Replacing the decisive third with a pure fourth eliminates the major/minor polarity, vibrating in open fifths and fourths of crystal clarity.',
+    acousticPhenomenonDe: 'Die reine Quarte statt der Terz hebt die Polarität von Dur und Moll auf; der Klang schwingt in offenen Quint- und Quartenräumen von lichter Klarheit.',
+    musicalReferences: 'Debussy (La Cathédrale engloutie), Herbie Hancock (Maiden Voyage), modern sacred choral music.',
+  },
+  {
+    id: 'a-min9',
+    name: 'Minor 9th',
+    shortBadge: 'm9',
+    chordType: 'Minor 9th (m9)',
+    chordTypeDe: 'Moll-Nonakkord (m9)',
+    voicingLabel: 'Root · Minor 3rd · 5th · Minor 7th · Natural 9th',
+    archetype: 'Midnight Introspection & Deep Vulnerability',
+    archetypeDe: 'Mitternächtliche Tiefe & Verwundbarkeit',
+    frequencies: [110.00, 130.81, 164.81, 196.00, 246.94], // A2, C3, E3, G3, B3
+    notes: ['A2', 'C3', 'E3', 'G3', 'B3'],
+    color: '#38bdf8',
+    bgGlow: 'rgba(56, 189, 248, 0.18)',
+    tensionPercentage: 50,
+    tensionLabel: 'Reflective Gravitas (50% Tension)',
+    tensionLabelDe: 'Nachdenkliche Tiefe (50% Spannung)',
+    emotionalFeeling: 'A late-night rain on window glass. The 9th hangs above the dark minor triad like a lantern in fog, turning sadness into luxury.',
+    emotionalFeelingDe: 'Nächtlicher Regen an einer Fensterscheibe. Die None schwebt wie eine Laterne im Nebel über dem Moll-Dreiklang.',
+    acousticPhenomenon: 'Stacking thirds up to the 9th provides rich harmonic density that breathes with warm low-frequency chest resonance.',
+    acousticPhenomenonDe: 'Die Terzenschichtung bis zur None verleiht dem Akkord eine seidige Dichte, die atmet, ohne den Grundton zu ersticken.',
+    musicalReferences: 'Neo-Soul, Robert Glasper, Chopin Ballades, modern French electronic music, cinematic scoring.',
+  },
+  {
     id: 'd-min6',
-    name: 'Dm6',
+    name: 'Minor 6th',
+    shortBadge: 'm6',
     chordType: 'Minor 6th (m6)',
     chordTypeDe: 'Moll-Sextakkord (m6)',
     voicingLabel: 'Root · Minor 3rd · Perfect 5th · Major 6th',
@@ -161,22 +190,23 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     tensionPercentage: 65,
     tensionLabel: 'Bittersweet Descent (65% Tension)',
     tensionLabelDe: 'Herbe Melancholie (65% Spannung)',
-    emotionalFeeling: 'A profound operatic sigh in classic D-minor pathos. The natural 6th (B) against the minor 3rd (F) creates the bittersweet nobility of classic European tragedy.',
-    emotionalFeelingDe: 'Ein tiefer Seufzer in edlem d-Moll-Opernpathos. Die große Sexte (H) gegen die Mollterz (F) erzeugt jenen herben, vornehmen Schmerz europäischer Tragödien.',
+    emotionalFeeling: 'A profound operatic sigh in classic European pathos. The natural 6th against the minor 3rd creates bittersweet nobility.',
+    emotionalFeelingDe: 'Ein tiefer Seufzer in edlem Opernpathos. Die große Sexte gegen die Mollterz erzeugt jenen herben, vornehmen Schmerz europäischer Tragödien.',
     acousticPhenomenon: 'The acoustic collision of minor third and Dorian major sixth echoes the ancient modal vocal color in sacred and theatrical tradition.',
     acousticPhenomenonDe: 'Der akustische Kontrast aus Mollterz und dorischer großer Sexte spiegelt die ausdrucksvolle Stimmfarbe alter Moden wider.',
     musicalReferences: 'Fauré (Élégie) & Duparc mélodies, Ennio Morricone film themes, Puccini (La Bohème act IV), Django Reinhardt jazz.',
   },
   {
     id: 'e-aug',
-    name: 'Eaug',
-    chordType: 'Augmented Triad (aug)',
-    chordTypeDe: 'Übermäßiger Dreiklang (aug)',
+    name: 'Augmented',
+    shortBadge: 'aug',
+    chordType: 'Augmented (aug)',
+    chordTypeDe: 'Übermäßig (aug)',
     voicingLabel: 'Root · Major 3rd · Augmented 5th (Symmetrical)',
     archetype: 'Zero Gravity & Dreamlike Dissolution',
     archetypeDe: 'Schwerelosigkeit & Traumhafte Auflösung',
-    frequencies: [164.81, 207.65, 261.63], // E3, Ab3, C4
-    notes: ['E3', 'Ab3', 'C4'],
+    frequencies: [164.81, 207.65, 261.63], // E3, G#3, C4
+    notes: ['E3', 'G#3', 'C4'],
     color: '#10b981',
     bgGlow: 'rgba(16, 185, 129, 0.18)',
     tensionPercentage: 75,
@@ -189,10 +219,33 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     musicalReferences: 'Debussy (Voiles), Stevie Wonder, film transitions depicting hypnotism or altered states of consciousness.',
   },
   {
+    id: 'min-maj7',
+    name: 'Minor-Major 7th',
+    shortBadge: 'm(maj7)',
+    chordType: 'Minor-Major 7th (m(maj7))',
+    chordTypeDe: 'Moll-Major-7 (m(maj7))',
+    voicingLabel: 'Root · Minor 3rd · Perfect 5th · Leading Major 7th',
+    archetype: 'The Enigma & Noir Cinema Suspense',
+    archetypeDe: 'Das Rätsel & Film-Noir-Spannung',
+    frequencies: [146.83, 174.61, 220.00, 277.18], // D3, F3, A3, C#4
+    notes: ['D3', 'F3', 'A3', 'C#4'],
+    color: '#e11d48',
+    bgGlow: 'rgba(225, 29, 72, 0.20)',
+    tensionPercentage: 78,
+    tensionLabel: 'Poignant Dissonance (78% Tension)',
+    tensionLabelDe: 'Herbe Dissonanz (78% Spannung)',
+    emotionalFeeling: 'Shadows in a rainy alley. A mournful minor triad pierced by an icy, luminous leading tone that cuts through the darkness like a gleaming blade.',
+    emotionalFeelingDe: 'Schatten in einer regennassen Gasse. Ein melancholischer Moll-Kern, durchdrungen von einem eiskalten Leitton, der das Dunkel schneidet.',
+    acousticPhenomenon: 'The internal collision between the minor third and the major seventh creates a severe augmented fifth dissonance, producing haunting psychological tension.',
+    acousticPhenomenonDe: 'Harte Reibung zwischen Mollterz und großer Septime (übermäßige Quinte), die dem Klang eine herbe, faszinierende Schärfe verleiht.',
+    musicalReferences: 'Bernard Herrmann (Vertigo, Psycho), Chopin (Ballade No. 1), Stravinsky, film noir spy motifs.',
+  },
+  {
     id: 'b-dim-min7',
-    name: 'Bø7',
-    chordType: 'Half-Diminished 7th (Tristan Chord)',
-    chordTypeDe: 'Halbverminderter Septakkord (Tristan)',
+    name: 'Half-Diminished 7th',
+    shortBadge: 'ø7',
+    chordType: 'Half-Diminished 7th (ø7)',
+    chordTypeDe: 'Halbverminderter Septakkord (ø7)',
     voicingLabel: 'Root · Minor 3rd · Diminished 5th · Minor 7th',
     archetype: 'The Tristan Ache & Tragic Yearning',
     archetypeDe: 'Tristan-Sehnsucht & Tragische Tiefe',
@@ -203,17 +256,40 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     tensionPercentage: 84,
     tensionLabel: 'Urgent Yearning (84% Tension)',
     tensionLabelDe: 'Dringliche Sehnsucht (84% Spannung)',
-    emotionalFeeling: 'The authentic archetype of Wagner\'s Tristan und Isolde. Suspended between dark tritone friction (B–F) and aching minor 7th vulnerability, it pulls with visceral, unresolved longing.',
-    emotionalFeelingDe: 'Der authentische Archetyp aus Wagners Tristan und Isolde. Schwebend zwischen dunkler Tritonus-Reibung (H–F) und zerbrechlicher Mollseptimen-Sehnsucht berührt er das Herz unmittelbar.',
-    acousticPhenomenon: 'A half-diminished seventh chord: the internal tritone (B–F) and minor intervals create deep, asymmetric gravitational pull toward resolution.',
-    acousticPhenomenonDe: 'Ein halbverminderter Septakkord: Der interne Tritonus (H–F) und die Moll-Intervalle erzeugen einen asymmetrischen, sehnsuchtsvollen Gravitationssog.',
+    emotionalFeeling: 'The authentic archetype of Wagner\'s Tristan und Isolde. Suspended between dark tritone friction and aching minor 7th vulnerability, it pulls with visceral, unresolved longing.',
+    emotionalFeelingDe: 'Der authentische Archetyp aus Wagners Tristan und Isolde. Schwebend zwischen dunkler Tritonus-Reibung und zerbrechlicher Mollseptimen-Sehnsucht berührt er das Herz unmittelbar.',
+    acousticPhenomenon: 'A half-diminished seventh chord: the internal tritone and minor intervals create deep, asymmetric gravitational pull toward resolution.',
+    acousticPhenomenonDe: 'Ein halbverminderter Septakkord: Der interne Tritonus und die Moll-Intervalle erzeugen einen asymmetrischen, sehnsuchtsvollen Gravitationssog.',
     musicalReferences: 'Wagner (Tristan und Isolde Prelude - the Tristan Chord), Chopin (Ballades & Nocturnes), Ravel (Pavane), Wayne Shorter, classic jazz iiø–V minor cadences.',
   },
   {
+    id: 'g-dom7',
+    name: 'Dominant 7th',
+    shortBadge: '7',
+    chordType: 'Dominant 7th (7)',
+    chordTypeDe: 'Dominant-Septakkord (7)',
+    voicingLabel: 'Root · Major 3rd · 5th · Minor 7th (Tritone Core)',
+    archetype: 'Kinetic Urgency & Gravitational Cliffhanger',
+    archetypeDe: 'Kinetische Dringlichkeit & Gravitationssog',
+    frequencies: [98.00, 123.47, 146.83, 174.61], // G2, B2, D3, F3
+    notes: ['G2', 'B2', 'D3', 'F3'],
+    color: '#f97316',
+    bgGlow: 'rgba(249, 115, 22, 0.2)',
+    tensionPercentage: 88,
+    tensionLabel: 'High Gravitational Pull (88% Tension)',
+    tensionLabelDe: 'Hohe Schwerkraft (88% Spannung)',
+    emotionalFeeling: 'Your chest tightens. The music is leaning forward over a cliff, demanding release. You cannot stay here forever.',
+    emotionalFeelingDe: 'Die Brust spannt sich an. Die Musik lehnt sich über einen Abgrund und verlangt Erlösung. Hier kann man nicht verharren.',
+    acousticPhenomenon: 'The internal tritone between major third and minor seventh (3 whole tones) creates acoustic friction that pulls magnetically toward tonic resolution.',
+    acousticPhenomenonDe: 'Der interne Tritonus zwischen Terz und Septime erzeugt eine magnetische Reibung, die unweigerlich nach Auflösung strebt.',
+    musicalReferences: 'Verdi & Puccini cadences, Motown gospel turnarounds, classical symphonic climaxes, blues turnarounds.',
+  },
+  {
     id: 'cs-dim7',
-    name: 'C♯°7',
-    chordType: 'Diminished 7th (4-Note Symmetrical)',
-    chordTypeDe: 'Vollverminderter Septakkord (4 Töne)',
+    name: 'Diminished 7th',
+    shortBadge: '°7',
+    chordType: 'Diminished 7th (°7)',
+    chordTypeDe: 'Vollverminderter Septakkord (°7)',
     voicingLabel: 'Root · Minor 3rd · Diminished 5th · Diminished 7th',
     archetype: 'Symmetrical Lightning & Visceral Suspense',
     archetypeDe: 'Symmetrischer Blitz & Atemlose Spannung',
@@ -226,8 +302,8 @@ const CHORD_PALETTE: ChordPaletteItem[] = [
     tensionLabelDe: 'Höchste Spannung & Krise (94% Spannung)',
     emotionalFeeling: 'A dagger in the dark. Total vertigo and imminent drama. Four notes spaced by exact minor thirds—it can resolve in four directions and holds your breath hostage.',
     emotionalFeelingDe: 'Ein Dolchstoß im Dunkeln. Vollkommener Schwindel und dramatische Zuspitzung. Exakt drei Halbtöne zwischen jedem Ton – er kann sich in vier Richtungen auflösen und raubt den Atem.',
-    acousticPhenomenon: 'Two interlocking tritones (C#-G and E-Bb) create maximum dissonant interference. Perfectly symmetrical, it lacks an acoustic root and floats on a razor edge.',
-    acousticPhenomenonDe: 'Zwei ineinandergreifende Tritoni (Cis-G und E-B) erzeugen maximale akustische Reibung. Ohne tonales Zentrum balanciert der Klang auf Messers Schneide.',
+    acousticPhenomenon: 'Two interlocking tritones create maximum dissonant interference. Perfectly symmetrical, it lacks an acoustic root and floats on a razor edge.',
+    acousticPhenomenonDe: 'Zwei ineinandergreifende Tritoni erzeugen maximale akustische Reibung. Ohne tonales Zentrum balanciert der Klang auf Messers Schneide.',
     musicalReferences: 'Mozart (Don Giovanni Commendatore scene), Verdi (Rigoletto storm), Beethoven (Appassionata), gothic horror scoring, silent film suspense.',
   }
 ];
@@ -767,9 +843,23 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     };
   }, [releaseChord]);
 
+  // Smoothly center the Ear Training interactive frame in the viewport, especially on mobile phones
+  const scrollToEarTrainer = useCallback((delay = 80) => {
+    const doScroll = () => {
+      const consoleEl = document.getElementById('ear-training-console');
+      if (consoleEl) {
+        consoleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const studioEl = document.getElementById('harmonic-studio');
+        studioEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+    setTimeout(doScroll, delay);
+    setTimeout(doScroll, delay + 180);
+  }, []);
 
   return (
-    <section id="music-theory" className="py-24 px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
+    <section id="music-theory" className="pt-3 sm:pt-6 lg:pt-10 pb-16 sm:pb-20 px-4 sm:px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
       {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound - active when studio is opened) */}
       {isStudioOpen && (
         <>
@@ -800,7 +890,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-14">
+        <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#c49750]" />
             <span>{t.musicTheory.badge}</span>
@@ -894,8 +984,8 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
             </div>
 
             {/* Bottom Quote Box: Aligned and sized identically to the right card's launchpad */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[135px] lg:h-[145px]">
-              <p className="text-base sm:text-lg lg:text-xl font-serif italic text-[#f3cf8a] font-light leading-relaxed">
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
+              <p className="text-lg sm:text-xl lg:text-[1.35rem] xl:text-2xl font-serif italic text-[#f3cf8a] font-normal leading-relaxed">
                 “{t.musicTheory.secretGardenClosing}”
               </p>
             </div>
@@ -934,7 +1024,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
             </div>
 
             {/* Bottom Interactive Keys Launchpad - Identical height and alignment to the left card */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[135px] lg:h-[145px]">
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <button
                   type="button"
@@ -956,9 +1046,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                   onClick={() => {
                     setStudioTab('ear-training');
                     setIsStudioOpen(true);
-                    setTimeout(() => {
-                      document.getElementById('harmonic-studio')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 50);
+                    scrollToEarTrainer(80);
                   }}
                   className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
                 >
@@ -973,7 +1061,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
 
         {/* Interactive Harmonic Color & Weight Studio */}
         {isStudioOpen && (
-          <div id="harmonic-studio" className="mb-20 bg-[#0e1118] border border-[#242938] rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden transition-all duration-300">
+          <div id="harmonic-studio" className="mb-20 bg-[#0e1118] border border-[#242938] rounded-2xl p-3 sm:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/5">
               <div>
@@ -1029,6 +1117,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('ear-training');
                   stopAudio(true);
+                  scrollToEarTrainer(40);
                 }}
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
                   studioTab === 'ear-training'
@@ -1053,158 +1142,102 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
             ) : (
               <>
 
-                {/* Compact Chord Selector Ribbon without descriptions */}
-                <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 mb-8">
-                  {CHORD_PALETTE.map((chord) => {
-                    const isSelected = chord.id === activeChordId;
-                    const isCurrentlyPlayingThis = isSelected && isPlaying;
-                    return (
-                      <button
-                        key={chord.id}
-                        type="button"
-                        onPointerDown={(e) => {
-                          if (e.pointerType === 'touch' || e.button === 0) {
-                            handleChordPress(chord);
-                          }
-                        }}
-                        onPointerUp={() => handleChordRelease(chord.id)}
-                        onPointerCancel={() => handleChordRelease(chord.id)}
-                        onPointerLeave={() => handleChordRelease(chord.id)}
-                        onKeyDown={(e) => {
-                          if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
-                            e.preventDefault();
-                            handleChordPress(chord);
-                          }
-                        }}
-                        onKeyUp={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleChordRelease(chord.id);
-                          }
-                        }}
-                        className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[62px] sm:min-h-[68px] select-none touch-manipulation ${
-                          isSelected
-                            ? 'border-[#c49750] bg-[#161a24] shadow-[0_0_20px_rgba(196,151,80,0.2)] ring-1 ring-[#c49750]/50 scale-[1.02]'
-                            : 'border-[#222634] bg-[#12141c] hover:border-[#383f52] hover:bg-[#151822]'
-                        } ${heldChordId === chord.id ? 'ring-2 ring-[#c49750]' : ''}`}
-                      >
-                        <div className="flex items-center justify-between gap-1 mb-1">
+                {/* Selected Chord Showcase & Side-by-Side Scrollable Chord Menu */}
+                <div className="bg-[#141822] border border-[#282e3f] rounded-xl p-3 sm:p-5 lg:p-6 shadow-xl">
+                  <div className="flex flex-row gap-2.5 sm:gap-5 items-stretch">
+                    
+                    {/* Main Left Content: Chord Identity, Full Score, Tension Gauge & Somatic Descriptions */}
+                    <div className="flex-1 min-w-0 space-y-3 sm:space-y-4">
+                      
+                      {/* Top Header: Identity & Audio Playback */}
+                      <div className="pb-2 border-b border-white/5 space-y-1.5">
+                        <div className="flex items-center gap-2">
                           <span 
-                            className={`w-2.5 h-2.5 rounded-full shrink-0 transition-transform ${
-                              isCurrentlyPlayingThis ? 'scale-125 ring-2 ring-white/50' : ''
-                            }`} 
-                            style={{ backgroundColor: chord.color }}
-                          />
-                          <span className="text-[10px] font-mono text-[#8c887d]">
-                            {chord.tensionPercentage}%
+                            className="px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-medium uppercase tracking-wider truncate"
+                            style={{ backgroundColor: `${selectedChord.color}25`, color: selectedChord.color }}
+                          >
+                            {isDe ? selectedChord.archetypeDe : selectedChord.archetype}
                           </span>
                         </div>
-                        <div className="font-serif text-xs sm:text-sm font-medium text-[#eeeae0] leading-snug flex items-center justify-between">
-                          <span className="truncate">{chord.name}</span>
-                          {isCurrentlyPlayingThis && (
-                            <span className="text-[10px] text-[#c49750] font-mono animate-pulse ml-1">●</span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
 
-                {/* Selected Chord Showcase & Acoustic Deep Dive */}
-                <div className="bg-[#141822] border border-[#282e3f] rounded-xl p-5 sm:p-7">
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
-                    
-                    {/* Left Column: Chord Identity & Playback + Compact Score on the Right */}
-                    <div className="lg:col-span-6 space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        
-                        {/* Chord Title & Playback Button */}
-                        <div className="space-y-2.5 flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span 
-                              className="px-2.5 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider"
-                              style={{ backgroundColor: `${selectedChord.color}25`, color: selectedChord.color }}
-                            >
-                              {isDe ? selectedChord.archetypeDe : selectedChord.archetype}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-3.5">
-                            <h4 className="text-3xl sm:text-4xl font-serif text-[#fbf9f5] font-normal tracking-tight">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xl sm:text-3xl lg:text-4xl font-serif text-[#fbf9f5] font-normal tracking-tight truncate">
                               {selectedChord.name}
                             </h4>
-
-                            {/* Audio Play/Stop Button with instant strike & hold */}
-                            <button
-                              type="button"
-                              onPointerDown={(e) => {
-                                if (e.pointerType === 'touch' || e.button === 0) {
-                                  if (isPlaying) {
-                                    stopAudio(false);
-                                  } else {
-                                    handleChordPress(selectedChord);
-                                  }
-                                }
-                              }}
-                              onPointerUp={() => {
-                                if (heldChordIdRef.current) {
-                                  handleChordRelease(selectedChord.id);
-                                }
-                              }}
-                              onPointerCancel={() => {
-                                if (heldChordIdRef.current) {
-                                  handleChordRelease(selectedChord.id);
-                                }
-                              }}
-                              onPointerLeave={() => {
-                                if (heldChordIdRef.current) {
-                                  handleChordRelease(selectedChord.id);
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
-                                  e.preventDefault();
-                                  if (isPlaying) {
-                                    stopAudio(false);
-                                  } else {
-                                    handleChordPress(selectedChord);
-                                  }
-                                }
-                              }}
-                              onKeyUp={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  if (heldChordIdRef.current) {
-                                    handleChordRelease(selectedChord.id);
-                                  }
-                                }
-                              }}
-                              className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95 touch-manipulation"
-                              style={{
-                                backgroundColor: selectedChord.color,
-                                boxShadow: isPlaying ? `0 0 28px ${selectedChord.color}` : undefined
-                              }}
-                              title={
-                                isPlaying
-                                  ? (isDe ? 'Klang anhalten' : 'Stop sound')
-                                  : (isDe ? 'Akkord anspielen' : 'Play chord')
-                              }
-                            >
-                              {isPlaying ? (
-                                <VolumeX className="w-5 h-5 text-black animate-pulse" />
-                              ) : (
-                                <Volume2 className="w-5 h-5 text-black group-hover:scale-110 transition-transform" />
-                              )}
-                            </button>
+                            <p className="text-[10px] sm:text-xs text-[#a09c91] font-mono leading-tight mt-0.5 truncate">
+                              {selectedChord.voicingLabel}
+                            </p>
                           </div>
 
-                          <p className="text-xs text-[#a09c91] font-mono leading-relaxed">
-                            {selectedChord.voicingLabel}
-                          </p>
+                          {/* Audio Play/Stop Button with instant strike & hold */}
+                          <button
+                            type="button"
+                            onPointerDown={(e) => {
+                              if (e.pointerType === 'touch' || e.button === 0) {
+                                if (isPlaying) {
+                                  stopAudio(false);
+                                } else {
+                                  handleChordPress(selectedChord);
+                                }
+                              }
+                            }}
+                            onPointerUp={() => {
+                              if (heldChordIdRef.current) {
+                                handleChordRelease(selectedChord.id);
+                              }
+                            }}
+                            onPointerCancel={() => {
+                              if (heldChordIdRef.current) {
+                                handleChordRelease(selectedChord.id);
+                              }
+                            }}
+                            onPointerLeave={() => {
+                              if (heldChordIdRef.current) {
+                                handleChordRelease(selectedChord.id);
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+                                e.preventDefault();
+                                if (isPlaying) {
+                                  stopAudio(false);
+                                } else {
+                                  handleChordPress(selectedChord);
+                                }
+                              }
+                            }}
+                            onKeyUp={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                if (heldChordIdRef.current) {
+                                  handleChordRelease(selectedChord.id);
+                                }
+                              }
+                            }}
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl cursor-pointer group shrink-0 select-none active:scale-95 touch-manipulation"
+                            style={{
+                              backgroundColor: selectedChord.color,
+                              boxShadow: isPlaying ? `0 0 24px ${selectedChord.color}` : undefined
+                            }}
+                            title={
+                              isPlaying
+                                ? (isDe ? 'Klang anhalten' : 'Stop sound')
+                                : (isDe ? 'Akkord anspielen' : 'Play chord')
+                            }
+                          >
+                            {isPlaying ? (
+                              <VolumeX className="w-5 h-5 text-black animate-pulse" />
+                            ) : (
+                              <Volume2 className="w-5 h-5 text-black group-hover:scale-110 transition-transform" />
+                            )}
+                          </button>
                         </div>
+                      </div>
 
-                        {/* Compact Square Musical Score (Positioned on the right of the chord) */}
-                        <div className="shrink-0 flex items-center justify-center sm:justify-end">
+                      {/* Generous Full Musical Score Staff Stage (Complete Grand Staff, No Clipping) */}
+                      <div className="w-full flex items-center justify-center py-0.5">
+                        <div className="w-full max-w-[260px] sm:max-w-[300px] h-[130px] sm:h-[150px] rounded-xl bg-[#0a0c12]/95 border border-[#c49750]/35 flex items-center justify-center p-2 shadow-lg relative">
                           <MusicalScoreChord
                             notes={selectedChord.notes}
                             chordName={selectedChord.name}
@@ -1212,20 +1245,19 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                             isDe={isDe}
                           />
                         </div>
-
                       </div>
 
                       {/* Gravitational Tension Gauge */}
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex items-center justify-between text-xs font-mono">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px] sm:text-xs font-mono">
                           <span className="text-[#8c887d]">
-                            {isDe ? 'Harmonische Gravitation / Spannung:' : 'Harmonic Tension / Gravitational Pull:'}
+                            {isDe ? 'Spannung:' : 'Harmonic Tension:'}
                           </span>
                           <span className="font-semibold" style={{ color: selectedChord.color }}>
                             {isDe ? selectedChord.tensionLabelDe : selectedChord.tensionLabel}
                           </span>
                         </div>
-                        <div className="w-full h-2 rounded-full bg-[#1e2330] overflow-hidden">
+                        <div className="w-full h-1.5 sm:h-2 rounded-full bg-[#1e2330] overflow-hidden">
                           <div 
                             className="h-full rounded-full transition-all duration-500"
                             style={{ 
@@ -1235,29 +1267,70 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                           />
                         </div>
                       </div>
+
+                      {/* Sensation & Pedagogical Breakdown */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3.5 pt-0.5">
+                        <div className="bg-[#10131c] border border-white/5 rounded-lg p-2.5 sm:p-3">
+                          <h5 className="text-[10px] uppercase tracking-wider font-mono text-[#c49750] mb-1">
+                            {isDe ? 'Wie es sich anfühlt (Körpergefühl):' : 'How It Feels in the Body:'}
+                          </h5>
+                          <p className="text-xs sm:text-sm text-[#dedacf] font-serif italic leading-relaxed">
+                            “{isDe ? selectedChord.emotionalFeelingDe : selectedChord.emotionalFeeling}”
+                          </p>
+                        </div>
+
+                        <div className="bg-[#10131c] border border-white/5 rounded-lg p-2.5 sm:p-3">
+                          <h5 className="text-[10px] uppercase tracking-wider font-mono text-[#a78bfa] mb-1">
+                            {isDe ? 'Akustisches Phänomen:' : 'Acoustic Phenomenon:'}
+                          </h5>
+                          <p className="text-[11px] sm:text-xs text-[#a8a499] font-light leading-relaxed">
+                            {isDe ? selectedChord.acousticPhenomenonDe : selectedChord.acousticPhenomenon}
+                          </p>
+                        </div>
+                      </div>
+
                     </div>
 
-                    {/* Right Column: Sensation & Pedagogical Breakdown */}
-                    <div className="lg:col-span-6 space-y-4 border-t lg:border-t-0 lg:border-l border-white/5 pt-5 lg:pt-0 lg:pl-7">
-                      
-                      <div>
-                        <h5 className="text-xs uppercase tracking-wider font-mono text-[#c49750] mb-1.5">
-                          {isDe ? 'Wie es sich anfühlt (Sinnliche Wahrnehmung):' : 'How It Feels in the Body (Somatic Sensation):'}
-                        </h5>
-                        <p className="text-base sm:text-lg text-[#dedacf] font-serif italic leading-relaxed">
-                          “{isDe ? selectedChord.emotionalFeelingDe : selectedChord.emotionalFeeling}”
-                        </p>
+                    {/* Right Rail: Sleek Scrollable Chord Nature Menu (Expanded to fill entire card height) */}
+                    <div className="w-[78px] sm:w-[94px] md:w-[110px] lg:w-[125px] shrink-0 bg-[#0d1017] border border-[#222736] rounded-xl p-1.5 sm:p-2 flex flex-col self-stretch">
+                      <div className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-[#d4af37] px-0.5 pb-1 mb-1 border-b border-white/10 text-center font-semibold shrink-0">
+                        <span>{isDe ? 'Akkorde' : 'Chords'}</span>
                       </div>
 
-                      <div>
-                        <h5 className="text-xs uppercase tracking-wider font-mono text-[#a78bfa] mb-1.5">
-                          {isDe ? 'Akustisches Phänomen:' : 'Acoustic Phenomenon:'}
-                        </h5>
-                        <p className="text-xs sm:text-sm text-[#a8a499] font-light leading-relaxed">
-                          {isDe ? selectedChord.acousticPhenomenonDe : selectedChord.acousticPhenomenon}
-                        </p>
+                      <div className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-0.5 thin-scrollbar">
+                        {CHORD_PALETTE.map((chord) => {
+                          const isSelected = chord.id === activeChordId;
+                          const isCurrentlyPlayingThis = isSelected && isPlaying;
+                          return (
+                            <button
+                              key={chord.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveChordId(chord.id);
+                                handleChordPress(chord);
+                              }}
+                              className={`w-full px-1.5 py-2 rounded-lg border text-left transition-all duration-150 cursor-pointer flex items-center justify-between gap-1 select-none touch-manipulation ${
+                                isSelected
+                                  ? 'border-[#c49750] bg-[#1a202c] shadow-[0_0_10px_rgba(196,151,80,0.25)] ring-1 ring-[#c49750]/60'
+                                  : 'border-[#202534] bg-[#11141d] hover:border-[#384156] hover:bg-[#151924]'
+                              }`}
+                              title={`${chord.name} (${chord.tensionPercentage}%)`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 w-full">
+                                <span 
+                                  className={`w-2 h-2 rounded-full shrink-0 transition-transform ${
+                                    isCurrentlyPlayingThis ? 'scale-125 ring-2 ring-white/60 animate-pulse' : ''
+                                  }`} 
+                                  style={{ backgroundColor: chord.color }}
+                                />
+                                <span className="font-mono text-xs sm:text-[13px] font-bold text-[#eeeae0] truncate tracking-tight">
+                                  {chord.shortBadge}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
-
                     </div>
 
                   </div>

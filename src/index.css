@@ -17,10 +17,22 @@
   font-weight: 800;
 }
 
+.beyond-word {
+  color: #ffffff;
+  display: inline-block;
+  font-weight: 600;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
-    scroll-padding-top: 80px;
+    scroll-padding-top: 54px;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      scroll-padding-top: 64px;
+    }
   }
 
   body {
@@ -48,6 +60,25 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #c49750;
+}
+
+/* Ultra-thin scrollbar for compact mobile menus */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 151, 80, 0.45) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(196, 151, 80, 0.4);
+  border-radius: 9999px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
 }
 
 /* Sacred Yin-Yang Awakening Keyframes */

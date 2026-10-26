@@ -21,11 +21,11 @@ export const Biography: React.FC<BiographyProps> = ({ onScrollToGallery, onOpenI
   }, []);
 
   return (
-    <section id="biography" className="py-20 px-6 bg-[#0e1015] border-t border-[#1e222a]">
+    <section id="biography" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0e1015] border-t border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="max-w-3xl mb-14">
+        <div className="max-w-3xl mb-8 sm:mb-12">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-3">
             <span>{t.biography.badge}</span>
           </div>
