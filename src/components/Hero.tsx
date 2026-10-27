@@ -151,11 +151,15 @@ export const Hero: React.FC<HeroProps> = ({
               <span className="font-light">{t.hero.highlights.location}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[#c49750]">🎓</span>
-              <span className="font-light">{t.hero.highlights.credentials}</span>
+              <span className="text-[#c49750] shrink-0">🎓</span>
+              <span className="font-light">{t.hero.highlights.cnsmdp}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[#c49750]">🎭</span>
+              <span className="text-[#c49750] shrink-0">🏛️</span>
+              <span className="font-light">{t.hero.highlights.staatsoper}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[#c49750] shrink-0">🎭</span>
               <span className="font-light">{t.hero.highlights.stages}</span>
             </div>
           </div>

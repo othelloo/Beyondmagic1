@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp, Info, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 import { MusicalScoreChord } from './MusicalScoreChord';
 import { EarTrainingStudio } from './EarTrainingStudio';
+import { PitchMemoryStudio } from './PitchMemoryStudio';
+import { RhythmStudio } from './RhythmStudio';
 
 // Dynamic module loader for acoustic piano samples (decouples 503KB base64 audio from initial bundle)
 let pianoSamplesModule: typeof import('../data/pianoSamples') | null = null;
@@ -316,8 +318,10 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const [heldChordId, setHeldChordId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const soundMode = 'piano';
-  const [studioTab, setStudioTab] = useState<'explore' | 'ear-training'>('explore');
+  const [studioTab, setStudioTab] = useState<'explore' | 'ear-training' | 'pitch-memory' | 'rhythm'>('explore');
   const [isStudioOpen, setIsStudioOpen] = useState<boolean>(false);
+  const [showMobileIntroPopup, setShowMobileIntroPopup] = useState<boolean>(false);
+  const [dontShowAgain, setDontShowAgain] = useState<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
@@ -858,6 +862,50 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     setTimeout(doScroll, delay + 180);
   }, []);
 
+  // Smoothly center the Harmonic Explorer interactive chord workbench in the viewport
+  const scrollToWorkbench = useCallback((delay = 80) => {
+    const doScroll = () => {
+      const workbenchEl = document.getElementById('harmonic-interactive-workbench');
+      if (workbenchEl) {
+        workbenchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const studioEl = document.getElementById('harmonic-studio');
+        studioEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    setTimeout(doScroll, delay);
+    setTimeout(doScroll, delay + 180);
+  }, []);
+
+  // Open Harmonic Explorer: on mobile, show the intro popup unless user checked "Don't show this again"
+  const handleOpenExplore = useCallback(() => {
+    setStudioTab('explore');
+    setIsStudioOpen(true);
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const hasSeenIntro = typeof window !== 'undefined' && localStorage.getItem('beyondMagic_hideHarmonicIntro') === 'true';
+
+    if (isMobile && !hasSeenIntro) {
+      setShowMobileIntroPopup(true);
+      setTimeout(() => {
+        const workbenchEl = document.getElementById('harmonic-interactive-workbench');
+        workbenchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    } else {
+      scrollToWorkbench(80);
+    }
+  }, [scrollToWorkbench]);
+
+  // Dismiss intro popup and persist "Don't show this again" preference
+  const handleDismissIntroPopup = useCallback(() => {
+    if (dontShowAgain) {
+      try {
+        localStorage.setItem('beyondMagic_hideHarmonicIntro', 'true');
+      } catch {}
+    }
+    setShowMobileIntroPopup(false);
+    scrollToWorkbench(60);
+  }, [dontShowAgain, scrollToWorkbench]);
+
   return (
     <section id="music-theory" className="pt-3 sm:pt-6 lg:pt-10 pb-16 sm:pb-20 px-4 sm:px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
       {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound - active when studio is opened) */}
@@ -1028,13 +1076,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setStudioTab('explore');
-                    setIsStudioOpen(true);
-                    setTimeout(() => {
-                      document.getElementById('harmonic-studio')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 50);
-                  }}
+                  onClick={handleOpenExplore}
                   className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
                 >
                   <Waves className="w-4 h-4 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
@@ -1063,13 +1105,80 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
         {isStudioOpen && (
           <div id="harmonic-studio" className="mb-20 bg-[#0e1118] border border-[#242938] rounded-2xl p-3 sm:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-white/5">
+            {/* Mobile Instructions Popup Modal with "Don't show this again" */}
+            {showMobileIntroPopup && (
+              <div 
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) handleDismissIntroPopup();
+                }}
+              >
+                <div className="relative w-full max-w-sm rounded-2xl bg-[#121622] border border-[#c49750]/60 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-left">
+                  <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#c49750]/20 blur-[50px] pointer-events-none" />
+
+                  <button
+                    type="button"
+                    onClick={handleDismissIntroPopup}
+                    className="absolute top-3.5 right-3.5 p-1 rounded-lg text-[#8c887d] hover:text-white bg-[#181c28] border border-white/10 transition-colors cursor-pointer"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-2 pr-6">
+                    <Sparkles className="w-3.5 h-3.5 text-[#c49750]" />
+                    <span className="truncate">{t.musicTheory.interactiveTitle}</span>
+                  </div>
+
+                  <h4 className="font-serif text-base sm:text-lg text-[#fbf9f5] font-normal leading-snug mb-3">
+                    {t.musicTheory.interactiveSubtitle}
+                  </h4>
+
+                  <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-[#0a0c13] border border-white/5 text-[11px] font-mono text-[#a09c91] leading-relaxed">
+                    <Headphones className="w-4 h-4 text-[#c49750] shrink-0 mt-0.5" />
+                    <span>{t.musicTheory.interactiveHint}</span>
+                  </div>
+
+                  <label className="flex items-center gap-2.5 mt-4 pt-3 border-t border-white/10 text-xs text-[#dedacf] font-sans cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={dontShowAgain}
+                      onChange={(e) => setDontShowAgain(e.target.checked)}
+                      className="w-4 h-4 rounded bg-[#0b0d13] border-white/30 text-[#c49750] focus:ring-[#c49750] focus:ring-offset-0 cursor-pointer accent-[#c49750]"
+                    />
+                    <span className="text-[12px]">{isDe ? 'Nicht mehr anzeigen' : "Don't show this again"}</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleDismissIntroPopup}
+                    className="w-full mt-4 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#c49750] via-[#ffd56b] to-[#c49750] text-black font-semibold text-xs uppercase tracking-wider transition-all duration-150 cursor-pointer shadow-lg shadow-[#c49750]/25 active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
+                    <span>{isDe ? 'Verstanden & Loslegen' : 'Start Exploring'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-white/5">
               <div>
-                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1.5">
+                <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-1 sm:mb-1.5">
                   <Waves className="w-3.5 h-3.5 text-[#c49750]" />
                   <span>{t.musicTheory.interactiveTitle}</span>
+                  {/* Mobile Info Button to re-open instructions */}
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileIntroPopup(true)}
+                    className="sm:hidden p-1 rounded-md text-[#c49750] bg-[#1a1f2c] border border-[#c49750]/30 hover:border-[#c49750] transition-colors ml-1 cursor-pointer flex items-center gap-1 text-[10px] font-mono"
+                    title={isDe ? 'Anleitung anzeigen' : 'Show instructions'}
+                  >
+                    <Info className="w-3 h-3" />
+                    <span>Info</span>
+                  </button>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-serif text-[#fbf9f5] font-light">
+                {/* On desktop/tablet, display subtitle in header. On mobile, hidden to avoid pushing the interactive workbench below fold */}
+                <h3 className="hidden sm:block text-2xl sm:text-3xl font-serif text-[#fbf9f5] font-light">
                   {t.musicTheory.interactiveSubtitle}
                 </h3>
               </div>
@@ -1094,22 +1203,23 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               </div>
             </div>
 
-            {/* Studio Tab Switcher: Explore vs Test Your Ear */}
-            <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+            {/* Studio Tab Switcher: 4-Module Interactive Ear & Rhythm Atelier */}
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-6 border-b border-white/10 pb-4 overflow-x-auto no-scrollbar">
               <button
                 type="button"
                 onClick={() => {
                   setStudioTab('explore');
                   stopAudio(true);
+                  scrollToWorkbench(60);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'explore'
                     ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
                     : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
                 }`}
               >
-                <Waves className="w-4 h-4" />
-                <span>{isDe ? '1. Harmonien Erforschen' : '1. Harmonic Explorer'}</span>
+                <Waves className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isDe ? '1. Harmonien' : '1. Harmonics'}</span>
               </button>
 
               <button
@@ -1119,14 +1229,46 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                   stopAudio(true);
                   scrollToEarTrainer(40);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer ${
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'ear-training'
                     ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
                     : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
                 }`}
               >
-                <Music className="w-4 h-4" />
-                <span>{isDe ? '2. Gehör Testen' : '2. Test Your Ear'}</span>
+                <Music className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isDe ? '2. Akkord-Test' : '2. Chord Test'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('pitch-memory');
+                  stopAudio(true);
+                }}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  studioTab === 'pitch-memory'
+                    ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
+                    : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
+                }`}
+              >
+                <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isDe ? '3. Melodie-Singen' : '3. Pitch Memory'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('rhythm');
+                  stopAudio(true);
+                }}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  studioTab === 'rhythm'
+                    ? 'bg-[#c49750] text-black font-semibold shadow-lg shadow-[#c49750]/20'
+                    : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isDe ? '4. Rhythmus-Studio' : '4. Rhythm Trainer'}</span>
               </button>
             </div>
 
@@ -1139,11 +1281,21 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 soundMode={soundMode}
                 isDe={isDe}
               />
+            ) : studioTab === 'pitch-memory' ? (
+              <PitchMemoryStudio
+                playFrequencies={playCustomFrequencies}
+                stopAudio={stopAudio}
+                isDe={isDe}
+              />
+            ) : studioTab === 'rhythm' ? (
+              <RhythmStudio
+                isDe={isDe}
+              />
             ) : (
               <>
 
                 {/* Selected Chord Showcase & Side-by-Side Scrollable Chord Menu */}
-                <div className="bg-[#141822] border border-[#282e3f] rounded-xl p-3 sm:p-5 lg:p-6 shadow-xl">
+                <div id="harmonic-interactive-workbench" className="bg-[#141822] border border-[#282e3f] rounded-xl p-3 sm:p-5 lg:p-6 shadow-xl scroll-mt-20 sm:scroll-mt-24">
                   <div className="flex flex-row gap-2.5 sm:gap-5 items-stretch">
                     
                     {/* Main Left Content: Chord Identity, Full Score, Tension Gauge & Somatic Descriptions */}

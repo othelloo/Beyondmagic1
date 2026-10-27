@@ -1020,32 +1020,52 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
           style={{ backgroundColor: hasAnswered ? (isCorrect ? '#10b981' : '#f43f5e') : '#c49750' }}
         />
 
-        {/* 1. Game Mode Selector Tabs: Chord Colors vs. Inversions */}
-        <div className="flex items-center justify-center gap-2 pb-2.5 mb-2.5 border-b border-white/10">
-          <button
-            type="button"
-            onClick={() => handleSwitchGameMode('chord-colors')}
-            className={`flex-1 max-w-[210px] py-1.5 px-3 rounded-xl text-xs font-serif transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              gameMode === 'chord-colors'
-                ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-semibold shadow-md shadow-[#c49750]/20'
-                : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
-            }`}
-          >
-            <span>🎨</span>
-            <span>{isDe ? 'Akkord-Farben' : 'Chord Colors'}</span>
-          </button>
+        {/* 1. Top Bar: Game Mode Selector Tabs + Top 10 High Scores */}
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2 pb-2.5 mb-2.5 border-b border-white/10">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={() => handleSwitchGameMode('chord-colors')}
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-xl text-xs font-serif transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer truncate ${
+                gameMode === 'chord-colors'
+                  ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-semibold shadow-md shadow-[#c49750]/20'
+                  : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
+              }`}
+            >
+              <span>🎨</span>
+              <span className="truncate">
+                <span className="hidden xs:inline">{isDe ? 'Akkord-' : 'Chord '}</span>
+                {isDe ? 'Farben' : 'Colors'}
+              </span>
+            </button>
 
+            <button
+              type="button"
+              onClick={() => handleSwitchGameMode('inversions')}
+              className={`flex-1 py-1.5 px-2 sm:px-3 rounded-xl text-xs font-serif transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer truncate ${
+                gameMode === 'inversions'
+                  ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-semibold shadow-md shadow-[#c49750]/20'
+                  : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
+              }`}
+            >
+              <span>🔄</span>
+              <span className="truncate">{isDe ? 'Umkehrungen' : 'Inversions'}</span>
+            </button>
+          </div>
+
+          {/* Dedicated Top 10 High Scores Button (Always inside frame on mobile) */}
           <button
             type="button"
-            onClick={() => handleSwitchGameMode('inversions')}
-            className={`flex-1 max-w-[210px] py-1.5 px-3 rounded-xl text-xs font-serif transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              gameMode === 'inversions'
-                ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-semibold shadow-md shadow-[#c49750]/20'
-                : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
-            }`}
+            onClick={() => {
+              setActiveLeaderboardTab(gameMode);
+              setShowLeaderboard(true);
+            }}
+            className="shrink-0 px-2 sm:px-2.5 py-1.5 rounded-xl bg-[#181c28] hover:bg-[#222738] active:scale-95 border border-[#c49750]/60 text-[#fbf9f5] flex items-center gap-1 sm:gap-1.5 text-xs font-mono transition-all cursor-pointer shadow-sm group"
+            title={isDe ? 'Top 10 Bestenliste' : 'Top 10 High Scores'}
+            aria-label={isDe ? 'Top 10 Bestenliste' : 'Top 10 High Scores'}
           >
-            <span>🔄</span>
-            <span>{isDe ? 'Umkehrungen' : 'Inversions'}</span>
+            <Trophy className="w-3.5 h-3.5 text-[#c49750] group-hover:scale-110 transition-transform shrink-0" />
+            <span className="font-semibold text-[#f5eedf] text-[11px] sm:text-xs">Top 10</span>
           </button>
         </div>
 
@@ -1076,10 +1096,10 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
           </div>
         )}
 
-        {/* 3. Integrated HUD Bar: Stats, Mode, Leaderboard & Reset */}
+        {/* 3. Integrated HUD Bar: Stats, Sound Mode & Reset */}
         <div className="flex items-center justify-between gap-1.5 pb-2.5 mb-2 border-b border-white/10 text-xs font-mono">
           {/* Left: Streak & Mistakes */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <div className="px-2 py-1 rounded-lg bg-[#0b0d14] border border-white/10 flex items-center gap-1 text-[11px]">
               <Flame className={`w-3.5 h-3.5 ${streak > 0 ? 'text-[#f59e0b] animate-bounce' : 'text-[#6e6a60]'}`} />
               <span className="text-[#8c887d]">{isDe ? 'Serie' : 'Streak'}</span>
@@ -1097,8 +1117,8 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
             </div>
           </div>
 
-          {/* Right: Sound Mode, Top 10 Button, Reset */}
-          <div className="flex items-center gap-1.5">
+          {/* Right: Sound Mode & Reset */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {/* Block / Arp toggle */}
             <div className="inline-flex rounded-lg bg-[#0b0d13] p-0.5 border border-[#262c3c]">
               <button
@@ -1132,20 +1152,6 @@ export const EarTrainingStudio: React.FC<EarTrainingStudioProps> = ({
                 Arp
               </button>
             </div>
-
-            {/* Top 10 High Scores Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveLeaderboardTab(gameMode);
-                setShowLeaderboard(true);
-              }}
-              className="px-2 py-1 rounded-lg bg-[#181c28] hover:bg-[#222738] border border-[#c49750]/50 text-[#fbf9f5] flex items-center gap-1 text-[11px] transition-all cursor-pointer shadow-sm group"
-              title={isDe ? 'Top 10 Bestenliste' : 'Top 10 High Scores'}
-            >
-              <Trophy className="w-3 h-3 text-[#c49750] group-hover:scale-110 transition-transform" />
-              <span className="font-semibold text-[#f5eedf]">Top 10</span>
-            </button>
 
             {/* Reset / New Run */}
             <button

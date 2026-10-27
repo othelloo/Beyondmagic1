@@ -20,6 +20,8 @@ export interface Translations {
     locationAvailability: string;
     highlights: {
       location: string;
+      cnsmdp: string;
+      staatsoper: string;
       credentials: string;
       stages: string;
     };
@@ -324,7 +326,9 @@ export const translations: Record<Language, Translations> = {
       locationAvailability: 'Available in NRW (Germany), Berlin, or online worldwide.',
       highlights: {
         location: 'NRW (Cologne/Düsseldorf/Essen) · Berlin · Online Worldwide',
-        credentials: 'CNSMDP Paris Valedictorian · Staatsoper Berlin Young Artist',
+        cnsmdp: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury).',
+        staatsoper: 'Staatsoper Berlin Young Artist',
+        credentials: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury).\nStaatsoper Berlin Young Artist',
         stages: 'Operalia finalist · Aalto Stage Award for Young Artists'
       },
       ctaPrimary: 'Book a Lesson / Inquire',
@@ -412,7 +416,7 @@ export const translations: Record<Language, Translations> = {
       title: 'The Healthy Basis: Longevity, Resilience & Emotional Relay',
       subtitle: 'Twenty years on European opera stages taught me one undeniable truth: when your voice is anchored in a cultivated muscular and breathing system, you can endure demanding rehearsals, grueling schedules, and colds—without ever developing vocal nodules.',
       credoQuote: 'To claim I never experienced vocal fatigue in twenty years of singing lead roles across Europe would be a lie. We rehearse for weeks, we sing through heavy exhaustion, we catch colds. The real mastery is knowing how to navigate all of that safely. When your muscular foundation and breathing system are deeply cultivated, the body instinctively steps in during tiredness and takes the entire pressure off your throat. No nodules. No permanent strain. Just an enduring, healthy basis that lets you survive demanding concerts, 40-date tours, and connect music directly with authentic emotion.',
-      credoTagline: 'CNSMDP Valedictorian · 20+ Years European Lead Operatic Roles · Zero Nodules · Anatomical Resilience',
+      credoTagline: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury) · 20+ Years European Lead Operatic Roles · Zero Nodules · Anatomical Resilience',
       hookQuote: 'Music is emotion. But if we are overwhelmed by emotion, the throat constricts and we cannot sing. True vocal artistry is learning how to deeply connect with emotion—and then having the technical basis to relay it without choking.',
       hookSubquote: 'My role is to give you a foundation so reliable that even when you are exhausted on night 30 of a 40-date tour, your body knows exactly what to do—leaving your throat completely free.',
       
@@ -676,14 +680,14 @@ export const translations: Record<Language, Translations> = {
       badge: 'Background & Career',
       title: 'How I Started at 20 and Learned Fast',
       subtitle: 'From zero formal childhood music training to winning a prestigious scholarship in France in just two years, followed by leading tenor roles across Europe.',
-      point1Title: 'Paris CNSMDP Valedictorian',
+      point1Title: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury)',
       point1Desc: 'Scholarship winner and summa cum laude graduate of the Conservatoire National Supérieur de Musique de Paris.',
       point2Title: 'Major European Opera Houses',
       point2Desc: 'Lead tenor roles at Opéra National de Paris (Werther), Staatsoper Berlin (Alfredo in La Traviata), Deutsche Oper Berlin, Aalto-Theater Essen.',
       point3Title: 'World-Class Collaborations',
       point3Desc: 'Worked with Daniel Barenboim, Michel Plasson, Sir Neville Marriner, Marco Armiliato, Francisco Araiza, and Sonya Yoncheva.',
       p1: 'I began studying classical singing and music at age twenty—unusually late for the classical world. Without childhood conservatory schooling or rigid rote drills, I immersed myself directly into the physical reality of sound, listening with absolute intensity.',
-      p2: 'By training auditory memory to recognize chords, vocal colors, and acoustic tensions directly in the body before naming them, I bypassed years of mechanical stumbling. Just two years later, I won a scholarship to France and subsequently graduated from the CNSMDP in Paris as valedictorian.',
+      p2: 'By training auditory memory to recognize chords, vocal colors, and acoustic tensions directly in the body before naming them, I bypassed years of mechanical stumbling. Just two years later, I won a scholarship to France and subsequently graduated from the CNSMDP in Paris as top-ranked graduate (Félicitations du Jury).',
       p3: 'Following two years in the Young Artist Program at the Staatsoper Berlin, I debuted in principal tenor roles across Europe: the title role in Massenet’s Werther at the Opéra National de Paris, Alfredo in Verdi’s La Traviata at the Staatsoper Berlin alongside Sonya Yoncheva, Faust, and Malcolm in Macbeth.',
       p4: 'Today, I bring this exact directness to my students. Whether preparing a major European audition, learning your first French role, or producing music, you do not need decades of confusion. You need to reconnect with sound as a living, natural language.',
       highlightQuote: '“On stage with an orchestra, you don’t calculate textbook rules. You listen, you feel the harmonic pull, and you sing what is genuine.”',
@@ -768,7 +772,9 @@ export const translations: Record<Language, Translations> = {
       locationAvailability: 'Verfügbar in NRW (Köln / Düsseldorf / Essen), Berlin oder weltweit online.',
       highlights: {
         location: 'NRW (Köln / Düsseldorf / Essen) · Berlin · Online weltweit',
-        credentials: 'CNSMDP Paris Jahrgangsbester · Staatsoper Berlin Opernstudio',
+        cnsmdp: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury).',
+        staatsoper: 'Staatsoper Berlin Young Artist',
+        credentials: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury).\nStaatsoper Berlin Young Artist',
         stages: 'Operalia finalist · Aalto Stage Award for Young Artists'
       },
       ctaPrimary: 'Stunde anfragen / Buchen',
@@ -856,7 +862,7 @@ export const translations: Record<Language, Translations> = {
       title: 'Die gesunde Basis: Belastbarkeit, Langlebigkeit & Emotion',
       subtitle: 'Zwanzig Jahre auf europäischen Opernbühnen haben mich eines gelehrt: Wenn die Stimme auf einem fundierten Muskel- und Atemsystem ruht, meistert man anstrengende Probenwochen, Müdigkeit und Erkältungen – vollkommen ohne Stimmbandknötchen.',
       credoQuote: 'Zu behaupten, ich hätte in zwanzig Jahren nie Stimmermüdung gespürt, wäre schlicht eine Lüge. Man singt manchmal zu viel, Probenphasen ziehen sich über Wochen, Reisen schlauchen oder man fängt sich eine Erkältung ein. Die wahre Kunst ist, wie man sicher durch all das hindurch navigiert. Wenn die muskuläre Basis und das Atemsystem tief verankert sind, übernimmt der Körper bei Erschöpfung automatisch die Arbeit und nimmt den gesamten Druck von den Stimmbändern. Keine Knötchen. Keine Überlastung. Sondern eine gesunde Basis, mit der man lange Konzerte und 40 Tour-Termine souverän übersteht.',
-      credoTagline: 'CNSMDP Paris Jahrgangsbester · 20+ Jahre Europäische Opern-Hauptrollen · Null Knötchen · Anatomische Resilienz',
+      credoTagline: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury) · 20+ Jahre Europäische Opern-Hauptrollen · Null Knötchen · Anatomische Resilienz',
       hookQuote: 'Musik ist Emotion. Doch wenn wir von unseren Gefühlen überwältigt werden, schnürt die Kehle zu und wir können nicht mehr frei singen. Wahre Vokalkunst bedeutet, tief mit Emotionen in Kontakt zu treten – und sie dann klar ans Publikum weiterzugeben, ohne die Stimme zu blockieren.',
       hookSubquote: 'Meine Aufgabe ist es, Ihnen ein Fundament zu geben, das Sie durch jede Erschöpfung trägt: Wenn die Müdigkeit kommt, weiß Ihr Körper exakt, was zu tun ist – und entlastet die Stimme vollständig.',
 
@@ -1120,14 +1126,14 @@ export const translations: Record<Language, Translations> = {
       badge: 'Künstlerischer Werdegang',
       title: 'Wie ich mit 20 anfing und schnell lernte',
       subtitle: 'Vom Quereinstieg mit zwanzig Jahren ohne Vorbildung zum Frankreich-Stipendium in nur zwei Jahren – und zu führenden Tenor-Hauptrollen an Europas Opernbühnen.',
-      point1Title: 'CNSMDP Paris Jahrgangsbester',
+      point1Title: 'Top-Ranked Graduate of the CNSMDP (Félicitations du Jury)',
       point1Desc: 'Gewinner des Frankreich-Stipendiums und summa cum laude Absolvent des Conservatoire National Supérieur de Musique de Paris.',
       point2Title: 'Führende Opernhäuser Europas',
       point2Desc: 'Tenor-Hauptrollen an der Opéra National de Paris (Werther), Staatsoper Berlin (Alfredo in La Traviata), Deutsche Oper Berlin, Aalto-Theater Essen.',
       point3Title: 'Hochkarätige Zusammenarbeit',
       point3Desc: 'Zusammenarbeit mit Daniel Barenboim, Michel Plasson, Sir Neville Marriner, Marco Armiliato, Francisco Araiza und Sonya Yoncheva.',
       p1: 'Ich kam ungewöhnlich spät zum klassischen Gesang: Erst mit zwanzig Jahren begann ich, mich intensiv mit Musik zu beschäftigen. Ohne jahrelangen kindlichen Konservatoriumsunterricht tauchte ich direkt in das lebendige Phänomen des Klangs ein und hörte mit bedingungsloser Aufmerksamkeit zu.',
-      p2: 'Indem ich Akkorde, Klangfarben und Spannungen unmittelbar im Körper spürte, bevor ich sie benannte oder aufschrieb, ersparte ich mir jahrelanges mechanisches Herumprobieren. Nach nur zwei Jahren gewann ich ein Stipendium für Frankreich und schloss mein Studium am renommierten CNSMDP in Paris als Jahrgangsbester ab.',
+      p2: 'Indem ich Akkorde, Klangfarben und Spannungen unmittelbar im Körper spürte, bevor ich sie benannte oder aufschrieb, ersparte ich mir jahrelanges mechanisches Herumprobieren. Nach nur zwei Jahren gewann ich ein Stipendium für Frankreich und schloss mein Studium am renommierten CNSMDP in Paris als Jahrgangsbester mit den Félicitations du Jury ab.',
       p3: 'Nach zwei Jahren im Opernstudio der Staatsoper Berlin folgten internationale Debüts in Tenor-Hauptrollen: Die Titelpartie in Massenets Werther an der Opéra National de Paris, Alfredo in Verdis La Traviata an der Staatsoper Berlin (an der Seite von Sonya Yoncheva), Faust sowie Fenton in Falstaff.',
       p4: 'Genau diese Direktheit gebe ich an meine Schüler weiter. Ob Sie sich auf ein wichtiges Theater-Vorsingen vorbereiten, Ihre erste französische Partie einstudieren oder eigene Musik produzieren: Sie brauchen keine Jahrzehnte der Verwirrung. Sie müssen die Musik wieder als natürliche Sprache begreifen.',
       highlightQuote: '„Auf der Bühne mit Orchester rechnet man keine Lehrbuchregeln ab. Man lauscht, man spürt den harmonischen Zug, und man singt, was wahrhaftig ist.“',
