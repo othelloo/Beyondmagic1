@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp, Info, X } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp, Info, X, Clock, Award } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 import { MusicalScoreChord } from './MusicalScoreChord';
 import { EarTrainingStudio } from './EarTrainingStudio';
 import { PitchMemoryStudio } from './PitchMemoryStudio';
 import { RhythmStudio } from './RhythmStudio';
+import { TempoStudio } from './TempoStudio';
+import { AssessmentStudio } from './AssessmentStudio';
 
 // Dynamic module loader for acoustic piano samples (decouples 503KB base64 audio from initial bundle)
 let pianoSamplesModule: typeof import('../data/pianoSamples') | null = null;
@@ -318,7 +320,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const [heldChordId, setHeldChordId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const soundMode = 'piano';
-  const [studioTab, setStudioTab] = useState<'explore' | 'ear-training' | 'pitch-memory' | 'rhythm'>('explore');
+  const [studioTab, setStudioTab] = useState<'explore' | 'ear-training' | 'pitch-memory' | 'rhythm' | 'tempo' | 'assessment'>('explore');
   const [isStudioOpen, setIsStudioOpen] = useState<boolean>(false);
   const [showMobileIntroPopup, setShowMobileIntroPopup] = useState<boolean>(false);
   const [dontShowAgain, setDontShowAgain] = useState<boolean>(false);
@@ -1072,15 +1074,15 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
             </div>
 
             {/* Bottom Interactive Keys Launchpad - Identical height and alignment to the left card */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-4 sm:py-5 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={handleOpenExplore}
-                  className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
+                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
                 >
-                  <Waves className="w-4 h-4 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span>{isDe ? 'Akkorde & Farben' : 'Explore Colors'}</span>
+                  <Waves className="w-3.5 h-3.5 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">{isDe ? 'Akkorde' : 'Chords'}</span>
                 </button>
 
                 <button
@@ -1090,10 +1092,34 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                     setIsStudioOpen(true);
                     scrollToEarTrainer(80);
                   }}
-                  className="w-full py-3.5 px-4 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs sm:text-sm font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2.5 select-none shadow-md group/btn active:scale-98"
+                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
                 >
-                  <Headphones className="w-4 h-4 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span>{isDe ? 'Gehör testen' : 'Test Your Ear'}</span>
+                  <Headphones className="w-3.5 h-3.5 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">{isDe ? 'Gehör-Test' : 'Ear Test'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudioTab('tempo');
+                    setIsStudioOpen(true);
+                  }}
+                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#38bdf8]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
+                >
+                  <Clock className="w-3.5 h-3.5 text-[#38bdf8] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">{isDe ? 'Tempo' : 'Tempo'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStudioTab('assessment');
+                    setIsStudioOpen(true);
+                  }}
+                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#c49750]/40 bg-[#171b26] hover:bg-[#202738] hover:border-[#ffd56b] text-[#ffd56b] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98 font-bold"
+                >
+                  <Award className="w-3.5 h-3.5 text-[#ffd56b] group-hover/btn:scale-110 transition-transform shrink-0" />
+                  <span className="truncate">{isDe ? 'Einstufung' : 'Assessment'}</span>
                 </button>
               </div>
             </div>
@@ -1270,6 +1296,38 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{isDe ? '4. Rhythmus-Studio' : '4. Rhythm Trainer'}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('tempo');
+                  stopAudio(true);
+                }}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  studioTab === 'tempo'
+                    ? 'bg-[#38bdf8] text-black font-semibold shadow-lg shadow-[#38bdf8]/20'
+                    : 'bg-[#12151f] text-[#a09c91] hover:text-white border border-[#232938]'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>{isDe ? '5. Tempo-Studio' : '5. Tempo Studio'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStudioTab('assessment');
+                  stopAudio(true);
+                }}
+                className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                  studioTab === 'assessment'
+                    ? 'bg-gradient-to-r from-[#ffd56b] to-[#c49750] text-black font-bold shadow-lg shadow-[#c49750]/30 ring-1 ring-white/40'
+                    : 'bg-[#181d2c] text-[#ffd56b] hover:text-white border border-[#c49750]/40'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ffd56b]" />
+                <span className="font-bold">{isDe ? '6. Einstufung' : '6. Assessment'}</span>
+              </button>
             </div>
 
             {studioTab === 'ear-training' ? (
@@ -1290,6 +1348,15 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
             ) : studioTab === 'rhythm' ? (
               <RhythmStudio
                 isDe={isDe}
+              />
+            ) : studioTab === 'tempo' ? (
+              <TempoStudio
+                isDe={isDe}
+              />
+            ) : studioTab === 'assessment' ? (
+              <AssessmentStudio
+                isDe={isDe}
+                onSwitchTab={(tab) => setStudioTab(tab)}
               />
             ) : (
               <>

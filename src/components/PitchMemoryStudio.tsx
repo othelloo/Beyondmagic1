@@ -207,6 +207,10 @@ interface PianoKeyDef {
 }
 
 const PIANO_WHITE_KEYS: PianoKeyDef[] = [
+  { note: 'C3', label: 'C', octave: 3, midi: 48, freq: 130.81, isBlack: false },
+  { note: 'D3', label: 'D', octave: 3, midi: 50, freq: 146.83, isBlack: false },
+  { note: 'E3', label: 'E', octave: 3, midi: 52, freq: 164.81, isBlack: false },
+  { note: 'F3', label: 'F', octave: 3, midi: 53, freq: 174.61, isBlack: false },
   { note: 'G3', label: 'G', octave: 3, midi: 55, freq: 196.00, isBlack: false },
   { note: 'A3', label: 'A', octave: 3, midi: 57, freq: 220.00, isBlack: false },
   { note: 'B3', label: 'B', octave: 3, midi: 59, freq: 246.94, isBlack: false },
@@ -224,14 +228,18 @@ interface PianoBlackKeyDef extends PianoKeyDef {
   leftPercent: number;
 }
 
+// 15 white keys => each key is 6.666% wide
 const PIANO_BLACK_KEYS: PianoBlackKeyDef[] = [
-  { note: 'G#3', label: 'G♯', sharpLabel: 'G♯/A♭', octave: 3, midi: 56, freq: 207.65, isBlack: true, leftPercent: 9.09 },
-  { note: 'A#3', label: 'A♯', sharpLabel: 'A♯/B♭', octave: 3, midi: 58, freq: 233.08, isBlack: true, leftPercent: 18.18 },
-  { note: 'C#4', label: 'C♯', sharpLabel: 'C♯/D♭', octave: 4, midi: 61, freq: 277.18, isBlack: true, leftPercent: 36.36 },
-  { note: 'D#4', label: 'D♯', sharpLabel: 'D♯/E♭', octave: 4, midi: 63, freq: 311.13, isBlack: true, leftPercent: 45.45 },
-  { note: 'F#4', label: 'F♯', sharpLabel: 'F♯/G♭', octave: 4, midi: 66, freq: 369.99, isBlack: true, leftPercent: 63.63 },
-  { note: 'G#4', label: 'G♯', sharpLabel: 'G♯/A♭', octave: 4, midi: 68, freq: 415.30, isBlack: true, leftPercent: 72.72 },
-  { note: 'A#4', label: 'A♯', sharpLabel: 'A♯/B♭', octave: 4, midi: 70, freq: 466.16, isBlack: true, leftPercent: 81.81 },
+  { note: 'C#3', label: 'C♯', sharpLabel: 'C♯/D♭', octave: 3, midi: 49, freq: 138.59, isBlack: true, leftPercent: 6.666 },
+  { note: 'D#3', label: 'D♯', sharpLabel: 'D♯/E♭', octave: 3, midi: 51, freq: 155.56, isBlack: true, leftPercent: 13.333 },
+  { note: 'F#3', label: 'F♯', sharpLabel: 'F♯/G♭', octave: 3, midi: 54, freq: 185.00, isBlack: true, leftPercent: 26.666 },
+  { note: 'G#3', label: 'G♯', sharpLabel: 'G♯/A♭', octave: 3, midi: 56, freq: 207.65, isBlack: true, leftPercent: 33.333 },
+  { note: 'A#3', label: 'A♯', sharpLabel: 'A♯/B♭', octave: 3, midi: 58, freq: 233.08, isBlack: true, leftPercent: 40.000 },
+  { note: 'C#4', label: 'C♯', sharpLabel: 'C♯/D♭', octave: 4, midi: 61, freq: 277.18, isBlack: true, leftPercent: 53.333 },
+  { note: 'D#4', label: 'D♯', sharpLabel: 'D♯/E♭', octave: 4, midi: 63, freq: 311.13, isBlack: true, leftPercent: 60.000 },
+  { note: 'F#4', label: 'F♯', sharpLabel: 'F♯/G♭', octave: 4, midi: 66, freq: 369.99, isBlack: true, leftPercent: 73.333 },
+  { note: 'G#4', label: 'G♯', sharpLabel: 'G♯/A♭', octave: 4, midi: 68, freq: 415.30, isBlack: true, leftPercent: 80.000 },
+  { note: 'A#4', label: 'A♯', sharpLabel: 'A♯/B♭', octave: 4, midi: 70, freq: 466.16, isBlack: true, leftPercent: 86.666 },
 ];
 
 export interface PitchLeaderboardEntry {
@@ -267,6 +275,7 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
 
   // Transposition Offset (in semitones): supports comfortable singing in ANY key/vocal range!
   const [transpositionOffset, setTranspositionOffset] = useState<number | null>(null);
+  const transpositionOffsetRef = useRef<number | null>(null);
 
   // Live pitch state for Sing Mode
   const [livePitch, setLivePitch] = useState<DetectedPitch | null>(null);
@@ -321,6 +330,7 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
     setCurrentMelody(mel);
     setActiveNoteIdx(-1);
     setTargetSingIdx(0);
+    transpositionOffsetRef.current = null;
     setTranspositionOffset(null);
     setHoldProgress(0);
     setPianoFeedback(null);
@@ -456,12 +466,12 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
 
   // Handle Piano Key Tap / Click
   const handlePianoKeyPress = (key: PianoKeyDef) => {
-    if (phase !== 'LISTENING_SING') return;
-
-    // Play grand piano tone for the tapped key
+    // Play grand piano tone for the tapped key unconditionally so users can freely explore the keyboard beforehand!
     playFrequencies([key.freq], 'piano', false);
     setLastTappedKey(key.note);
     setTimeout(() => setLastTappedKey(null), 300);
+
+    if (phase !== 'LISTENING_SING') return;
 
     const target = currentMelody.notes[targetSingIdx];
     if (!target) return;
@@ -470,14 +480,16 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
     // If first note (targetSingIdx === 0): ANY key tapped by user is accepted and sets the transposition!
     if (targetSingIdx === 0) {
       const offset = key.midi - currentMelody.notes[0].midi;
+      transpositionOffsetRef.current = offset;
       setTranspositionOffset(offset);
       setPianoFeedback({ isCorrect: true });
       setTimeout(() => setPianoFeedback(null), 600);
       handleNoteSuccess();
     } else {
       // Subsequent notes: must match the melodic interval from note 0 (transposed into user's key)
+      const activeOffset = transpositionOffsetRef.current ?? transpositionOffset ?? 0;
       const originalInterval = currentMelody.notes[targetSingIdx].midi - currentMelody.notes[0].midi;
-      const expectedPitchClass = ((currentMelody.notes[0].midi + (transpositionOffset ?? 0) + originalInterval) % 12 + 12) % 12;
+      const expectedPitchClass = ((currentMelody.notes[0].midi + activeOffset + originalInterval) % 12 + 12) % 12;
       const keyPitchClass = ((key.midi % 12) + 12) % 12;
 
       if (keyPitchClass === expectedPitchClass) {
@@ -519,6 +531,7 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
         const roundedMidi = Math.round(detectedMidi);
         const centsDeviation = Math.abs((detectedMidi - roundedMidi) * 100);
 
+        const activeOffset = transpositionOffsetRef.current ?? transpositionOffset ?? 0;
         let isMatch = false;
         if (targetSingIdx === 0) {
           // Note 0: ANY stable, clearly sung pitch is accepted as the starting tone!
@@ -527,7 +540,7 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
         } else {
           // Note i > 0: Relative melodic memory — matches the melody interval transposed by user's key!
           const originalInterval = currentMelody.notes[targetSingIdx].midi - currentMelody.notes[0].midi;
-          const expectedPitchClass = ((currentMelody.notes[0].midi + (transpositionOffset ?? 0) + originalInterval) % 12 + 12) % 12;
+          const expectedPitchClass = ((currentMelody.notes[0].midi + activeOffset + originalInterval) % 12 + 12) % 12;
           const detectedPitchClass = ((roundedMidi % 12) + 12) % 12;
           isMatch = detectedPitchClass === expectedPitchClass && centsDeviation <= 45;
         }
@@ -543,8 +556,9 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
           if (elapsed >= 220) {
             holdStartTimeRef.current = null;
             setHoldProgress(0);
-            if (targetSingIdx === 0 && transpositionOffset === null) {
+            if (targetSingIdx === 0 && transpositionOffsetRef.current === null) {
               const offset = roundedMidi - currentMelody.notes[0].midi;
+              transpositionOffsetRef.current = offset;
               setTranspositionOffset(offset);
             }
             handleNoteSuccess();
@@ -637,25 +651,24 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
         />
 
         {/* 1. Header Bar: Level Tabs + Top 10 High Scores */}
-        <div className="flex items-center justify-between gap-1.5 sm:gap-2 pb-2.5 mb-2.5 border-b border-white/10">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2 pb-2.5 mb-2.5 border-b border-white/10 w-full">
           <div className="flex items-center gap-1 sm:gap-1.5 flex-1 min-w-0">
             {([1, 2, 3] as PitchDifficulty[]).map((lvl) => (
               <button
                 key={lvl}
                 type="button"
                 onClick={() => handleSwitchDifficulty(lvl)}
-                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-mono transition-all flex items-center justify-center gap-1 cursor-pointer truncate ${
+                className={`flex-1 py-1.5 px-1.5 sm:px-2 rounded-xl text-xs font-mono transition-all flex items-center justify-center gap-1 cursor-pointer ${
                   difficulty === lvl
                     ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-bold shadow-md shadow-[#c49750]/20'
                     : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
                 }`}
                 title={lvl === 1 ? 'Level 1' : lvl === 2 ? 'Level 2' : 'Level 3'}
               >
-                <span>{lvl === 1 ? '🌱' : lvl === 2 ? '🌿' : '🌳'}</span>
-                <span className="truncate">
-                  {lvl === 1 ? (isDe ? 'Stufe 1' : 'Level 1') :
-                   lvl === 2 ? (isDe ? 'Stufe 2' : 'Level 2') :
-                   (isDe ? 'Stufe 3' : 'Level 3')}
+                <span className="text-xs shrink-0">{lvl === 1 ? '🌱' : lvl === 2 ? '🌿' : '🌳'}</span>
+                <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">
+                  <span className="sm:hidden">{isDe ? `St.${lvl}` : `L${lvl}`}</span>
+                  <span className="hidden sm:inline">{lvl === 1 ? (isDe ? 'Stufe 1' : 'Level 1') : lvl === 2 ? (isDe ? 'Stufe 2' : 'Level 2') : (isDe ? 'Stufe 3' : 'Level 3')}</span>
                 </span>
               </button>
             ))}
@@ -665,11 +678,11 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
           <button
             type="button"
             onClick={() => setShowLeaderboard(true)}
-            className="shrink-0 px-2 sm:px-2.5 py-1.5 rounded-xl bg-[#181c28] hover:bg-[#222738] border border-[#c49750]/60 text-[#fbf9f5] flex items-center gap-1 text-xs font-mono transition-all cursor-pointer shadow-sm group"
+            className="shrink-0 ml-1.5 sm:ml-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-[#181c28] hover:bg-[#222738] border border-[#c49750]/60 text-[#fbf9f5] flex items-center gap-1.5 text-xs font-mono transition-all cursor-pointer shadow-sm group"
             title={isDe ? 'Top 10 Bestenliste' : 'Top 10 High Scores'}
           >
             <Trophy className="w-3.5 h-3.5 text-[#c49750] group-hover:scale-110 transition-transform shrink-0" />
-            <span className="font-semibold text-[#f5eedf] text-[11px] sm:text-xs">Top 10</span>
+            <span className="font-semibold text-[#f5eedf] text-[11px] sm:text-xs whitespace-nowrap">Top 10</span>
           </button>
         </div>
 
@@ -941,70 +954,105 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
             )}
           </div>
         ) : (
-          /* Piano Keyboard Mode View */
+          /* Piano Keyboard Mode View (2-Octave Panoramic Keyboard C3 to C5) */
           <div className="p-2 sm:p-3 rounded-xl bg-[#0b0d14] border border-white/5 mb-3">
-            <div className="flex items-center justify-between text-[10px] font-mono text-[#8c887d] mb-1.5 px-1">
-              <span>{isDe ? 'Interaktives Konzertklavier:' : 'Interactive Grand Piano:'}</span>
-              <span className="text-[#c49750]">
-                {phase === 'LISTENING_SING' 
-                  ? (isDe ? 'Spiele die Töne aus dem Gedächtnis' : 'Play the tones from memory') 
-                  : (isDe ? 'Höre zuerst zu...' : 'Listen first...')}
-              </span>
-            </div>
+            {phase === 'LISTENING_SING' ? (
+              <div className="flex items-center justify-between text-[11px] font-mono mb-2 px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span>🎵</span>
+                    <span>{isDe ? `Startnote: ${currentMelody.notes[0].note}` : `Start Note: ${currentMelody.notes[0].note}`}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => playFrequencies([currentMelody.notes[0].frequency], 'piano', false)}
+                    className="px-2 py-0.5 rounded-lg bg-[#181c28] hover:bg-[#23293a] border border-[#c49750]/50 text-[#ffd56b] text-[10px] cursor-pointer transition-colors"
+                    title={isDe ? 'Startnote nochmals anhören' : 'Hear start note again'}
+                  >
+                    <span>{isDe ? 'Anhören 🔊' : 'Hear Note 🔊'}</span>
+                  </button>
+                </div>
+                <span className="text-[#a09c91] text-[10px]">
+                  {isDe ? 'Töne & Rhythmus nachspielen' : 'Recall notes & rhythm'}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-[10px] font-mono text-[#8c887d] mb-1.5 px-1">
+                <span>{isDe ? 'Interaktives 2-Oktaven-Konzertklavier (C3–C5):' : 'Interactive 2-Octave Grand Piano (C3–C5):'}</span>
+                <span className="text-[#ffd56b]">
+                  {isDe ? '🎹 Tasten vorab frei ausprobieren!' : '🎹 Feel free to try keys anytime!'}
+                </span>
+              </div>
+            )}
 
-            {/* Piano Keyboard Container */}
-            <div className="relative w-full h-28 sm:h-32 select-none px-0.5">
-              
-              {/* White Keys Row */}
-              <div className="flex w-full h-full">
-                {PIANO_WHITE_KEYS.map((key) => {
+            {/* Mobile landscape tip */}
+            <p className="text-[10px] font-mono text-[#8c887d] italic sm:hidden text-center mb-1">
+              {isDe 
+                ? '📱 Tipp: Drehe das Smartphone ins Querformat für das 2-Oktaven-Panorama!' 
+                : '📱 Tip: Rotate phone to landscape for the full 2-octave panoramic keyboard!'}
+            </p>
+
+            {/* Piano Keyboard Container with Horizontal Scroll on Narrow Screens */}
+            <div className="p-1 rounded-xl bg-[#07090e] border border-white/5 overflow-x-auto no-scrollbar">
+              <div className="relative h-28 sm:h-32 select-none min-w-[540px] sm:min-w-0 w-full px-0.5">
+                
+                {/* White Keys Row */}
+                <div className="flex w-full h-full">
+                  {PIANO_WHITE_KEYS.map((key) => {
+                    const isLastTapped = lastTappedKey === key.note;
+                    const isStartKey = phase === 'LISTENING_SING' && key.note === currentMelody.notes[0].note;
+
+                    return (
+                      <button
+                        key={key.note}
+                        type="button"
+                        onClick={() => handlePianoKeyPress(key)}
+                        className={`flex-1 h-full rounded-b-md border-r border-[#1a1e28] last:border-r-0 flex flex-col justify-end items-center pb-1.5 text-xs font-mono font-bold transition-all duration-75 relative cursor-pointer ${
+                          isLastTapped
+                            ? 'bg-[#c49750] text-black shadow-inner translate-y-0.5'
+                            : isStartKey
+                            ? 'bg-amber-100 ring-2 ring-[#c49750] text-black shadow-md'
+                            : 'bg-[#dedacf] hover:bg-[#fbf9f5] active:bg-[#c49750] text-[#1c1f2b]'
+                        }`}
+                        title={key.note}
+                      >
+                        {isStartKey && (
+                          <span className="absolute top-1 text-[8px] font-bold px-1 py-0.2 bg-[#c49750] text-black rounded">
+                            Start
+                          </span>
+                        )}
+                        <span className="text-[11px] sm:text-xs leading-none">{key.label}</span>
+                        <span className="text-[8px] text-[#6e6a60] leading-none mt-0.5">{key.octave}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Black Keys Layer */}
+                {PIANO_BLACK_KEYS.map((key) => {
                   const isLastTapped = lastTappedKey === key.note;
 
                   return (
                     <button
                       key={key.note}
                       type="button"
-                      disabled={phase !== 'LISTENING_SING'}
                       onClick={() => handlePianoKeyPress(key)}
-                      className={`flex-1 h-full rounded-b-md border-r border-[#1a1e28] last:border-r-0 flex flex-col justify-end items-center pb-1.5 text-xs font-mono font-bold transition-all duration-75 relative cursor-pointer disabled:cursor-not-allowed ${
+                      style={{
+                        left: `calc(${key.leftPercent}% - 2.5%)`,
+                        width: '5%',
+                      }}
+                      className={`absolute top-0 h-[62%] rounded-b-sm z-10 flex flex-col justify-end items-center pb-1 border border-[#0d0f17] shadow-[0_4px_8px_rgba(0,0,0,0.8)] transition-all duration-75 cursor-pointer ${
                         isLastTapped
-                          ? 'bg-[#c49750] text-black shadow-inner translate-y-0.5'
-                          : 'bg-[#dedacf] hover:bg-[#fbf9f5] active:bg-[#c49750] text-[#1c1f2b]'
+                          ? 'bg-[#c49750] text-black translate-y-0.5'
+                          : 'bg-[#181c28] hover:bg-[#23293a] active:bg-[#c49750] text-[#d6d2c4]'
                       }`}
-                      title={key.note}
+                      title={key.sharpLabel || key.note}
                     >
-                      <span className="text-[11px] sm:text-xs leading-none">{key.label}</span>
-                      <span className="text-[8px] text-[#6e6a60] leading-none mt-0.5">{key.octave}</span>
+                      <span className="text-[8px] sm:text-[9px] font-mono font-semibold leading-none">{key.label}</span>
                     </button>
                   );
                 })}
               </div>
-
-              {/* Black Keys Layer */}
-              {PIANO_BLACK_KEYS.map((key) => {
-                const isLastTapped = lastTappedKey === key.note;
-
-                return (
-                  <button
-                    key={key.note}
-                    type="button"
-                    disabled={phase !== 'LISTENING_SING'}
-                    onClick={() => handlePianoKeyPress(key)}
-                    style={{
-                      left: `calc(${key.leftPercent}% - 3.5%)`,
-                      width: '7%',
-                    }}
-                    className={`absolute top-0 h-[62%] rounded-b-sm z-10 flex flex-col justify-end items-center pb-1 border border-[#0d0f17] shadow-[0_4px_8px_rgba(0,0,0,0.8)] transition-all duration-75 cursor-pointer disabled:cursor-not-allowed ${
-                      isLastTapped
-                        ? 'bg-[#c49750] text-black translate-y-0.5'
-                        : 'bg-[#181c28] hover:bg-[#23293a] active:bg-[#c49750] text-[#d6d2c4]'
-                    }`}
-                    title={key.sharpLabel || key.note}
-                  >
-                    <span className="text-[8px] sm:text-[9px] font-mono font-semibold leading-none">{key.label}</span>
-                  </button>
-                );
-              })}
             </div>
 
             {/* Ear Feedback Toast */}
@@ -1026,8 +1074,8 @@ export const PitchMemoryStudio: React.FC<PitchMemoryStudioProps> = ({
                     <span>✕</span>
                     <span>
                       {isDe 
-                        ? 'Ton weicht ab – versuche es noch einmal nach Gehör!' 
-                        : 'Different pitch – listen again or try another key!'}
+                        ? 'Melodisches Intervall weicht ab – versuche es noch einmal nach Gehör!' 
+                        : 'Melodic interval differs – listen again and try another key!'}
                     </span>
                   </>
                 )}
