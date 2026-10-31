@@ -35,12 +35,14 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    // Check if visiting /admin or #admin
+    // Check if visiting /admin, #admin, or verification link
     const checkAdminRoute = () => {
       if (typeof window === 'undefined') return;
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path === '/admin' || path.startsWith('/admin/') || hash === '#admin') {
+      const search = window.location.search.toLowerCase();
+      const hasVerifyToken = search.includes('verify_token=') || search.includes('admin_token=') || hash.includes('verify_token=');
+      if (path === '/admin' || path.startsWith('/admin/') || hash === '#admin' || hasVerifyToken) {
         setIsAdminOpen(true);
       }
     };

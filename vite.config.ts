@@ -190,6 +190,132 @@ function portraitUploadPlugin(): Plugin {
           res.end();
         }
       });
+
+      // Admin Security Middleware for password verification
+      let pendingAdminChange: any = null;
+
+      server.middlewares.use('/api/admin/pending-change', (req, res) => {
+        if (req.method === 'POST') {
+          const chunks: Buffer[] = [];
+          req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          req.on('end', () => {
+            try {
+              pendingAdminChange = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true }));
+            } catch (err: any) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else if (req.method === 'DELETE') {
+          pendingAdminChange = null;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
+
+      server.middlewares.use('/api/admin/verify-token', (req, res) => {
+        if (req.method === 'GET') {
+          try {
+            const url = new URL(req.url || '', 'http://localhost');
+            const token = url.searchParams.get('token');
+            if (pendingAdminChange && pendingAdminChange.token === token && Date.now() <= pendingAdminChange.expiresAt) {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ valid: true, newPassword: pendingAdminChange.newPasswordValue }));
+              return;
+            }
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ valid: false, error: 'Token not found or expired' }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
+
+      server.middlewares.use('/api/admin/apply-password', (req, res) => {
+        if (req.method === 'POST') {
+          pendingAdminChange = null;
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
+
+      server.middlewares.use('/api/admin/send-email', (req, res) => {
+        if (req.method === 'POST') {
+          const chunks: Buffer[] = [];
+          req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          req.on('end', () => {
+            try {
+              const body = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+              console.log(`[Admin Security] Verification link generated for ${body.recipient || 'beeyondmagic@protonmail.com'}:`);
+              console.log(`[Admin Security] Link: ${body.verificationUrl}`);
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true }));
+            } catch (err: any) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
+
+      // API to backup incoming inquiries to disk (Fail-Safe against spam dropping)
+      server.middlewares.use('/api/inquiries', (req, res) => {
+        const backupFile = path.resolve(rootDir, 'src/data/inquiries_backup.json');
+        if (req.method === 'POST') {
+          const chunks: Buffer[] = [];
+          req.on('data', chunk => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+          req.on('end', () => {
+            try {
+              const body = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+              let list: any[] = [];
+              if (fs.existsSync(backupFile)) {
+                try {
+                  list = JSON.parse(fs.readFileSync(backupFile, 'utf-8'));
+                } catch {
+                  list = [];
+                }
+              }
+              list.unshift(body);
+              fs.writeFileSync(backupFile, JSON.stringify(list, null, 2));
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true }));
+            } catch (err: any) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: err.message }));
+            }
+          });
+        } else if (req.method === 'GET') {
+          try {
+            let list: any[] = [];
+            if (fs.existsSync(backupFile)) {
+              list = JSON.parse(fs.readFileSync(backupFile, 'utf-8'));
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ inquiries: list }));
+          } catch (err: any) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: err.message }));
+          }
+        } else {
+          res.writeHead(405);
+          res.end();
+        }
+      });
     }
   };
 }

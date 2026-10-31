@@ -22,7 +22,14 @@ import {
   KeyRound,
   ShieldCheck,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+  Send,
+  Clock,
+  Link2,
+  ShieldAlert,
+  Download
 } from 'lucide-react';
 import { getYouTubeId, getYouTubeThumbnail } from '../utils/youtube';
 import {
@@ -36,11 +43,28 @@ import {
   movePhoto,
   resetMediaToDefaults,
   onMediaChange,
-  savePortrait,
-  getAdminPassword,
-  setAdminPassword
+  savePortrait
 } from '../data/mediaStore';
-import { getStoredInquiries, deleteInquiry, onInquiriesChange, InquiryMessage } from '../data/inquiryStore';
+import {
+  getActiveAdminPassword,
+  checkAdminPassword,
+  isUsingDefaultPassword,
+  createPendingPasswordChange,
+  getPendingPasswordChange,
+  cancelPendingPasswordChange,
+  validateAndApplyVerification,
+  DEFAULT_ADMIN_PASSWORD,
+  AUTHORIZED_ADMIN_EMAIL,
+  PendingPasswordChange
+} from '../data/adminAuthStore';
+import { sendPasswordVerificationEmail, EmailDispatchResult } from '../utils/adminEmailService';
+import {
+  getStoredInquiries,
+  deleteInquiry,
+  onInquiriesChange,
+  InquiryMessage,
+  exportInquiriesAsCsv
+} from '../data/inquiryStore';
 import { VideoItem, PhotoItem } from '../types';
 
 interface MediaManagerModalProps {
@@ -54,16 +78,26 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
   const [videos, setVideos] = useState<VideoItem[]>(getStoredVideos());
   const [photos, setPhotos] = useState<PhotoItem[]>(getStoredPhotos());
 
-  // Password / Authentication state
-  const [storedPassword, setStoredPasswordState] = useState<string>(getAdminPassword());
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(!getAdminPassword());
+  // Password / Authentication state - ALWAYS locked by default
+  const [storedPassword, setStoredPasswordState] = useState<string>(getActiveAdminPassword());
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // New password management in Security tab
+  // Email verification banners
+  const [verificationBanner, setVerificationBanner] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Security tab state for email-verified password change
   const [newPassword, setNewPassword] = useState('');
-  const [passwordSaveSuccess, setPasswordSaveSuccess] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [isSubmittingChange, setIsSubmittingChange] = useState(false);
+  const [pendingChange, setPendingChange] = useState<PendingPasswordChange | null>(getPendingPasswordChange());
+  const [emailDispatchResult, setEmailDispatchResult] = useState<EmailDispatchResult | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Synchronize with external changes
   useEffect(() => {
@@ -80,14 +114,30 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
     };
   }, []);
 
-  // When modal opens, check if password is required
+  // When modal opens or mounts, refresh current password & check for email verification link token
   useEffect(() => {
-    if (isOpen) {
-      const pwd = getAdminPassword();
-      setStoredPasswordState(pwd);
-      if (!pwd) {
-        setIsUnlocked(true);
-      }
+    if (typeof window === 'undefined') return;
+
+    setStoredPasswordState(getActiveAdminPassword());
+    setPendingChange(getPendingPasswordChange());
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('verify_token') || urlParams.get('admin_token');
+    const claim = urlParams.get('claim') || undefined;
+
+    if (token) {
+      validateAndApplyVerification(token, claim).then((res) => {
+        if (res.success) {
+          setVerificationBanner({ type: 'success', text: res.message });
+          setStoredPasswordState(getActiveAdminPassword());
+          setPendingChange(null);
+          // Clean the address bar while keeping /admin
+          const cleanPath = window.location.pathname.startsWith('/admin') ? '/admin' : window.location.pathname;
+          window.history.replaceState(null, '', cleanPath);
+        } else {
+          setVerificationBanner({ type: 'error', text: res.message });
+        }
+      });
     }
   }, [isOpen]);
 
@@ -121,7 +171,7 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === storedPassword) {
+    if (checkAdminPassword(passwordInput)) {
       setIsUnlocked(true);
       setPasswordError(false);
       setPasswordInput('');
@@ -130,20 +180,57 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({ isOpen, on
     }
   };
 
-  const handleSaveNewPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAdminPassword(newPassword.trim());
-    setStoredPasswordState(newPassword.trim());
-    setPasswordSaveSuccess(true);
-    setTimeout(() => setPasswordSaveSuccess(false), 3000);
+  const handleLockStudio = () => {
+    setIsUnlocked(false);
+    setPasswordInput('');
   };
 
-  const handleClearPassword = () => {
-    setAdminPassword('');
-    setStoredPasswordState('');
-    setNewPassword('');
-    setPasswordSaveSuccess(true);
-    setTimeout(() => setPasswordSaveSuccess(false), 3000);
+  const handleRequestPasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+
+    const trimmed = newPassword.trim();
+    if (!trimmed) {
+      setFormError('Please enter a new password.');
+      return;
+    }
+    if (trimmed.length < 4) {
+      setFormError('Password must be at least 4 characters long.');
+      return;
+    }
+    if (trimmed !== confirmPassword.trim()) {
+      setFormError('Passwords do not match. Please ensure both fields are identical.');
+      return;
+    }
+
+    setIsSubmittingChange(true);
+    try {
+      const { token, verificationUrl, expiresAt } = createPendingPasswordChange(trimmed);
+      const dispatch = await sendPasswordVerificationEmail({ token, verificationUrl, expiresAt });
+      setEmailDispatchResult(dispatch);
+      setPendingChange(getPendingPasswordChange());
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to submit password change request.');
+    } finally {
+      setIsSubmittingChange(false);
+    }
+  };
+
+  const handleCancelPending = () => {
+    cancelPendingPasswordChange();
+    setPendingChange(null);
+    setEmailDispatchResult(null);
+    setFormError('');
+  };
+
+  const handleCopyLink = (url: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 3000);
+    }
   };
 
   const handlePortraitUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,22 +350,22 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
               <Sparkles className="w-3.5 h-3.5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-mono uppercase tracking-widest text-[#f0ede6] font-semibold">
                   Studio Admin
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#c49750]/20 text-[#c49750] border border-[#c49750]/30">
                   /admin
                 </span>
-                {!storedPassword ? (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <Unlock className="w-2.5 h-2.5" />
-                    <span>Unlocked (No PIN set)</span>
+                {isUsingDefaultPassword() ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <KeyRound className="w-2.5 h-2.5" />
+                    <span>Pass: temporaryadmin</span>
                   </span>
                 ) : (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    <Lock className="w-2.5 h-2.5" />
-                    <span>Password Protected</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    <span>Verified Password</span>
                   </span>
                 )}
               </div>
@@ -287,27 +374,74 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-[#9c978b] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            aria-label="Close Admin"
-            title="Close (/admin)"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isUnlocked && (
+              <button
+                onClick={handleLockStudio}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-[#b8b5ab] hover:text-white transition-colors cursor-pointer border border-white/10"
+                title="Lock Admin Session"
+              >
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Lock</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[#9c978b] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Close Admin"
+              title="Close (/admin)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* LOCKED SCREEN (Only shown if a password was previously set and not yet unlocked) */}
-        {!isUnlocked && storedPassword ? (
+        {/* STRICT LOCKED SCREEN - Access strictly requires the active password */}
+        {!isUnlocked ? (
           <div className="p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-5">
             <div className="w-14 h-14 rounded-full bg-[#181c26] border border-[#c49750]/40 flex items-center justify-center text-[#c49750]">
               <Lock className="w-6 h-6" />
             </div>
+
             <div className="space-y-1">
-              <h3 className="text-base font-semibold text-white">Admin Access</h3>
+              <h3 className="text-base font-semibold text-white">Studio Admin Access</h3>
               <p className="text-xs text-[#8e8a7f] max-w-sm">
-                Enter your secret password to manage videos, photos, and messages.
+                Access is restricted. Enter your password to manage videos, photos, and messages.
               </p>
+            </div>
+
+            {/* Email Verification Feedback Banner */}
+            {verificationBanner && (
+              <div
+                className={`w-full max-w-sm p-3.5 rounded-xl border text-xs text-left flex items-start gap-2.5 animate-in fade-in ${
+                  verificationBanner.type === 'success'
+                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
+                    : 'bg-red-950/70 border-red-500/50 text-red-200'
+                }`}
+              >
+                {verificationBanner.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <div className="font-semibold mb-0.5">
+                    {verificationBanner.type === 'success' ? 'Password Verified & Activated' : 'Verification Issue'}
+                  </div>
+                  <div className="leading-relaxed">{verificationBanner.text}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Password status hint */}
+            <div className="p-2.5 bg-[#141722] border border-white/5 rounded-lg text-[11px] text-[#9c978b] max-w-xs w-full text-center font-mono">
+              {isUsingDefaultPassword() ? (
+                <span>Access Pass: <strong className="text-[#c49750]">temporaryadmin</strong></span>
+              ) : (
+                <span className="text-emerald-400 flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Protected with verified password
+                </span>
+              )}
             </div>
 
             <form onSubmit={handleUnlock} className="w-full max-w-xs space-y-3">
@@ -320,7 +454,7 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                     setPasswordInput(e.target.value);
                     setPasswordError(false);
                   }}
-                  placeholder="Enter password..."
+                  placeholder="Enter admin password..."
                   className={`w-full px-4 py-2.5 bg-black/60 border rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none ${
                     passwordError ? 'border-red-500 ring-1 ring-red-500' : 'border-[#2b303d] focus:border-[#c49750]'
                   }`}
@@ -328,14 +462,17 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8e8a7f] hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8e8a7f] hover:text-white cursor-pointer"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
               {passwordError && (
-                <p className="text-[11px] text-red-400 font-mono">Incorrect password. Please try again.</p>
+                <p className="text-[11px] text-red-400 font-mono">
+                  Incorrect password. {isUsingDefaultPassword() ? '(Default pass is temporaryadmin)' : ''}
+                </p>
               )}
 
               <button
@@ -861,17 +998,37 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
               {/* TAB 3: INBOX & RECEIVED MESSAGES */}
               {activeTab === 'inbox' && (
                 <div className="space-y-6">
-                  {/* Delivery Explainer Card */}
-                  <div className="p-4 bg-gradient-to-br from-[#121620] to-[#0e1017] border border-[#c49750]/30 rounded-xl space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750]">
-                      <Mail className="w-4 h-4" />
-                      <span>Form Inquiries & Audio Submissions</span>
+                  {/* Delivery & Anti-Spam Zero-Loss Explainer Card */}
+                  <div className="p-4 bg-gradient-to-br from-[#121620] to-[#0e1017] border border-[#c49750]/30 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span>Direct Studio Inbox & Anti-Spam Protection</span>
+                      </div>
+                      {inquiries.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={exportInquiriesAsCsv}
+                          className="px-3 py-1.5 text-xs font-mono bg-[#c49750]/15 hover:bg-[#c49750]/25 text-[#c49750] border border-[#c49750]/30 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Export to Excel / CSV</span>
+                        </button>
+                      )}
                     </div>
+
                     <p className="text-xs text-[#d1cdc2] leading-relaxed">
-                      Every submission sent through the website contact modal is archived here and (when deployed to Netlify) forwarded to your email address:
+                      <strong>How your messages are protected from Netlify spam cuts:</strong> Automated cloud filters (like Netlify&apos;s Akismet) frequently misjudge student messages that contain links (such as SoundCloud, YouTube, or Google Drive audition samples) as spam and drop them into a hidden spam folder.
                     </p>
-                    <div className="p-3 bg-black/40 rounded-lg border border-white/5 text-xs text-[#9c978b]">
-                      Direct destination: <strong className="text-[#c49750]">beeyondmagic@protonmail.com</strong>
+
+                    <div className="p-3 bg-black/40 rounded-lg border border-emerald-500/20 text-xs text-[#b8b5ab] space-y-1">
+                      <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Dual-Channel Safety Active:</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed">
+                        Every single submission is logged directly into this Studio Inbox <em>before</em> any third-party filters run. Even if Netlify flags a message with a music link, it is 100% saved and readable right here.
+                      </p>
                     </div>
                   </div>
 
@@ -879,7 +1036,16 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs text-[#8c887d] font-mono">
                       <span>RECEIVED MESSAGES ({inquiries.length})</span>
-                      <span>Newest first</span>
+                      {inquiries.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={exportInquiriesAsCsv}
+                          className="text-[11px] text-[#c49750] hover:underline flex items-center gap-1"
+                        >
+                          <Download className="w-3 h-3" />
+                          <span>Download CSV</span>
+                        </button>
+                      )}
                     </div>
 
                     {inquiries.length === 0 ? (
@@ -952,78 +1118,229 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                 </div>
               )}
 
-              {/* TAB 4: SECURITY & PASSWORD (DECIDE LATER OR SET NOW) */}
+              {/* TAB 4: SECURITY & EMAIL-VERIFIED PASSWORD SYSTEM */}
               {activeTab === 'security' && (
                 <div className="space-y-5">
+                  {/* Security Overview Card */}
                   <div className="p-4 bg-black/40 border border-[#2b303d] rounded-xl space-y-3">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-[#c49750]" />
-                      <span className="text-xs font-mono uppercase tracking-wider text-white font-semibold">
-                        Secret /admin Password
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-[#c49750]" />
+                        <span className="text-xs font-mono uppercase tracking-wider text-white font-semibold">
+                          Admin Security & Password Control
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleLockStudio}
+                        className="px-2.5 py-1 text-[11px] font-mono text-amber-400 hover:text-white bg-amber-500/10 hover:bg-amber-500/20 rounded border border-amber-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Lock className="w-3 h-3" />
+                        <span>Lock Studio Now</span>
+                      </button>
                     </div>
+
                     <p className="text-xs text-[#b8b5ab] leading-relaxed">
-                      You can set a password whenever you decide to lock this page. Right now, it is unlocked so you can access it freely.
+                      Admin access is restricted by password. You can update your password at any time. For maximum protection, any password change only activates when verified through your authorized email.
                     </p>
 
-                    <div className="p-3 bg-[#11141c] rounded-lg border border-white/5 flex items-center justify-between text-xs">
-                      <span className="text-[#8c887d]">Current status:</span>
-                      {storedPassword ? (
-                        <span className="text-amber-400 font-mono flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5" /> Protected with secret password
-                        </span>
-                      ) : (
-                        <span className="text-emerald-400 font-mono flex items-center gap-1">
-                          <Unlock className="w-3.5 h-3.5" /> Open / Unlocked (no password set)
-                        </span>
-                      )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      <div className="p-3 bg-[#11141c] rounded-lg border border-white/5 space-y-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">Current Active Password:</span>
+                        <div className="text-xs">
+                          {isUsingDefaultPassword() ? (
+                            <span className="text-amber-400 font-mono flex items-center gap-1 font-semibold">
+                              <KeyRound className="w-3.5 h-3.5" /> temporaryadmin
+                            </span>
+                          ) : (
+                            <span className="text-emerald-400 font-mono flex items-center gap-1 font-semibold">
+                              <ShieldCheck className="w-3.5 h-3.5" /> Verified Custom Password
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-3 bg-[#11141c] rounded-lg border border-white/5 space-y-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">Authorized Verification Email:</span>
+                        <div className="text-xs font-mono text-[#c49750] truncate font-semibold">
+                          {AUTHORIZED_ADMIN_EMAIL}
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {passwordSaveSuccess && (
-                    <div className="p-3 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-xs text-emerald-300 flex items-center gap-2 animate-in fade-in">
-                      <Check className="w-4 h-4 text-emerald-400" />
-                      <span>Password setting saved successfully!</span>
+                  {/* ACTIVE PENDING EMAIL VERIFICATION CARD */}
+                  {pendingChange && (
+                    <div className="p-4 sm:p-5 bg-gradient-to-br from-[#1a1c12] to-[#12140e] border border-amber-500/40 rounded-xl space-y-3.5 shadow-lg animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-amber-400 font-semibold">
+                          <Clock className="w-4 h-4 animate-pulse" />
+                          <span>Password Change Pending Email Verification</span>
+                        </div>
+                        <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
+                          Valid for 2 hours
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-[#e0ded5] leading-relaxed">
+                        A request to change your admin password has been submitted. An authorization message was prepared for{' '}
+                        <strong className="text-amber-300 font-mono">{AUTHORIZED_ADMIN_EMAIL}</strong>.
+                      </p>
+
+                      <div className="p-3 bg-black/50 border border-amber-500/20 rounded-lg text-xs space-y-1 text-[#d6d3c7]">
+                        <div className="font-semibold text-white flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Strict Privacy & Verification Rules:</span>
+                        </div>
+                        <p className="text-[11px] text-[#b8b5ab]">
+                          • The new password is <strong>never displayed</strong> in the email.
+                        </p>
+                        <p className="text-[11px] text-[#b8b5ab]">
+                          • You simply click the link in your email to validate and activate it on your page.
+                        </p>
+                        <p className="text-[11px] text-[#b8b5ab]">
+                          • Your current password (<strong>{isUsingDefaultPassword() ? 'temporaryadmin' : 'current password'}</strong>) continues to work until verified.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                        <a
+                          href="https://mail.proton.me/"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3.5 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 shadow"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>Open ProtonMail (mail.proton.me)</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+
+                        {emailDispatchResult && (
+                          <a
+                            href={emailDispatchResult.mailtoUrl}
+                            className="px-3 py-2 bg-white/10 hover:bg-white/15 text-white text-xs rounded-lg transition-colors flex items-center gap-1.5"
+                          >
+                            <Send className="w-3.5 h-3.5 text-[#c49750]" />
+                            <span>Mail App</span>
+                          </a>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const { verificationUrl } = createPendingPasswordChange(pendingChange.newPasswordValue);
+                            handleCopyLink(verificationUrl);
+                          }}
+                          className="px-3 py-2 bg-[#1b1f2b] hover:bg-[#252b3b] text-[#c49750] text-xs font-mono rounded-lg transition-colors flex items-center gap-1.5 border border-[#2b303d] cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>{copiedLink ? 'Link Copied!' : 'Copy Verification Link'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCancelPending}
+                          className="px-3 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-300 text-xs rounded-lg transition-colors border border-red-500/20 cursor-pointer ml-auto"
+                        >
+                          Cancel Request
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   {/* Set or Change Password Form */}
-                  <form onSubmit={handleSaveNewPassword} className="p-4 bg-[#141720]/80 border border-[#232734] rounded-xl space-y-3.5">
-                    <div className="text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold">
-                      {storedPassword ? 'Change Password' : 'Set a Password (When Ready)'}
+                  <form
+                    onSubmit={handleRequestPasswordChange}
+                    className="p-4 sm:p-5 bg-[#141720]/80 border border-[#232734] rounded-xl space-y-4"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-xs font-mono uppercase tracking-wider text-[#c49750] font-semibold flex items-center gap-2">
+                        <KeyRound className="w-3.5 h-3.5" />
+                        <span>{pendingChange ? 'Submit A Different Password' : 'Change Admin Password'}</span>
+                      </div>
+                      <p className="text-xs text-[#9c978b]">
+                        Enter your desired new password below. A secure verification link will be prepared for{' '}
+                        <strong className="text-white">{AUTHORIZED_ADMIN_EMAIL}</strong>. The change only works after clicking the link.
+                      </p>
                     </div>
 
-                    <div>
-                      <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
-                        New Password or PIN
-                      </label>
-                      <input
-                        type="text"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="e.g. BeyondMagic2026 or 4829..."
-                        className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750]"
-                      />
+                    {formError && (
+                      <div className="p-3 bg-red-950/60 border border-red-500/40 rounded-lg text-xs text-red-300 flex items-center gap-2 animate-in fade-in">
+                        <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                        <span>{formError}</span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => {
+                              setNewPassword(e.target.value);
+                              setFormError('');
+                            }}
+                            placeholder="e.g. BeyondMagic2026!..."
+                            className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750] pr-9"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8e8a7f] hover:text-white cursor-pointer"
+                          >
+                            {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-wider text-[#9c988c] mb-1">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => {
+                              setConfirmPassword(e.target.value);
+                              setFormError('');
+                            }}
+                            placeholder="Re-enter password..."
+                            className="w-full px-3.5 py-2.5 bg-black/60 border border-[#2b303d] rounded-lg text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-[#c49750] pr-9"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8e8a7f] hover:text-white cursor-pointer"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                    <div className="pt-1">
                       <button
                         type="submit"
-                        disabled={!newPassword.trim()}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] disabled:opacity-40 text-black text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
+                        disabled={isSubmittingChange || !newPassword.trim() || !confirmPassword.trim()}
+                        className="w-full sm:w-auto px-5 py-2.5 bg-[#c49750] hover:bg-[#d8a85c] disabled:opacity-40 text-black text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-2"
                       >
-                        Save Password
+                        {isSubmittingChange ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Generating & Dispatching Link...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Send Verification Link to {AUTHORIZED_ADMIN_EMAIL}</span>
+                          </>
+                        )}
                       </button>
-
-                      {storedPassword && (
-                        <button
-                          type="button"
-                          onClick={handleClearPassword}
-                          className="w-full sm:w-auto px-4 py-2.5 bg-white/5 hover:bg-red-500/20 text-[#d1cdc2] hover:text-red-300 text-xs rounded-lg transition-colors cursor-pointer"
-                        >
-                          Remove Password (Keep Open)
-                        </button>
-                      )}
                     </div>
                   </form>
                 </div>

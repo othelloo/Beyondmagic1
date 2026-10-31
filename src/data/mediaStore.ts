@@ -180,17 +180,19 @@ export function movePhoto(id: string, direction: 'up' | 'down'): void {
   reorderPhotos(index, targetIndex);
 }
 
-const STORAGE_KEY_ADMIN_PASSWORD = 'verisme_admin_password_v1';
+import { getActiveAdminPassword, DEFAULT_ADMIN_PASSWORD } from './adminAuthStore';
+
+const STORAGE_KEY_ADMIN_PASSWORD = 'beyondmagic_admin_password_v2';
 
 export function getAdminPassword(): string {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem(STORAGE_KEY_ADMIN_PASSWORD) || '';
+  return getActiveAdminPassword();
 }
 
 export function setAdminPassword(password: string): void {
   if (typeof window === 'undefined') return;
   if (!password) {
     localStorage.removeItem(STORAGE_KEY_ADMIN_PASSWORD);
+    localStorage.removeItem('verisme_admin_password_v1');
   } else {
     localStorage.setItem(STORAGE_KEY_ADMIN_PASSWORD, password);
   }

@@ -3,11 +3,13 @@ import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headph
 import { useLanguage } from '../context/LanguageContext';
 import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 import { MusicalScoreChord } from './MusicalScoreChord';
-import { EarTrainingStudio } from './EarTrainingStudio';
-import { PitchMemoryStudio } from './PitchMemoryStudio';
-import { RhythmStudio } from './RhythmStudio';
-import { TempoStudio } from './TempoStudio';
-import { AssessmentStudio } from './AssessmentStudio';
+
+// On-demand code-splitting: studios only load over the wire when user clicks their tab
+const EarTrainingStudio = React.lazy(() => import('./EarTrainingStudio').then(m => ({ default: m.EarTrainingStudio })));
+const PitchMemoryStudio = React.lazy(() => import('./PitchMemoryStudio').then(m => ({ default: m.PitchMemoryStudio })));
+const RhythmStudio = React.lazy(() => import('./RhythmStudio').then(m => ({ default: m.RhythmStudio })));
+const TempoStudio = React.lazy(() => import('./TempoStudio').then(m => ({ default: m.TempoStudio })));
+const AssessmentStudio = React.lazy(() => import('./AssessmentStudio').then(m => ({ default: m.AssessmentStudio })));
 
 // Dynamic module loader for acoustic piano samples (decouples 503KB base64 audio from initial bundle)
 let pianoSamplesModule: typeof import('../data/pianoSamples') | null = null;
@@ -849,35 +851,35 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     };
   }, [releaseChord]);
 
-  // Smoothly center the Ear Training interactive frame in the viewport, especially on mobile phones
-  const scrollToEarTrainer = useCallback((delay = 80) => {
+  // Universal smooth centering for any interactive atelier console
+  const scrollToInteractive = useCallback((tab?: string, delay = 70) => {
     const doScroll = () => {
-      const consoleEl = document.getElementById('ear-training-console');
-      if (consoleEl) {
-        consoleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        const studioEl = document.getElementById('harmonic-studio');
-        studioEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    };
-    setTimeout(doScroll, delay);
-    setTimeout(doScroll, delay + 180);
-  }, []);
+      const activeTab = tab || studioTab;
+      const targetId = 
+        activeTab === 'assessment' ? 'assessment-studio-console' :
+        activeTab === 'tempo' ? 'tempo-studio-console' :
+        activeTab === 'rhythm' ? 'rhythm-studio-console' :
+        activeTab === 'pitch-memory' ? 'pitch-memory-console' :
+        activeTab === 'ear-training' ? 'ear-training-console' :
+        activeTab === 'explore' ? 'harmonic-interactive-workbench' : 'harmonic-studio';
 
-  // Smoothly center the Harmonic Explorer interactive chord workbench in the viewport
-  const scrollToWorkbench = useCallback((delay = 80) => {
-    const doScroll = () => {
-      const workbenchEl = document.getElementById('harmonic-interactive-workbench');
-      if (workbenchEl) {
-        workbenchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        const studioEl = document.getElementById('harmonic-studio');
-        studioEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const el = document.getElementById(targetId) || document.getElementById('harmonic-studio');
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const fitsInCenter = rect.height < (window.innerHeight * 0.88);
+        el.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: fitsInCenter ? 'center' : 'start' 
+        });
       }
     };
     setTimeout(doScroll, delay);
     setTimeout(doScroll, delay + 180);
-  }, []);
+  }, [studioTab]);
+
+  // Backward-compatible alias helpers
+  const scrollToEarTrainer = useCallback((delay = 80) => scrollToInteractive('ear-training', delay), [scrollToInteractive]);
+  const scrollToWorkbench = useCallback((delay = 80) => scrollToInteractive('explore', delay), [scrollToInteractive]);
 
   // Open Harmonic Explorer: on mobile, show the intro popup unless user checked "Don't show this again"
   const handleOpenExplore = useCallback(() => {
@@ -889,13 +891,12 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     if (isMobile && !hasSeenIntro) {
       setShowMobileIntroPopup(true);
       setTimeout(() => {
-        const workbenchEl = document.getElementById('harmonic-interactive-workbench');
-        workbenchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        scrollToInteractive('explore', 50);
       }, 50);
     } else {
-      scrollToWorkbench(80);
+      scrollToInteractive('explore', 80);
     }
-  }, [scrollToWorkbench]);
+  }, [scrollToInteractive]);
 
   // Dismiss intro popup and persist "Don't show this again" preference
   const handleDismissIntroPopup = useCallback(() => {
@@ -905,8 +906,8 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
       } catch {}
     }
     setShowMobileIntroPopup(false);
-    scrollToWorkbench(60);
-  }, [dontShowAgain, scrollToWorkbench]);
+    scrollToInteractive('explore', 60);
+  }, [dontShowAgain, scrollToInteractive]);
 
   return (
     <section id="music-theory" className="pt-3 sm:pt-6 lg:pt-10 pb-16 sm:pb-20 px-4 sm:px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
@@ -1073,53 +1074,127 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               </div>
             </div>
 
-            {/* Bottom Interactive Keys Launchpad - Identical height and alignment to the left card */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-4 sm:py-5 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
+            {/* Bottom Interactive Keys Launchpad: 4 Modern Atelier Hardware Keys */}
+            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/90 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-4 sm:px-8 py-3.5 sm:py-5 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {/* Key 1: Chords & Resonance */}
                 <button
                   type="button"
-                  onClick={handleOpenExplore}
-                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
+                  onClick={() => {
+                    setStudioTab('explore');
+                    setIsStudioOpen(true);
+                    scrollToInteractive('explore', 60);
+                  }}
+                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#c49750]/60 hover:from-[#1b2132] hover:to-[#0f121c] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(196,151,80,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
                 >
-                  <Waves className="w-3.5 h-3.5 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">{isDe ? 'Akkorde' : 'Chords'}</span>
+                  {/* Top Amber LED Strip */}
+                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#c49750] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#c49750]/15 border border-[#c49750]/30 flex items-center justify-center text-[#c49750] group-hover/key:scale-105 transition-transform">
+                      <Waves className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[9px] font-mono text-[#c49750] uppercase tracking-wider hidden sm:inline">
+                      {isDe ? 'Resonanz' : 'Harmonics'}
+                    </span>
+                  </div>
+
+                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                    {isDe ? 'Harmonien' : 'Chords'}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                    {isDe ? 'Akkorde & Resonanz' : 'Voicings & Tension'}
+                  </div>
                 </button>
 
+                {/* Key 2: Ear Training & Vocal Memory */}
                 <button
                   type="button"
                   onClick={() => {
                     setStudioTab('ear-training');
                     setIsStudioOpen(true);
-                    scrollToEarTrainer(80);
+                    scrollToInteractive('ear-training', 60);
                   }}
-                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#c49750]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
+                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#a78bfa]/60 hover:from-[#1d1f33] hover:to-[#101220] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(167,139,250,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
                 >
-                  <Headphones className="w-3.5 h-3.5 text-[#c49750] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">{isDe ? 'Gehör-Test' : 'Ear Test'}</span>
+                  {/* Top Lavender LED Strip */}
+                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#a78bfa] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#a78bfa]/15 border border-[#a78bfa]/30 flex items-center justify-center text-[#a78bfa] group-hover/key:scale-105 transition-transform">
+                      <Headphones className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[9px] font-mono text-[#a78bfa] uppercase tracking-wider hidden sm:inline">
+                      {isDe ? 'Gehör' : 'Aural'}
+                    </span>
+                  </div>
+
+                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                    {isDe ? 'Gehör-Training' : 'Ear Training'}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                    {isDe ? 'Akkord-Gehör & Gesang' : 'Aural Pitch & Voice'}
+                  </div>
                 </button>
 
+                {/* Key 3: Rhythm & Pulse Ear Testing */}
                 <button
                   type="button"
                   onClick={() => {
-                    setStudioTab('tempo');
+                    setStudioTab('rhythm');
                     setIsStudioOpen(true);
+                    scrollToInteractive('rhythm', 60);
                   }}
-                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#2b3246] bg-[#131724] hover:bg-[#1a2032] hover:border-[#38bdf8]/60 text-[#dedacf] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98"
+                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#38bdf8]/60 hover:from-[#172233] hover:to-[#0c1420] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(56,189,248,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
                 >
-                  <Clock className="w-3.5 h-3.5 text-[#38bdf8] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">{isDe ? 'Tempo' : 'Tempo'}</span>
+                  {/* Top Cyan LED Strip */}
+                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#38bdf8]/15 border border-[#38bdf8]/30 flex items-center justify-center text-[#38bdf8] group-hover/key:scale-105 transition-transform">
+                      <Clock className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[9px] font-mono text-[#38bdf8] uppercase tracking-wider hidden sm:inline">
+                      {isDe ? 'Puls' : 'Meter'}
+                    </span>
+                  </div>
+
+                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                    {isDe ? 'Rhythmus & Tempo' : 'Rhythm & Tempo'}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                    {isDe ? 'Notensystem & Puls' : 'Staff Score & Pulse'}
+                  </div>
                 </button>
 
+                {/* Key 4: Full Assessment Diagnostic */}
                 <button
                   type="button"
                   onClick={() => {
                     setStudioTab('assessment');
                     setIsStudioOpen(true);
+                    scrollToInteractive('assessment', 60);
                   }}
-                  className="py-2.5 px-2.5 sm:px-3 rounded-xl border border-[#c49750]/40 bg-[#171b26] hover:bg-[#202738] hover:border-[#ffd56b] text-[#ffd56b] hover:text-white text-xs font-mono uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 select-none shadow-md group/btn active:scale-98 font-bold"
+                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-[#c49750]/50 bg-gradient-to-b from-[#1c1920] to-[#100e16] hover:border-[#ffd56b] hover:from-[#25202c] hover:to-[#161320] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(255,213,107,0.2)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
                 >
-                  <Award className="w-3.5 h-3.5 text-[#ffd56b] group-hover/btn:scale-110 transition-transform shrink-0" />
-                  <span className="truncate">{isDe ? 'Einstufung' : 'Assessment'}</span>
+                  {/* Top Gold Brilliant Strip */}
+                  <div className="absolute top-0 inset-x-2 h-[2px] bg-gradient-to-r from-transparent via-[#ffd56b] to-transparent opacity-80 group-hover/key:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#ffd56b]/20 border border-[#ffd56b]/40 flex items-center justify-center text-[#ffd56b] group-hover/key:scale-105 transition-transform">
+                      <Award className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-[9px] font-mono font-bold text-[#ffd56b] px-1.5 py-0.2 rounded bg-[#ffd56b]/15 uppercase tracking-wider">
+                      {isDe ? '9 Tests' : '9 Tests'}
+                    </span>
+                  </div>
+
+                  <div className="font-serif sm:font-sans font-bold text-xs sm:text-sm text-[#ffd56b] group-hover/key:text-white truncate">
+                    {isDe ? 'Einstufung' : 'Assessment'}
+                  </div>
+                  <div className="text-[10px] font-mono text-[#c49750] group-hover/key:text-[#dedacf] truncate">
+                    {isDe ? 'Vollständige Diagnose' : 'Full Diagnostic'}
+                  </div>
                 </button>
               </div>
             </div>
@@ -1229,14 +1304,14 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
               </div>
             </div>
 
-            {/* Studio Tab Switcher: 4-Module Interactive Ear & Rhythm Atelier */}
+            {/* Studio Tab Switcher: 6-Module Interactive Ear & Rhythm Atelier */}
             <div className="flex items-center gap-1.5 sm:gap-2 mb-6 border-b border-white/10 pb-4 overflow-x-auto no-scrollbar">
               <button
                 type="button"
                 onClick={() => {
                   setStudioTab('explore');
                   stopAudio(true);
-                  scrollToWorkbench(60);
+                  scrollToInteractive('explore', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'explore'
@@ -1253,7 +1328,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('ear-training');
                   stopAudio(true);
-                  scrollToEarTrainer(40);
+                  scrollToInteractive('ear-training', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'ear-training'
@@ -1262,7 +1337,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 }`}
               >
                 <Music className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>{isDe ? '2. Akkord-Test' : '2. Chord Test'}</span>
+                <span>{isDe ? '2. Akkord-Gehör' : '2. Chord Ear Test'}</span>
               </button>
 
               <button
@@ -1270,6 +1345,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('pitch-memory');
                   stopAudio(true);
+                  scrollToInteractive('pitch-memory', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'pitch-memory'
@@ -1278,7 +1354,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 }`}
               >
                 <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>{isDe ? '3. Melodie-Singen' : '3. Pitch Memory'}</span>
+                <span>{isDe ? '3. Gesang & Melodie' : '3. Vocal Pitch Memory'}</span>
               </button>
 
               <button
@@ -1286,6 +1362,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('rhythm');
                   stopAudio(true);
+                  scrollToInteractive('rhythm', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'rhythm'
@@ -1294,7 +1371,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>{isDe ? '4. Rhythmus-Studio' : '4. Rhythm Trainer'}</span>
+                <span>{isDe ? '4. Rhythmus-Studio' : '4. Rhythm Studio'}</span>
               </button>
 
               <button
@@ -1302,6 +1379,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('tempo');
                   stopAudio(true);
+                  scrollToInteractive('tempo', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'tempo'
@@ -1310,7 +1388,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 }`}
               >
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>{isDe ? '5. Tempo-Studio' : '5. Tempo Studio'}</span>
+                <span>{isDe ? '5. Tempo & Puls' : '5. Tempo & Pulse'}</span>
               </button>
 
               <button
@@ -1318,6 +1396,7 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 onClick={() => {
                   setStudioTab('assessment');
                   stopAudio(true);
+                  scrollToInteractive('assessment', 40);
                 }}
                 className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-mono uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
                   studioTab === 'assessment'
@@ -1326,43 +1405,52 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 }`}
               >
                 <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#ffd56b]" />
-                <span className="font-bold">{isDe ? '6. Einstufung' : '6. Assessment'}</span>
+                <span className="font-bold">{isDe ? '6. Einstufung' : '6. Full Assessment'}</span>
               </button>
             </div>
 
-            {studioTab === 'ear-training' ? (
-              <EarTrainingStudio
-                chords={CHORD_PALETTE}
-                playChordFrequencies={playCustomFrequencies}
-                stopAudio={stopAudio}
-                isPlaying={isPlaying}
-                soundMode={soundMode}
-                isDe={isDe}
-              />
-            ) : studioTab === 'pitch-memory' ? (
-              <PitchMemoryStudio
-                playFrequencies={playCustomFrequencies}
-                stopAudio={stopAudio}
-                isDe={isDe}
-              />
-            ) : studioTab === 'rhythm' ? (
-              <RhythmStudio
-                isDe={isDe}
-              />
-            ) : studioTab === 'tempo' ? (
-              <TempoStudio
-                isDe={isDe}
-              />
-            ) : studioTab === 'assessment' ? (
-              <AssessmentStudio
-                isDe={isDe}
-                onSwitchTab={(tab) => setStudioTab(tab)}
-              />
-            ) : (
-              <>
+            <React.Suspense fallback={
+              <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto rounded-2xl bg-[#121520] border border-[#2b3347] p-8 text-center animate-pulse">
+                <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#c49750]/20 flex items-center justify-center text-lg">
+                  🎵
+                </div>
+                <div className="h-4 bg-[#c49750]/20 rounded w-48 mx-auto mb-2" />
+                <div className="h-3 bg-white/5 rounded w-64 mx-auto" />
+              </div>
+            }>
+              {studioTab === 'ear-training' ? (
+                <EarTrainingStudio
+                  chords={CHORD_PALETTE}
+                  playChordFrequencies={playCustomFrequencies}
+                  stopAudio={stopAudio}
+                  isPlaying={isPlaying}
+                  soundMode={soundMode}
+                  isDe={isDe}
+                />
+              ) : studioTab === 'pitch-memory' ? (
+                <PitchMemoryStudio
+                  playFrequencies={playCustomFrequencies}
+                  stopAudio={stopAudio}
+                  isDe={isDe}
+                />
+              ) : studioTab === 'rhythm' ? (
+                <RhythmStudio
+                  isDe={isDe}
+                />
+              ) : studioTab === 'tempo' ? (
+                <TempoStudio
+                  isDe={isDe}
+                />
+              ) : studioTab === 'assessment' ? (
+                <AssessmentStudio
+                  isDe={isDe}
+                  onSwitchTab={(tab) => setStudioTab(tab)}
+                />
+              ) : null}
+            </React.Suspense>
 
-                {/* Selected Chord Showcase & Side-by-Side Scrollable Chord Menu */}
-                <div id="harmonic-interactive-workbench" className="bg-[#141822] border border-[#282e3f] rounded-xl p-3 sm:p-5 lg:p-6 shadow-xl scroll-mt-20 sm:scroll-mt-24">
+            {studioTab === 'explore' && (
+              <div id="harmonic-interactive-workbench" className="bg-[#141822] border border-[#282e3f] rounded-xl p-3 sm:p-5 lg:p-6 shadow-xl scroll-mt-20 sm:scroll-mt-24">
                   <div className="flex flex-row gap-2.5 sm:gap-5 items-stretch">
                     
                     {/* Main Left Content: Chord Identity, Full Score, Tension Gauge & Somatic Descriptions */}
@@ -1554,7 +1642,6 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
 
                   </div>
                 </div>
-              </>
             )}
 
             {/* Bottom Collapse Button */}

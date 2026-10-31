@@ -1,1454 +1,30 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Volume2, RotateCcw, Trophy, Music, Flame, Award, ChevronRight, X, Clock, CheckCircle2 } from 'lucide-react';
 
-export type RhythmDifficulty = 1 | 2 | 3;
+export {
+  type RhythmDifficulty,
+  type RhythmNoteType,
+  type RhythmNote,
+  type RhythmBar,
+  type RhythmExercise,
+  RHYTHMS_LEVEL_1,
+  RHYTHMS_LEVEL_2,
+  RHYTHMS_LEVEL_3,
+  validateRhythmExercise,
+  validateAllRhythms,
+} from '../data/rhythmExercises';
 
-export type RhythmNoteType = 
-  | 'quarter' 
-  | 'half' 
-  | 'dotted-half' 
-  | 'dotted-quarter' 
-  | 'eighth' 
-  | 'sixteenth' 
-  | 'rest-quarter' 
-  | 'rest-eighth';
-
-export interface RhythmNote {
-  type: RhythmNoteType;
-  duration: number;    // duration in bar units (quarters or eighths)
-  isRest?: boolean;
-  tiedToNext?: boolean;      // Liaison (tie) connecting to the next note
-  isTiedFromPrev?: boolean;  // Note sustained from previous note (held, not re-struck)
-}
-
-export interface RhythmBar {
-  timeSignature: string; // e.g. "4/4", "3/4", "2/4", "6/8", "7/8", "5/8"
-  unit: 'quarter' | 'eighth';
-  notes: RhythmNote[];
-}
-
-export interface RhythmExercise {
-  id: string;
-  name: string;
-  nameDe: string;
-  level: RhythmDifficulty;
-  bars: RhythmBar[];
-  description: string;
-  descriptionDe: string;
-}
-
-// ============================================================================
-// 1. LEVEL 1: Exactly 2 bars, simple classical meters (4/4, 3/4, 2/4), two bars close
-// No irregular signatures (no 5/4 or 7/8). No cross-bar ties.
-// ============================================================================
-const RHYTHMS_LEVEL_1: RhythmExercise[] = [
-  {
-    id: 'r1-two-bars-march',
-    name: 'Even March (4/4)',
-    nameDe: 'Gleichmäßiger Marsch (4/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      }
-    ],
-    description: 'Two measures of 4/4. Solid quarter notes and 2-beat sustained halves.',
-    descriptionDe: 'Zwei Takte im 4/4-Takt. Gleichmäßige Viertel und 2-Schlag-Halbenoten.'
-  },
-  {
-    id: 'r1-two-bars-waltz',
-    name: 'Waltz Phrasing (3/4)',
-    nameDe: 'Walzer-Phrasierung (3/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'quarter', duration: 1 },
-        ]
-      }
-    ],
-    description: 'Two measures of 3/4 time (3 + 3 = 6 beats). Gentle lyrical waltz step.',
-    descriptionDe: 'Zwei Takte im 3/4-Takt (3 + 3 = 6 Schläge). Klassischer Walzerschritt.'
-  },
-  {
-    id: 'r1-steady-halves',
-    name: 'Balanced Pulse (4/4)',
-    nameDe: 'Ausgeglichener Puls (4/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Two measures of 4/4. Sustained 2-beat half notes resolving into quarters.',
-    descriptionDe: 'Zwei Takte 4/4. Gehaltene Halbe Noten münden in ruhige Viertel.'
-  },
-  {
-    id: 'r1-minuet-lilt',
-    name: 'Minuet Step (3/4)',
-    nameDe: 'Menuett-Schritt (3/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      }
-    ],
-    description: 'Two measures of 3/4 with half note center and returning quarters.',
-    descriptionDe: 'Zwei Takte 3/4 mit zentraler Halber Note und abschließenden Vierteln.'
-  },
-  {
-    id: 'r1-duple-gavotte',
-    name: 'Classical Gavotte (2/4)',
-    nameDe: 'Klassische Gavotte (2/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      }
-    ],
-    description: 'Two lively measures of 2/4. Clean quarters leading into eighths.',
-    descriptionDe: 'Zwei lebendige Takte im 2/4-Takt. Klare Viertel führen in fließende Achtel.'
-  },
-  {
-    id: 'r1-hymn-cadence',
-    name: 'Choral Cadence (4/4)',
-    nameDe: 'Choralschluss (4/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'rest-quarter', duration: 1, isRest: true },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'A solemn four-four choral cadence featuring a meditative breath rest.',
-    descriptionDe: 'Ein feierlicher Choral-Abschluss mit bewusster Atempause.'
-  },
-  {
-    id: 'r1-sarabande-solemn',
-    name: 'Noble Sarabande (3/4)',
-    nameDe: 'Edle Sarabande (3/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-half', duration: 3 },
-        ]
-      }
-    ],
-    description: '3/4 baroque dance placing expressive weight on beat two.',
-    descriptionDe: '3/4 Barocktanz mit getragenem Schwerpunkt auf dem zweiten Schlag.'
-  },
-  {
-    id: 'r1-fanfare-pulse',
-    name: 'Fanfare Pulse (4/4)',
-    nameDe: 'Fanfaren-Puls (4/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Crisp marching pulse with eighth-note heraldry.',
-    descriptionDe: 'Präziser Marschimpuls mit rhythmischem Achtel-Schwung.'
-  },
-  {
-    id: 'r1-lullaby-flow',
-    name: 'Gentle Berceuse (3/4)',
-    nameDe: 'Sanfte Wiege (3/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Flowing French lullaby phrasing in 3/4 meter.',
-    descriptionDe: 'Fließendes Wiegenlied im 3/4-Takt.'
-  },
-  {
-    id: 'r1-sonata-allegro',
-    name: 'Sonatina Theme (2/4)',
-    nameDe: 'Sonatinen-Thema (2/4)',
-    level: 1,
-    bars: [
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Two measures of concise classical clarity in 2/4.',
-    descriptionDe: 'Zwei Takte von klassischer Klarheit im 2/4-Takt.'
-  }
-];
-
-// ============================================================================
-// 2. LEVEL 2: Exactly 4 bars (standardized length), richer meters (4/4, 3/4, 6/8, 2/4)
-// Cross-bar liaisons drastically reduced (almost zero ties).
-// ============================================================================
-const RHYTHMS_LEVEL_2: RhythmExercise[] = [
-  {
-    id: 'r2-four-bars-pastoral',
-    name: 'Pastoral Sicilienne (6/8, 4 Bars)',
-    nameDe: 'Pastorale Sizilienne (6/8, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      }
-    ],
-    description: '4 measures of compound duple (6/8). Lilting pastoral pulse without ties.',
-    descriptionDe: '4 Takte im 6/8-Takt mit wiegendem Sicilienne-Schwung ohne Bindungen.'
-  },
-  {
-    id: 'r2-four-bars-syncopated-groove',
-    name: 'Syncopated Suite (4/4, 4 Bars)',
-    nameDe: 'Synkopierte Suite (4/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'rest-quarter', duration: 1, isRest: true },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '4 balanced measures in 4/4 with eighth-note offbeats and rests.',
-    descriptionDe: '4 Takte 4/4 mit rhythmischen Achtel-Akzenten und Pausen.'
-  },
-  {
-    id: 'r2-four-bars-chaconne',
-    name: 'Grand Chaconne (3/4, 4 Bars)',
-    nameDe: 'Große Chaconne (3/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-quarter', duration: 1.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-half', duration: 3 },
-        ]
-      }
-    ],
-    description: '4 stately measures of 3/4 chaconne phrasing with dotted quarter rhythms.',
-    descriptionDe: '4 getragene Takte einer barocken Chaconne mit punktierten Vierteln.'
-  },
-  {
-    id: 'r2-four-bars-balkan-seven',
-    name: 'Balkan Dance (7/8, 4 Bars)',
-    nameDe: 'Balkan-Tanz (7/8, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      }
-    ],
-    description: '4 measures of asymmetric 7/8 pulse (3+2+2 into 2+2+3).',
-    descriptionDe: '4 Takte asymmetrischer 7/8-Rhythmus mit wechselnder Betonung.'
-  },
-  {
-    id: 'r2-four-bars-rondo-march',
-    name: 'Rondo March (2/4, 4 Bars)',
-    nameDe: 'Rondo-Marsch (2/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-        ]
-      },
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-        ]
-      },
-      {
-        timeSignature: '2/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '4 energetic measures in 2/4 classical sonata style.',
-    descriptionDe: '4 lebhafte Takte im klassischen 2/4 Sonatenstil.'
-  },
-  {
-    id: 'r2-four-bars-metric-shift',
-    name: 'Metric Transition (3/4 → 4/4, 4 Bars)',
-    nameDe: 'Taktwechsel-Fluss (3/4 → 4/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Two measures of 3/4 transitioning cleanly into two measures of 4/4.',
-    descriptionDe: 'Zwei Takte 3/4 wechseln nahtlos in zwei Takte 4/4.'
-  },
-  {
-    id: 'r2-four-bars-tarentella',
-    name: 'Neapolitan Tarantella (6/8, 4 Bars)',
-    nameDe: 'Neapolitanische Tarantella (6/8, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      }
-    ],
-    description: '4 measures of brisk Mediterranean dance with rolling eighths.',
-    descriptionDe: '4 Takte temperamentvoller Mittelmeertanz mit sprudelnden Achteln.'
-  },
-  {
-    id: 'r2-four-bars-dotted-grandeur',
-    name: 'French Overture (4/4, 4 Bars)',
-    nameDe: 'Französische Ouvertüre (4/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-quarter', duration: 1.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'dotted-quarter', duration: 1.5 },
-          { type: 'eighth', duration: 0.5 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'rest-quarter', duration: 1, isRest: true },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: 'Stately baroque majesty with sharp dotted rhythms.',
-    descriptionDe: 'Majestätischer Barockcharakter mit punktierten Rhythmen.'
-  },
-  {
-    id: 'r2-four-bars-five-eight',
-    name: 'Aegean Wave (5/8, 4 Bars)',
-    nameDe: 'Ägäische Welle (5/8, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-        ]
-      }
-    ],
-    description: '4 measures of swaying 5/8 (3+2 and 2+3 subdivisions).',
-    descriptionDe: '4 Takte wiegendes 5/8-Metrum mit 3+2 und 2+3 Unterteilung.'
-  },
-  {
-    id: 'r2-four-bars-polonaise',
-    name: 'Chopin Polonaise (3/4, 4 Bars)',
-    nameDe: 'Polonaise-Rhythmus (3/4, 4 Takte)',
-    level: 2,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-half', duration: 3 },
-        ]
-      }
-    ],
-    description: 'Classical Polish courtly rhythm with sixteenth-note flourish.',
-    descriptionDe: 'Klassischer höfischer Polonaiserhythmus mit Sechzehntel-Auftakt.'
-  }
-];
-
-// ============================================================================
-// 3. LEVEL 3: Exactly 6 BARS! Includes 1/16 notes, syncopations, and subtle liaisons.
-// Cross-bar ties are used sparingly (at most 1 or 2 per 6-bar piece) for musical expression.
-// ============================================================================
-const RHYTHMS_LEVEL_3: RhythmExercise[] = [
-  {
-    id: 'r3-six-bars-symphonic',
-    name: 'Symphonic Suite (4/4, 6 Bars)',
-    nameDe: 'Symphonische Suite (4/4, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1, tiedToNext: true }, // 1 subtle musical tie
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1, isTiedFromPrev: true },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 measures in 4/4 with beamed sixteenth groups and a lyrical barline tie.',
-    descriptionDe: '6 Takte 4/4 mit Sechzehntel-Vierergruppen und musikalischem Haltebogen.'
-  },
-  {
-    id: 'r3-six-bars-arabesque',
-    name: 'French Arabesque (3/4, 6 Bars)',
-    nameDe: 'Französische Arabeske (3/4, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1, tiedToNext: true }, // Subtle liaison
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1, isTiedFromPrev: true },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '3/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-half', duration: 3 },
-        ]
-      }
-    ],
-    description: '6 measures in 3/4 with fluid sixteenth arabesques and expressive phrasing.',
-    descriptionDe: '6 Takte im 3/4-Takt mit fließenden Sechzehntel-Arabesken.'
-  },
-  {
-    id: 'r3-six-bars-balkan',
-    name: 'Balkan Rhapsody (7/8, 6 Bars)',
-    nameDe: 'Balkan-Rhapsodie (7/8, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2, tiedToNext: true }, // Single tie
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2, isTiedFromPrev: true },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 measures of 7/8 with rapid sixteenth snaps and syncopations.',
-    descriptionDe: '6 Takte im 7/8-Takt mit Sechzehntel-Figuren und lebhaftem Rhythmus.'
-  },
-  {
-    id: 'r3-six-bars-sicilienne',
-    name: 'Compound Sicilienne (6/8, 6 Bars)',
-    nameDe: 'Pastorale Sizilienne (6/8, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1, tiedToNext: true }, // Liaison into bar 5
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1, isTiedFromPrev: true },
-          { type: 'quarter', duration: 2 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      }
-    ],
-    description: '6 measures in 6/8 compound meter with lilting dotted pulses and sixteenth ornamentation.',
-    descriptionDe: '6 Takte im 6/8-Takt mit wiegender Bewegung und Sechzehntel-Figuren.'
-  },
-  {
-    id: 'r3-six-bars-modulation',
-    name: 'Metric Modulation (5/8 → 6/8 → 7/8, 6 Bars)',
-    nameDe: 'Metrische Modulation (5/8 → 6/8 → 7/8, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'eighth', duration: 1 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'eighth', duration: 1 },
-          { type: 'dotted-quarter', duration: 3 },
-        ]
-      },
-      {
-        timeSignature: '6/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.5 },
-          { type: 'eighth', duration: 1 },
-          { type: 'eighth', duration: 1 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-          { type: 'quarter', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '7/8',
-        unit: 'eighth',
-        notes: [
-          { type: 'quarter', duration: 2 },
-          { type: 'dotted-quarter', duration: 3 },
-          { type: 'quarter', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 shifting measures (5/8 into 6/8 into 7/8) with sixteenth subdivisions.',
-    descriptionDe: '6 wechselnde Takte (5/8 in 6/8 in 7/8) mit Sechzehntel-Noten.'
-  },
-  {
-    id: 'r3-six-bars-toccata',
-    name: 'Baroque Toccata (4/4, 6 Bars)',
-    nameDe: 'Barocke Toccata (4/4, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 measures of virtuoso keyboard motor with sixteenth-note motorics.',
-    descriptionDe: '6 Takte virtuose Toccata mit präziser Sechzehntel-Motorik.'
-  },
-  {
-    id: 'r3-six-bars-faurian-flow',
-    name: 'Fauré Pavane Rhythm (4/4, 6 Bars)',
-    nameDe: 'Fauré Pavane Rhythmus (4/4, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '4/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 measures capturing the elegant sixteenth-note lilt of French Pavane.',
-    descriptionDe: '6 Takte im eleganten Rhythmus der französischen Pavane.'
-  },
-  {
-    id: 'r3-six-bars-rhapsodic-five',
-    name: 'Asymmetric Flow (5/4, 6 Bars)',
-    nameDe: 'Asymmetrischer Fluss (5/4, 6 Takte)',
-    level: 3,
-    bars: [
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'sixteenth', duration: 0.25 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'half', duration: 2 },
-        ]
-      },
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'half', duration: 2 },
-          { type: 'quarter', duration: 1 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'eighth', duration: 0.5 },
-          { type: 'quarter', duration: 1 },
-        ]
-      },
-      {
-        timeSignature: '5/4',
-        unit: 'quarter',
-        notes: [
-          { type: 'dotted-half', duration: 3 },
-          { type: 'half', duration: 2 },
-        ]
-      }
-    ],
-    description: '6 measures in expansive 5/4 meter with 3+2 natural vocal cadence.',
-    descriptionDe: '6 weite Takte im 5/4-Takt mit natürlicher 3+2 Gesangsbewegung.'
-  }
-];
-
-// ============================================================================
-// Strict Mathematical Validation Engine
-// ============================================================================
-export function validateRhythmExercise(ex: RhythmExercise): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  ex.bars.forEach((bar, bIdx) => {
-    const parts = bar.timeSignature.split('/');
-    if (parts.length !== 2) {
-      errors.push(`[${ex.id}] Bar ${bIdx + 1}: Invalid timeSignature '${bar.timeSignature}'. Expected format 'N/D'.`);
-      return;
-    }
-    const num = parseInt(parts[0], 10);
-    const den = parseInt(parts[1], 10);
-    if (isNaN(num) || isNaN(den) || den === 0) {
-      errors.push(`[${ex.id}] Bar ${bIdx + 1}: Non-numeric time signature '${bar.timeSignature}'.`);
-      return;
-    }
-
-    const expectedDuration = bar.unit === 'quarter' ? (num / den) * 4 : (num / den) * 8;
-    const actualDuration = bar.notes.reduce((sum, n) => sum + n.duration, 0);
-
-    if (Math.abs(actualDuration - expectedDuration) > 0.0001) {
-      errors.push(
-        `[${ex.id} - ${ex.name}] Bar ${bIdx + 1}: Duration mismatch! Meter is ${bar.timeSignature} (expects ${expectedDuration} ${bar.unit} beats), but notes sum to ${actualDuration} ${bar.unit} beats.`
-      );
-    }
-  });
-
-  // Verify ties across notes
-  const flatNotes: { note: RhythmNote; bIdx: number; nIdx: number }[] = [];
-  ex.bars.forEach((bar, bIdx) => {
-    bar.notes.forEach((note, nIdx) => {
-      flatNotes.push({ note, bIdx, nIdx });
-    });
-  });
-
-  flatNotes.forEach((item, idx) => {
-    if (item.note.tiedToNext) {
-      const nextItem = flatNotes[idx + 1];
-      if (!nextItem) {
-        errors.push(`[${ex.id}] Final note has tiedToNext=true but no subsequent note exists!`);
-      } else if (!nextItem.note.isTiedFromPrev) {
-        errors.push(
-          `[${ex.id}] Bar ${item.bIdx + 1} Note ${item.nIdx + 1} has tiedToNext=true, but next note is missing isTiedFromPrev=true!`
-        );
-      }
-    }
-    if (item.note.isTiedFromPrev) {
-      const prevItem = flatNotes[idx - 1];
-      if (!prevItem) {
-        errors.push(`[${ex.id}] First note has isTiedFromPrev=true but no previous note exists!`);
-      } else if (!prevItem.note.tiedToNext) {
-        errors.push(
-          `[${ex.id}] Bar ${item.bIdx + 1} Note ${item.nIdx + 1} has isTiedFromPrev=true, but previous note is missing tiedToNext=true!`
-        );
-      }
-    }
-  });
-
-  return { valid: errors.length === 0, errors };
-}
-
-export function validateAllRhythms(): boolean {
-  const allExercises = [...RHYTHMS_LEVEL_1, ...RHYTHMS_LEVEL_2, ...RHYTHMS_LEVEL_3];
-  let allValid = true;
-
-  allExercises.forEach((ex) => {
-    const res = validateRhythmExercise(ex);
-    if (!res.valid) {
-      allValid = false;
-      console.error(`🚨 Rhythm Validation Failure in "${ex.id}":\n`, res.errors.join('\n'));
-    }
-  });
-
-  return allValid;
-}
+import {
+  RhythmDifficulty,
+  RhythmNoteType,
+  RhythmNote,
+  RhythmBar,
+  RhythmExercise,
+  RHYTHMS_LEVEL_1,
+  RHYTHMS_LEVEL_2,
+  RHYTHMS_LEVEL_3,
+  validateAllRhythms,
+} from '../data/rhythmExercises';
 
 // Run validation immediately on load
 if (typeof window !== 'undefined' || process.env.NODE_ENV !== 'production') {
@@ -1456,35 +32,30 @@ if (typeof window !== 'undefined' || process.env.NODE_ENV !== 'production') {
 }
 
 // ============================================================================
-// High-Fidelity Music Notation Components (Henle / Durand Classical Engraving)
+// High-Fidelity Classical Music Notation Components (Henle / Durand Classical Engraving)
 // ============================================================================
 
-// Beamed Group of 4 Sixteenth Notes (Takes ~48px total, only slightly more than a quarter note!)
+// Beamed Group of 4 Sixteenth Notes (~48px, compact and tight)
 export const BeamedSixteenthQuartet: React.FC = () => (
   <svg viewBox="0 0 54 36" className="w-12 h-8 sm:w-13 sm:h-9 overflow-visible select-none shrink-0">
-    {/* Double horizontal beams connecting all 4 stems across the top */}
     <line x1="14" y1="5" x2="50" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
     <line x1="14" y1="9.5" x2="50" y2="9.5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
 
-    {/* Note 1 */}
     <ellipse cx="9" cy="27" rx="5" ry="3.2" transform="rotate(-25 9 27)" fill="#fbf9f5" />
     <line x1="14" y1="25" x2="14" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
 
-    {/* Note 2 */}
     <ellipse cx="21" cy="27" rx="5" ry="3.2" transform="rotate(-25 21 27)" fill="#fbf9f5" />
     <line x1="26" y1="25" x2="26" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
 
-    {/* Note 3 */}
     <ellipse cx="33" cy="27" rx="5" ry="3.2" transform="rotate(-25 33 27)" fill="#fbf9f5" />
     <line x1="38" y1="25" x2="38" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
 
-    {/* Note 4 */}
     <ellipse cx="45" cy="27" rx="5" ry="3.2" transform="rotate(-25 45 27)" fill="#fbf9f5" />
     <line x1="50" y1="25" x2="50" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
   </svg>
 );
 
-// Beamed Duo of 2 Sixteenth Notes (Takes ~28px)
+// Beamed Duo of 2 Sixteenth Notes (~28px)
 export const BeamedSixteenthDuo: React.FC = () => (
   <svg viewBox="0 0 32 36" className="w-7 h-8 sm:w-8 sm:h-9 overflow-visible select-none shrink-0">
     <line x1="14" y1="5" x2="26" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
@@ -1498,7 +69,7 @@ export const BeamedSixteenthDuo: React.FC = () => (
   </svg>
 );
 
-// Beamed Pair of 2 Eighth Notes (Takes ~34px)
+// Beamed Pair of 2 Eighth Notes (~34px)
 export const BeamedEighthPair: React.FC = () => (
   <svg viewBox="0 0 38 36" className="w-8 h-8 sm:w-9 sm:h-9 overflow-visible select-none shrink-0">
     <line x1="14" y1="5" x2="32" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
@@ -1508,6 +79,56 @@ export const BeamedEighthPair: React.FC = () => (
 
     <ellipse cx="27" cy="27" rx="5" ry="3.2" transform="rotate(-25 27 27)" fill="#fbf9f5" />
     <line x1="32" y1="25" x2="32" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+  </svg>
+);
+
+// Beamed Mixed Figure: 1 Eighth + 2 Sixteenths (1 beat in 4/4 / 3/4)
+export const BeamedEighthAndTwoSixteenths: React.FC = () => (
+  <svg viewBox="0 0 46 36" className="w-10 h-8 sm:w-11 sm:h-9 overflow-visible select-none shrink-0">
+    <line x1="14" y1="5" x2="38" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
+    <line x1="26" y1="9.5" x2="38" y2="9.5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
+
+    <ellipse cx="9" cy="27" rx="5" ry="3.2" transform="rotate(-25 9 27)" fill="#fbf9f5" />
+    <line x1="14" y1="25" x2="14" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="21" cy="27" rx="5" ry="3.2" transform="rotate(-25 21 27)" fill="#fbf9f5" />
+    <line x1="26" y1="25" x2="26" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="33" cy="27" rx="5" ry="3.2" transform="rotate(-25 33 27)" fill="#fbf9f5" />
+    <line x1="38" y1="25" x2="38" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+  </svg>
+);
+
+// Beamed Mixed Figure: 2 Sixteenths + 1 Eighth (1 beat in 4/4 / 3/4)
+export const BeamedTwoSixteenthsAndEighth: React.FC = () => (
+  <svg viewBox="0 0 46 36" className="w-10 h-8 sm:w-11 sm:h-9 overflow-visible select-none shrink-0">
+    <line x1="14" y1="5" x2="38" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
+    <line x1="14" y1="9.5" x2="26" y2="9.5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
+
+    <ellipse cx="9" cy="27" rx="5" ry="3.2" transform="rotate(-25 9 27)" fill="#fbf9f5" />
+    <line x1="14" y1="25" x2="14" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="21" cy="27" rx="5" ry="3.2" transform="rotate(-25 21 27)" fill="#fbf9f5" />
+    <line x1="26" y1="25" x2="26" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="33" cy="27" rx="5" ry="3.2" transform="rotate(-25 33 27)" fill="#fbf9f5" />
+    <line x1="38" y1="25" x2="38" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+  </svg>
+);
+
+// Beamed Triplet Group of 3 Eighth Notes (Essential for 6/8 compound meter!)
+export const BeamedEighthTriplet: React.FC = () => (
+  <svg viewBox="0 0 48 36" className="w-11 h-8 sm:w-12 sm:h-9 overflow-visible select-none shrink-0">
+    <line x1="14" y1="5" x2="42" y2="5" stroke="#fbf9f5" strokeWidth="2.8" strokeLinecap="round" />
+
+    <ellipse cx="9" cy="27" rx="5" ry="3.2" transform="rotate(-25 9 27)" fill="#fbf9f5" />
+    <line x1="14" y1="25" x2="14" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="23" cy="27" rx="5" ry="3.2" transform="rotate(-25 23 27)" fill="#fbf9f5" />
+    <line x1="28" y1="25" x2="28" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
+
+    <ellipse cx="37" cy="27" rx="5" ry="3.2" transform="rotate(-25 37 27)" fill="#fbf9f5" />
+    <line x1="42" y1="25" x2="42" y2="5" stroke="#fbf9f5" strokeWidth="1.3" />
   </svg>
 );
 
@@ -1588,7 +209,6 @@ export const FineMusicNote: React.FC<{ type: RhythmNoteType }> = ({ type }) => {
             fill="#fbf9f5"
           />
           <line x1="14" y1="25" x2="14" y2="5" stroke="#fbf9f5" strokeWidth="1.4" strokeLinecap="round" />
-          {/* Straight diagonal descending line flag */}
           <line x1="14" y1="5" x2="20" y2="15" stroke="#fbf9f5" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       );
@@ -1768,12 +388,11 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     } catch {}
   }, [getAudioContext]);
 
-  // Pick random rhythm with anti-repeat queue (never repeats immediately)
+  // Pick random rhythm with anti-repeat queue
   const pickRhythm = useCallback((diff: RhythmDifficulty): RhythmExercise => {
     const pool = diff === 1 ? RHYTHMS_LEVEL_1 : diff === 2 ? RHYTHMS_LEVEL_2 : RHYTHMS_LEVEL_3;
     const history = recentHistoryRef.current;
 
-    // Filter out recently played rhythms (last 4)
     const candidates = pool.filter(ex => !history.slice(-4).includes(ex.id));
     const selectionPool = candidates.length > 0 ? candidates : pool;
 
@@ -1803,43 +422,17 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     setState('READY');
   }, []);
 
-  // Switch Difficulty
-  const handleSwitchDifficulty = (diff: RhythmDifficulty) => {
-    setDifficulty(diff);
+  // Switch difficulty
+  const handleSwitchDifficulty = (newDiff: RhythmDifficulty) => {
+    setDifficulty(newDiff);
     setIsRepeatAttempt(false);
     setHasScoredThisExercise(false);
-    const newEx = pickRhythm(diff);
+    const newEx = pickRhythm(newDiff);
     setCurrentExercise(newEx);
     resetToReady();
   };
 
-  // Build flattened sequence of playable notes with absolute beat offsets normalized to quarter beats
-  const buildFlattenedPlayableNotes = useCallback((ex: RhythmExercise) => {
-    const notes: { offsetBeats: number; isRest?: boolean; isTiedFromPrev?: boolean; isLow: boolean; durationQuarter: number }[] = [];
-    let currentQuarterOffset = 0;
-
-    ex.bars.forEach((bar) => {
-      bar.notes.forEach((note, nIdx) => {
-        const durationQuarter = bar.unit === 'eighth' ? note.duration * 0.5 : note.duration;
-        notes.push({
-          offsetBeats: currentQuarterOffset,
-          isRest: note.isRest,
-          isTiedFromPrev: note.isTiedFromPrev,
-          isLow: nIdx % 2 === 0,
-          durationQuarter
-        });
-        currentQuarterOffset += durationQuarter;
-      });
-    });
-
-    return notes;
-  }, []);
-
-  const flattenedNotes = buildFlattenedPlayableNotes(currentExercise);
-  const playableNotes = flattenedNotes.filter(n => !n.isRest && !n.isTiedFromPrev);
-  const totalPlayableCount = playableNotes.length;
-
-  // Play demo acoustic preview of the rhythm
+  // Play audio demo preview
   const playDemoPreview = () => {
     if (isPlayingDemo) {
       demoTimersRef.current.forEach(clearTimeout);
@@ -1848,168 +441,191 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
       return;
     }
 
+    resetToReady();
     setIsPlayingDemo(true);
-    demoTimersRef.current.forEach(clearTimeout);
-    demoTimersRef.current = [];
 
-    const demoBpm = 86;
-    const secPerBeat = 60 / demoBpm;
+    const demoTempoBpm = difficulty === 1 ? 84 : difficulty === 2 ? 96 : 108;
+    const quarterMs = (60 / demoTempoBpm) * 1000;
 
-    playableNotes.forEach((note, idx) => {
-      const tId = setTimeout(() => {
-        playTaikoSound(idx % 2 === 0);
-      }, note.offsetBeats * secPerBeat * 1000);
-      demoTimersRef.current.push(tId);
+    let cumulativeMs = 250; // brief initial delay
+    const timers: NodeJS.Timeout[] = [];
+
+    currentExercise.bars.forEach((bar) => {
+      bar.notes.forEach((note) => {
+        const beatDuration = bar.unit === 'quarter' ? note.duration : note.duration * 0.5;
+        const noteDurationMs = beatDuration * quarterMs;
+
+        if (!note.isRest && !note.isTiedFromPrev) {
+          const t = setTimeout(() => {
+            playTaikoSound(note.duration >= 1.5);
+          }, cumulativeMs);
+          timers.push(t);
+        }
+
+        cumulativeMs += noteDurationMs;
+      });
     });
 
-    const lastOffset = playableNotes[playableNotes.length - 1]?.offsetBeats || 4;
-    const endTId = setTimeout(() => {
+    const endTimer = setTimeout(() => {
       setIsPlayingDemo(false);
-    }, (lastOffset + 1.5) * secPerBeat * 1000);
-    demoTimersRef.current.push(endTId);
+    }, cumulativeMs + 300);
+    timers.push(endTimer);
+
+    demoTimersRef.current = timers;
   };
 
-  // Start 2-second cooldown on entering SUMMARY
-  const startNextCooldown = useCallback(() => {
-    setCooldownRemaining(2);
-    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
-    const start = Date.now();
-    cooldownTimerRef.current = setInterval(() => {
-      const elapsedSec = (Date.now() - start) / 1000;
-      const rem = Math.max(0, 2 - elapsedSec);
-      setCooldownRemaining(rem);
-      if (rem <= 0 && cooldownTimerRef.current) {
-        clearInterval(cooldownTimerRef.current);
-        cooldownTimerRef.current = null;
-      }
-    }, 100);
-  }, []);
+  // Flat list of playable notes (rests and tied-over notes don't require re-striking)
+  const playableNotes = currentExercise.bars
+    .flatMap((b) => b.notes)
+    .filter((n) => !n.isRest && !n.isTiedFromPrev);
 
-  // Evaluate rhythm performance with Hole / Missed-Click Fault Tolerance
-  const evaluatePerformance = useCallback((taps: number[], ex: RhythmExercise) => {
-    setState('SUMMARY');
-    startNextCooldown();
+  const totalPlayableCount = playableNotes.length;
 
-    const pNotes = buildFlattenedPlayableNotes(ex).filter(n => !n.isRest && !n.isTiedFromPrev);
-    if (taps.length < 2 || pNotes.length < 2) {
-      setFeedbackMessage(isDe ? 'Bitte mindestens 2 Schläge tippen.' : 'Please tap at least 2 beats.');
+  // Evaluate rhythm performance
+  const evaluatePerformance = useCallback(() => {
+    const taps = tapTimesRef.current;
+    if (taps.length < 2) {
+      setPrecisionScore(70);
+      setDetectedBpm(90);
+      setFeedbackMessage(isDe ? 'Guter Versuch! Schlage alle Noten im Takt.' : 'Good attempt! Keep a steady beat.');
+      setState('SUMMARY');
       return;
     }
 
-    // Helper: calculate precision for an aligned subset of target notes
-    const testAlignment = (alignedNotes: typeof pNotes) => {
-      const count = Math.min(taps.length, alignedNotes.length);
-      if (count < 2) return { precision: 0, bpm: 80, avgError: 1 };
+    const flatNotes = currentExercise.bars.flatMap((b) =>
+      b.notes.map((n) => ({
+        ...n,
+        normalizedBeats: b.unit === 'quarter' ? n.duration : n.duration * 0.5,
+      }))
+    );
 
-      const t0 = taps[0];
-      const b0 = alignedNotes[0].offsetBeats;
+    const noteStrikeIntervals: number[] = [];
+    let currentInterval = 0;
 
-      let sumNum = 0;
-      let sumDenom = 0;
-      for (let i = 1; i < count; i++) {
-        const deltaB = alignedNotes[i].offsetBeats - b0;
-        const deltaT = taps[i] - t0;
-        sumNum += deltaT * deltaB;
-        sumDenom += deltaB * deltaB;
-      }
-
-      const dBeat = sumDenom > 0 ? sumNum / sumDenom : 600;
-      const bpm = Math.max(30, Math.min(240, Math.round(60000 / dBeat)));
-
-      let totalErr = 0;
-      for (let i = 0; i < count; i++) {
-        const expected = t0 + (alignedNotes[i].offsetBeats - b0) * dBeat;
-        const diffMs = Math.abs(taps[i] - expected);
-        totalErr += diffMs / dBeat;
-      }
-
-      const avgErr = totalErr / count;
-      const prec = Math.max(0, Math.min(100, Math.round(100 - avgErr * 135)));
-      return { precision: prec, bpm, avgError: avgErr };
-    };
-
-    // 1. Direct alignment (no holes skipped)
-    let bestResult = testAlignment(pNotes);
-    let holeDetected = false;
-
-    // 2. Sudden Hole / Missed-Click Fault Tolerance:
-    // If a mouse click was dropped (or taps < notes), test skipping candidate note `skipIdx`
-    if (taps.length <= pNotes.length) {
-      for (let skipIdx = 0; skipIdx < pNotes.length; skipIdx++) {
-        const candidateNotes = pNotes.filter((_, idx) => idx !== skipIdx);
-        const res = testAlignment(candidateNotes);
-        // If skipping this note dramatically cleans up the score (+18% or restores >= 75%)
-        if (res.precision > bestResult.precision + 16 || (bestResult.precision < 65 && res.precision >= 75)) {
-          bestResult = res;
-          holeDetected = true;
-        }
+    for (let i = 0; i < flatNotes.length - 1; i++) {
+      currentInterval += flatNotes[i].normalizedBeats;
+      const nextNote = flatNotes[i + 1];
+      if (!nextNote.isRest && !nextNote.isTiedFromPrev) {
+        noteStrikeIntervals.push(currentInterval);
+        currentInterval = 0;
       }
     }
 
-    setDetectedBpm(bestResult.bpm);
-    setPrecisionScore(bestResult.precision);
+    const expectedBeats = noteStrikeIntervals;
+    const userIntervals: number[] = [];
+    for (let i = 1; i < taps.length; i++) {
+      userIntervals.push(taps[i] - taps[i - 1]);
+    }
 
-    if (holeDetected) {
+    let detectedHole = false;
+    let effectiveUserIntervals = userIntervals;
+
+    if (userIntervals.length < expectedBeats.length) {
+      detectedHole = true;
       setHoleToleratedMessage(
         isDe 
-          ? '✨ 1 verpasster Klick erkannt & automatisch ausgeglichen!' 
-          : '✨ 1 missed mouse click tolerated & aligned!'
+          ? '🛡️ Klick-Lücke erkannt & toleriert! Die nachfolgenden Noten wurden nahtlos analysiert.' 
+          : '🛡️ Missed tap detected & tolerated! Subsequent notes were aligned accurately.'
       );
-    } else {
-      setHoleToleratedMessage(null);
     }
 
-    // Practice / Repeat Rule:
-    // Repeating the same rhythm acts as practice and preserves score/streak without adding points!
-    if (isRepeatAttempt) {
-      setFeedbackMessage(
-        isDe
-          ? 'Übungswiederholung: Präzision gemessen, Punkte & Serie bleiben unverändert erhalten.'
-          : 'Practice Repeat: Precision measured, score & streak preserved.'
-      );
+    if (effectiveUserIntervals.length === 0 || expectedBeats.length === 0) {
+      setPrecisionScore(75);
+      setDetectedBpm(100);
+      setState('SUMMARY');
       return;
     }
 
-    // First attempt scoring
-    if (bestResult.precision >= 80) {
-      const roundScore = 180 * ex.level + (streak + 1) * 35;
-      setScore(prev => prev + roundScore);
-      setStreak(prev => {
-        const next = prev + 1;
-        setBestStreak(b => Math.max(b, next));
-        return next;
-      });
-      setHasScoredThisExercise(true);
-      setFeedbackMessage(
-        isDe 
-          ? 'Großartige Präzision! Sicher im eigenen Puls gehalten.' 
-          : 'Exceptional precision! Rock-solid groove in your tempo.'
-      );
-    } else if (bestResult.precision >= 68) {
-      const roundScore = 100 * ex.level;
-      setScore(prev => prev + roundScore);
-      setHasScoredThisExercise(true);
-      setFeedbackMessage(
-        isDe 
-          ? 'Gutes Gefühl! Halte die Taktunterteilung noch gleichmäßiger.' 
-          : 'Good feel! Keep your inner subdivisions steady.'
-      );
-    } else {
-      setStreak(0);
-      setFeedbackMessage(
-        isDe 
-          ? 'Ungleichmäßiges Tempo. Versuche einen stetigen Puls zu halten.' 
-          : 'Uneven tempo. Keep a relaxed, continuous pulse.'
-      );
-    }
-  }, [isDe, streak, isRepeatAttempt, buildFlattenedPlayableNotes, startNextCooldown]);
+    const pairsCount = Math.min(effectiveUserIntervals.length, expectedBeats.length);
+    let totalUserMs = 0;
+    let totalExpBeats = 0;
 
-  // Handle User Tap (Single PC Button, Mobile Dual Pads, or Keyboard)
-  const handleUserTap = useCallback((source: 'single' | 'left' | 'right' | 'key') => {
-    // If in SUMMARY state, the tap button acts as "Next Rhythm" only if cooldown finished
+    for (let i = 0; i < pairsCount; i++) {
+      totalUserMs += effectiveUserIntervals[i];
+      totalExpBeats += expectedBeats[i];
+    }
+
+    const avgMsPerBeat = totalUserMs / Math.max(0.1, totalExpBeats);
+    const measuredBpm = Math.max(40, Math.min(220, Math.round(60000 / avgMsPerBeat)));
+    setDetectedBpm(measuredBpm);
+
+    let errorAccumulator = 0;
+    for (let i = 0; i < pairsCount; i++) {
+      const idealMs = expectedBeats[i] * avgMsPerBeat;
+      const actualMs = effectiveUserIntervals[i];
+      const errorRatio = Math.abs(actualMs - idealMs) / Math.max(idealMs, 100);
+      errorAccumulator += Math.min(1.0, errorRatio);
+    }
+
+    const avgErrorRatio = errorAccumulator / pairsCount;
+    let calculatedPrecision = Math.round(Math.max(25, (1 - avgErrorRatio * 1.1) * 100));
+
+    if (detectedHole) {
+      calculatedPrecision = Math.max(calculatedPrecision, 72);
+    }
+
+    setPrecisionScore(calculatedPrecision);
+
+    let earnedPoints = 0;
+    let msg = '';
+
+    if (calculatedPrecision >= 90) {
+      earnedPoints = difficulty === 1 ? 150 : difficulty === 2 ? 220 : 320;
+      msg = isDe 
+        ? `Meisterhaft! Beeindruckende rhythmische Präzision bei ${measuredBpm} BPM.` 
+        : `Virtuoso groove! Immaculate timing precision at ${measuredBpm} BPM.`;
+      if (!isRepeatAttempt && !hasScoredThisExercise) {
+        setStreak((s) => {
+          const nextS = s + 1;
+          setBestStreak((b) => Math.max(b, nextS));
+          return nextS;
+        });
+        setScore((sc) => sc + earnedPoints);
+        setHasScoredThisExercise(true);
+      }
+    } else if (calculatedPrecision >= 75) {
+      earnedPoints = difficulty === 1 ? 100 : difficulty === 2 ? 150 : 220;
+      msg = isDe 
+        ? `Sehr solider Puls! Präzise Notenwerte bei ${measuredBpm} BPM.` 
+        : `Great steady groove! Clean note durations at ${measuredBpm} BPM.`;
+      if (!isRepeatAttempt && !hasScoredThisExercise) {
+        setStreak((s) => {
+          const nextS = s + 1;
+          setBestStreak((b) => Math.max(b, nextS));
+          return nextS;
+        });
+        setScore((sc) => sc + earnedPoints);
+        setHasScoredThisExercise(true);
+      }
+    } else {
+      msg = isDe 
+        ? `Tempo war ${measuredBpm} BPM. Höre dir die Demo an und wiederhole die Übung!` 
+        : `Pulse was ${measuredBpm} BPM. Listen to the demo and try repeating the exercise!`;
+      if (!isRepeatAttempt && !hasScoredThisExercise) {
+        setStreak(0);
+      }
+    }
+
+    setFeedbackMessage(msg);
+    setState('SUMMARY');
+
+    // 2-second cooldown on Next Rhythm button to prevent accidental skip
+    setCooldownRemaining(2.0);
+    const startCooldownTime = performance.now();
+    cooldownTimerRef.current = setInterval(() => {
+      const elapsed = (performance.now() - startCooldownTime) / 1000;
+      const remaining = Math.max(0, 2.0 - elapsed);
+      setCooldownRemaining(remaining);
+      if (remaining <= 0) {
+        if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      }
+    }, 100);
+  }, [currentExercise, difficulty, isDe, isRepeatAttempt, hasScoredThisExercise]);
+
+  // Handle user striking the pad
+  const handleUserTap = useCallback((side: 'left' | 'right' | 'key' = 'key') => {
     if (state === 'SUMMARY') {
       if (cooldownRemaining <= 0.05) {
-        // Proceed to next rhythm!
         setIsRepeatAttempt(false);
         setHasScoredThisExercise(false);
         const newEx = pickRhythm(difficulty);
@@ -2019,43 +635,52 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
       return;
     }
 
-    const isLow = source === 'single' || source === 'left' || source === 'key';
-    playTaikoSound(isLow);
-
-    if (source === 'single' || source === 'key') {
-      setPadPressed(true);
-      setTimeout(() => setPadPressed(false), 120);
-    } else if (source === 'left') {
-      setLeftPadPressed(true);
-      setTimeout(() => setLeftPadPressed(false), 120);
-    } else if (source === 'right') {
-      setRightPadPressed(true);
-      setTimeout(() => setRightPadPressed(false), 120);
-    }
-
     const now = performance.now();
-    const updated = [...tapTimesRef.current, now];
-    tapTimesRef.current = updated;
-    const currentCount = updated.length;
-    setTapsCount(currentCount);
+    playTaikoSound(side === 'left');
+
+    setPadPressed(true);
+    if (side === 'left') setLeftPadPressed(true);
+    if (side === 'right') setRightPadPressed(true);
+
+    setTimeout(() => {
+      setPadPressed(false);
+      setLeftPadPressed(false);
+      setRightPadPressed(false);
+    }, 85);
 
     if (state === 'READY') {
       setState('TAPPING');
+      tapTimesRef.current = [now];
+      setTapsCount(1);
+      return;
     }
 
-    // Finish when all playable notes in the score have been tapped
-    if (currentCount >= totalPlayableCount) {
+    tapTimesRef.current.push(now);
+    const newCount = tapsCount + 1;
+    setTapsCount(newCount);
+
+    if (newCount >= totalPlayableCount) {
       setTimeout(() => {
-        evaluatePerformance(updated, currentExercise);
+        evaluatePerformance();
       }, 250);
     }
-  }, [state, cooldownRemaining, totalPlayableCount, difficulty, pickRhythm, playTaikoSound, evaluatePerformance, currentExercise, resetToReady]);
+  }, [state, cooldownRemaining, totalPlayableCount, difficulty, pickRhythm, playTaikoSound, evaluatePerformance, currentExercise, resetToReady, tapsCount]);
 
-  // Keyboard shortcut listener: Spacebar and any Arrow key
+  // Keyboard shortcut listener: Spacebar, Enter, K, J, and Arrow keys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-      if (e.code === 'Space' || e.code === 'Enter' || ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) || e.key === 'k' || e.key === 'j') {
+      const isActionKey = 
+        e.code === 'Space' || 
+        e.code === 'Enter' || 
+        e.key === ' ' || 
+        e.key === 'Enter' || 
+        e.key === 'k' || 
+        e.key === 'K' || 
+        e.key === 'j' || 
+        e.key === 'J' ||
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code);
+
+      if (isActionKey) {
         e.preventDefault();
         handleUserTap('key');
       }
@@ -2065,13 +690,13 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleUserTap]);
 
-  // "Beat Again" button: repeat the same rhythm as practice (score stays preserved)
+  // Repeat Exercise
   const handleBeatAgain = () => {
     setIsRepeatAttempt(true);
     resetToReady();
   };
 
-  // Next Rhythm Challenge (via direct button click or cooldown completion)
+  // Next Rhythm Challenge
   const handleNextChallenge = () => {
     if (cooldownRemaining > 0.05) return;
     setIsRepeatAttempt(false);
@@ -2101,11 +726,19 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     } catch {}
   };
 
-  // Split bars into systems of 2 bars per line for uniform reading:
-  // - Level 1: 2 bars -> 1 line of 2 bars (close together)
-  // - Level 2: 4 bars -> 2 equal lines of 2 bars
-  // - Level 3: 6 bars -> 3 equal lines of 2 bars
-  const BARS_PER_SYSTEM = 2;
+  // Responsive layout: 4 bars per line on desktop (>=768px), 2 bars per line on mobile/tablet (<768px)
+  const [barsPerSystem, setBarsPerSystem] = useState<number>(() => {
+    return typeof window !== 'undefined' && window.innerWidth >= 768 ? 4 : 2;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setBarsPerSystem(window.innerWidth >= 768 ? 4 : 2);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const systems: {
     systemIdx: number;
     bars: {
@@ -2115,10 +748,10 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     }[];
   }[] = [];
 
-  for (let i = 0; i < currentExercise.bars.length; i += BARS_PER_SYSTEM) {
-    const slice = currentExercise.bars.slice(i, i + BARS_PER_SYSTEM);
+  for (let i = 0; i < currentExercise.bars.length; i += barsPerSystem) {
+    const slice = currentExercise.bars.slice(i, i + barsPerSystem);
     systems.push({
-      systemIdx: Math.floor(i / BARS_PER_SYSTEM),
+      systemIdx: Math.floor(i / barsPerSystem),
       bars: slice.map((bar, localIdx) => ({
         bar,
         globalBarIdx: i + localIdx,
@@ -2127,16 +760,72 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
     });
   }
 
-  // Smart note grouping for a bar: groups consecutive 16ths into tight beamed quartets or duos
+  // Smart classical engraving note grouping
   const renderBarNotes = (bar: RhythmBar, globalBarIdx: number, systemIdx: number) => {
     const elements: React.ReactNode[] = [];
     const notes = bar.notes;
+    const isCompoundMeter = bar.timeSignature === '6/8' || bar.timeSignature === '9/8' || bar.timeSignature === '12/8';
     let i = 0;
 
     while (i < notes.length) {
       const note = notes[i];
 
-      // Check for group of 4 sixteenths without ties
+      // 1. In compound meter (6/8): group 3 consecutive eighth notes into BeamedEighthTriplet!
+      if (
+        isCompoundMeter &&
+        i + 2 < notes.length &&
+        notes[i].type === 'eighth' &&
+        notes[i + 1].type === 'eighth' &&
+        notes[i + 2].type === 'eighth' &&
+        !notes[i].tiedToNext &&
+        !notes[i + 1].tiedToNext
+      ) {
+        elements.push(
+          <div key={`triplet-${i}`} className="relative flex items-center justify-center shrink-0">
+            <BeamedEighthTriplet />
+          </div>
+        );
+        i += 3;
+        continue;
+      }
+
+      // 2. Mixed figure: 1 Eighth + 2 Sixteenths (1 beat in 4/4 / 3/4)
+      if (
+        i + 2 < notes.length &&
+        notes[i].type === 'eighth' &&
+        notes[i + 1].type === 'sixteenth' &&
+        notes[i + 2].type === 'sixteenth' &&
+        !notes[i].tiedToNext &&
+        !notes[i + 1].tiedToNext
+      ) {
+        elements.push(
+          <div key={`e-16-16-${i}`} className="relative flex items-center justify-center shrink-0">
+            <BeamedEighthAndTwoSixteenths />
+          </div>
+        );
+        i += 3;
+        continue;
+      }
+
+      // 3. Mixed figure: 2 Sixteenths + 1 Eighth (1 beat in 4/4 / 3/4)
+      if (
+        i + 2 < notes.length &&
+        notes[i].type === 'sixteenth' &&
+        notes[i + 1].type === 'sixteenth' &&
+        notes[i + 2].type === 'eighth' &&
+        !notes[i].tiedToNext &&
+        !notes[i + 1].tiedToNext
+      ) {
+        elements.push(
+          <div key={`16-16-e-${i}`} className="relative flex items-center justify-center shrink-0">
+            <BeamedTwoSixteenthsAndEighth />
+          </div>
+        );
+        i += 3;
+        continue;
+      }
+
+      // 4. Quartet of 4 sixteenths
       if (
         i + 3 < notes.length &&
         notes[i].type === 'sixteenth' &&
@@ -2156,7 +845,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
         continue;
       }
 
-      // Check for duo of 2 sixteenths
+      // 5. Duo of 2 sixteenths
       if (
         i + 1 < notes.length &&
         notes[i].type === 'sixteenth' &&
@@ -2172,7 +861,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
         continue;
       }
 
-      // Check for pair of 2 eighth notes
+      // 6. Pair of 2 eighth notes
       if (
         i + 1 < notes.length &&
         notes[i].type === 'eighth' &&
@@ -2188,34 +877,19 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
         continue;
       }
 
-      // Standalone note with optional liaison
+      // 7. Standalone note with SINGLE continuous liaison arch
       elements.push(
-        <div key={`single-${i}`} className={`relative flex items-center justify-center shrink-0 ${note.isTiedFromPrev ? 'opacity-70' : ''}`}>
+        <div key={`single-${i}`} className={`relative flex items-center justify-center shrink-0 ${note.isTiedFromPrev ? 'opacity-80' : ''}`}>
           <FineMusicNote type={note.type} />
 
-          {/* Tie Arc connecting forward */}
+          {/* SINGLE continuous tie arc connecting forward across to next note */}
           {note.tiedToNext && (
-            <div className="absolute -bottom-2 left-2 pointer-events-none z-30">
-              <svg className="w-8 sm:w-10 h-3 overflow-visible" viewBox="0 0 32 12">
+            <div className="absolute -bottom-2.5 left-2 pointer-events-none z-30">
+              <svg className="w-12 sm:w-16 h-3.5 overflow-visible" viewBox="0 0 48 14">
                 <path
-                  d="M 2 2 Q 16 11 30 2"
+                  d="M 2 2 Q 24 13 46 2"
                   fill="none"
-                  stroke="#e6b769"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </div>
-          )}
-
-          {/* Continuation of tie from previous system */}
-          {note.isTiedFromPrev && i === 0 && (
-            <div className="absolute -bottom-2 -left-4 pointer-events-none z-30">
-              <svg className="w-5 h-3 overflow-visible" viewBox="0 0 20 12">
-                <path
-                  d="M 2 2 Q 10 11 18 2"
-                  fill="none"
-                  stroke="#e6b769"
+                  stroke="#c49750"
                   strokeWidth="2.2"
                   strokeLinecap="round"
                 />
@@ -2241,7 +915,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
           style={{ backgroundColor: state === 'SUMMARY' ? '#10b981' : state === 'TAPPING' ? '#ffd56b' : '#c49750' }}
         />
 
-        {/* 1. Header Bar: Clear Mobile-Friendly Level Buttons + Top 10 High Scores */}
+        {/* 1. Header Bar: Level Tabs + Top 10 High Scores */}
         <div className="flex items-center justify-between gap-1.5 sm:gap-2 pb-2.5 mb-2.5 border-b border-white/10 w-full">
           <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
             {([1, 2, 3] as RhythmDifficulty[]).map((lvl) => (
@@ -2249,30 +923,33 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
                 key={lvl}
                 type="button"
                 onClick={() => handleSwitchDifficulty(lvl)}
-                className={`flex-1 py-1.5 sm:py-2 px-1 sm:px-2 rounded-xl text-xs font-mono transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer text-center ${
+                className={`flex-1 py-1 sm:py-1.5 px-1.5 sm:px-2 rounded-xl text-xs font-mono transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 ${
                   difficulty === lvl
-                    ? 'bg-gradient-to-r from-[#c49750] to-[#e6b769] text-black font-extrabold shadow-md shadow-[#c49750]/30 ring-1 ring-white/30'
-                    : 'bg-[#0e111a] text-[#a09c91] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
+                    ? 'bg-gradient-to-r from-[#c49750] to-[#ffd56b] text-black font-extrabold shadow-md shadow-[#c49750]/20'
+                    : 'bg-[#0e111a] text-[#8c887d] hover:text-[#fbf9f5] border border-white/5 hover:border-white/10'
                 }`}
-                title={lvl === 1 ? 'Level 1: Simple 4/4 & 3/4' : lvl === 2 ? 'Level 2: 4-Bar Grooves' : 'Level 3: 6-Bar Symphony'}
+                title={lvl === 1 ? 'Level 1: 4 Takte' : lvl === 2 ? 'Level 2: 8 Takte' : 'Level 3: 12 Takte'}
               >
-                <span className="text-xs sm:text-sm shrink-0">{lvl === 1 ? '🌱' : lvl === 2 ? '🌿' : '🌳'}</span>
+                <span className="text-xs shrink-0">{lvl === 1 ? '🌱' : lvl === 2 ? '🌿' : '🌳'}</span>
                 <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap">
-                  <span className="sm:hidden">{isDe ? `St.${lvl}` : `L${lvl}`}</span>
-                  <span className="hidden sm:inline">{lvl === 1 ? (isDe ? 'Stufe 1' : 'Level 1') : lvl === 2 ? (isDe ? 'Stufe 2' : 'Level 2') : (isDe ? 'Stufe 3' : 'Level 3')}</span>
+                  {lvl === 1 
+                    ? (isDe ? 'Stufe 1 (4 Takte)' : 'Level 1 (4 Bars)')
+                    : lvl === 2 
+                    ? (isDe ? 'Stufe 2 (8 Takte)' : 'Level 2 (8 Bars)')
+                    : (isDe ? 'Stufe 3 (12 Takte)' : 'Level 3 (12 Bars)')}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* Top 10 Button */}
+          {/* Top 10 High Scores */}
           <button
             type="button"
             onClick={() => setShowLeaderboard(true)}
             className="shrink-0 ml-1.5 sm:ml-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-[#181c28] hover:bg-[#222738] border border-[#c49750]/60 text-[#fbf9f5] flex items-center gap-1.5 text-xs font-mono transition-all cursor-pointer shadow-sm group"
             title={isDe ? 'Top 10 Bestenliste' : 'Top 10 High Scores'}
           >
-            <Trophy className="w-3.5 h-3.5 text-[#c49750] group-hover:scale-110 transition-transform shrink-0" />
+            <Trophy className="w-3.5 h-3.5 text-[#c49750] group-hover/scale-110 transition-transform shrink-0" />
             <span className="font-semibold text-[#f5eedf] text-[11px] sm:text-xs whitespace-nowrap">Top 10</span>
           </button>
         </div>
@@ -2333,7 +1010,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
           </div>
         </div>
 
-        {/* 3. PURE CLASSICAL SHEET MUSIC CONTAINER: All Staff Lines In One Unified Frame */}
+        {/* 3. PURE CLASSICAL SHEET MUSIC CONTAINER: Stacked Systems In One Unified Frame */}
         <div className="my-2 p-3 sm:p-4 rounded-2xl bg-[#080a10] border border-[#c49750]/30 shadow-[inset_0_2px_20px_rgba(0,0,0,0.85)] text-center w-full box-border">
           
           <div className="flex items-center justify-between mb-3 text-[11px] font-mono text-[#8c887d]">
@@ -2360,7 +1037,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
           </div>
 
           {/* Unified Score Manuscript Plate: Stacked systems with 100% equal width and continuous 5 staff lines */}
-          <div className="flex flex-col gap-4 sm:gap-5 w-full py-2">
+          <div className="flex flex-col gap-3.5 sm:gap-4 w-full py-1">
             {systems.map((system) => {
               const isLastSystem = system.systemIdx === systems.length - 1;
 
@@ -2379,7 +1056,7 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
                   </div>
 
                   {/* Percussion Clef at start of staff line */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 mr-2 sm:mr-3 z-10 select-none">
+                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 mr-1.5 sm:mr-3 z-10 select-none">
                     <span className="w-0.5 sm:w-1 h-7 sm:h-8 bg-[#c49750]/80 rounded-sm" />
                     <span className="w-0.5 sm:w-1 h-7 sm:h-8 bg-[#c49750]/80 rounded-sm" />
                   </div>
@@ -2394,32 +1071,32 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
                       return (
                         <div 
                           key={barInfo.globalBarIdx} 
-                          className="flex-1 flex items-center justify-between h-full px-1 sm:px-3 relative"
+                          className="flex-1 flex items-center justify-between h-full px-1 sm:px-2 relative"
                         >
-                          {/* Time Signature - Perfectly scaled inside staff lines */}
+                          {/* Time Signature - Scaled inside staff lines */}
                           {showTimeSig && (
-                            <div className="flex flex-col items-center justify-center font-serif text-base sm:text-lg font-black text-[#fbf9f5] leading-[0.8] tracking-tight mr-1 sm:mr-2 select-none shrink-0 drop-shadow-md">
+                            <div className="flex flex-col items-center justify-center font-serif text-sm sm:text-base font-black text-[#fbf9f5] leading-[0.8] tracking-tight mr-1 select-none shrink-0 drop-shadow-md">
                               <span>{numerator}</span>
                               <span>{denominator}</span>
                             </div>
                           )}
 
-                          {/* Notes inside this measure (with smart beaming for 16ths and 8ths) */}
-                          <div className="flex-1 flex items-center justify-around gap-1 sm:gap-2 px-1">
+                          {/* Notes inside this measure (tight and clustered, no huge empty gaps) */}
+                          <div className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-0.5 overflow-visible">
                             {renderBarNotes(barInfo.bar, barInfo.globalBarIdx, system.systemIdx)}
                           </div>
 
                           {/* Barline between bars in this system */}
                           {barInfo.localBarIdx < system.bars.length - 1 && (
-                            <div className="w-[1.5px] h-7 sm:h-8 bg-white/35 shrink-0 ml-1 select-none" />
+                            <div className="w-[1px] h-7 sm:h-8 bg-white/30 shrink-0 ml-1 select-none" />
                           )}
                         </div>
                       );
                     })}
                   </div>
 
-                  {/* End of System Barline: Double barline on last line of piece, single on continuing lines */}
-                  <div className="flex items-center gap-0.5 shrink-0 ml-1.5 sm:ml-2 z-10 select-none">
+                  {/* End of System Barline */}
+                  <div className="flex items-center gap-0.5 shrink-0 ml-1 sm:ml-2 z-10 select-none">
                     {isLastSystem ? (
                       <>
                         <div className="w-[1.5px] h-7 sm:h-8 bg-white/40" />
@@ -2439,10 +1116,10 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
           </p>
         </div>
 
-        {/* 4. PRIMARY ACTION DECK: Tapping Deck DURING exercise -> Morphing into "Next Rhythm" AFTER with 2-second lock */}
+        {/* 4. PRIMARY ACTION DECK: Tapping Deck DURING exercise -> Morphing into "Next Rhythm" AFTER */}
         <div className="my-2 space-y-1.5">
           {state === 'SUMMARY' ? (
-            /* Summary Phase: The Primary Striking Button Morphing into NEXT RHYTHM with 2-Second Cooldown (Compact Mobile Height) */
+            /* Summary Phase: The Primary Striking Button Morphing into NEXT RHYTHM with 2-Second Cooldown */
             <div className="w-full">
               <button
                 type="button"
@@ -2469,177 +1146,131 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
                     <span className="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-black">
                       {isDe ? 'Nächster Rhythmus' : 'Next Rhythm'}
                     </span>
-                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[3] text-black" />
+                    <ChevronRight className="w-4 h-4 text-black" />
                   </>
                 )}
               </button>
             </div>
           ) : (
-            /* Exercise Phase: Single button on Desktop, Dual buttons on Mobile/Tablet */
-            <>
-              {/* Desktop / PC: ONE single wide button */}
-              <div className="hidden sm:block">
-                <button
-                  type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleUserTap('single');
-                  }}
-                  className={`w-full h-20 sm:h-22 rounded-2xl border flex items-center justify-center gap-3 transition-all duration-75 select-none cursor-pointer ${
-                    padPressed
-                      ? 'bg-gradient-to-r from-[#c49750] to-[#ffd56b] text-black border-[#ffd56b] shadow-[0_0_25px_rgba(196,151,80,0.85)] scale-[0.98]'
-                      : 'bg-[#151824] hover:bg-[#1b2132] active:scale-[0.98] text-[#fbf9f5] border-white/10 shadow-lg'
-                  }`}
-                >
-                  <span className="text-2xl sm:text-3xl">🥁</span>
-                  <span className="text-sm sm:text-base font-bold font-mono uppercase tracking-widest text-[#fbf9f5]">
-                    {isDe ? 'Trommeln' : 'Tap / Beat'}
-                  </span>
-                  <span className="text-[11px] font-mono text-[#8c887d] ml-2">
-                    (Spacebar / Click)
-                  </span>
-                </button>
-              </div>
+            /* Tapping Phase: Striking Pad */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleUserTap('left');
+                }}
+                className={`h-24 sm:h-28 rounded-2xl border flex flex-col items-center justify-center gap-1 select-none cursor-pointer transition-all ${
+                  leftPadPressed
+                    ? 'bg-gradient-to-r from-[#c49750] to-[#ffd56b] text-black scale-95 shadow-lg shadow-[#c49750]/30'
+                    : 'bg-[#151926] hover:bg-[#1d2334] text-[#dedacf] border-white/10 active:border-[#c49750]'
+                }`}
+              >
+                <span className="text-3xl">🥁</span>
+                <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider">
+                  {isDe ? 'Linke Hand (Bass)' : 'Left Hand (Bass)'}
+                </span>
+                <span className="text-[10px] font-mono text-[#8c887d]">
+                  {isDe ? 'Klick oder Leertaste / J' : 'Click or Space / J'}
+                </span>
+              </button>
 
-              {/* Phone & Tablet: TWO buttons side-by-side */}
-              <div className="grid grid-cols-2 gap-2 sm:hidden">
-                <button
-                  type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleUserTap('left');
-                  }}
-                  className={`h-20 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all duration-75 select-none cursor-pointer ${
-                    leftPadPressed
-                      ? 'bg-gradient-to-br from-[#c49750] to-[#ffd56b] text-black border-[#ffd56b] shadow-[0_0_20px_rgba(196,151,80,0.85)] scale-95'
-                      : 'bg-[#151824] active:scale-95 text-[#fbf9f5] border-white/10 shadow-lg'
-                  }`}
-                >
-                  <span className="text-xl">🥁</span>
-                  <span className="text-xs font-bold font-mono uppercase tracking-wider">
-                    {isDe ? 'Trommel' : 'Beat'}
-                  </span>
-                </button>
+              <button
+                type="button"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  handleUserTap('right');
+                }}
+                className={`h-24 sm:h-28 rounded-2xl border flex flex-col items-center justify-center gap-1 select-none cursor-pointer transition-all ${
+                  rightPadPressed
+                    ? 'bg-gradient-to-r from-[#ffd56b] to-[#c49750] text-black scale-95 shadow-lg shadow-[#ffd56b]/30'
+                    : 'bg-[#151926] hover:bg-[#1d2334] text-[#dedacf] border-white/10 active:border-[#ffd56b]'
+                }`}
+              >
+                <span className="text-3xl">🥁</span>
+                <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider">
+                  {isDe ? 'Rechte Hand (Snare)' : 'Right Hand (Snare)'}
+                </span>
+                <span className="text-[10px] font-mono text-[#8c887d]">
+                  {isDe ? 'Klick oder Enter / K' : 'Click or Enter / K'}
+                </span>
+              </button>
+            </div>
+          )}
 
-                <button
-                  type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    handleUserTap('right');
-                  }}
-                  className={`h-20 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all duration-75 select-none cursor-pointer ${
-                    rightPadPressed
-                      ? 'bg-gradient-to-br from-[#c49750] to-[#ffd56b] text-black border-[#ffd56b] shadow-[0_0_20px_rgba(196,151,80,0.85)] scale-95'
-                      : 'bg-[#151824] active:scale-95 text-[#fbf9f5] border-white/10 shadow-lg'
-                  }`}
-                >
-                  <span className="text-xl">🥁</span>
-                  <span className="text-xs font-bold font-mono uppercase tracking-wider">
-                    {isDe ? 'Trommel' : 'Beat'}
-                  </span>
-                </button>
-              </div>
-            </>
+          {/* Practice Repeat Exercise Link */}
+          {state === 'SUMMARY' && (
+            <div className="flex items-center justify-center pt-1.5">
+              <button
+                type="button"
+                onClick={handleBeatAgain}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#1c2233] hover:bg-[#252e46] border border-[#c49750]/50 text-xs sm:text-sm font-mono font-bold text-[#fbf9f5] hover:text-[#ffd56b] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+              >
+                <RotateCcw className="w-4 h-4 text-[#c49750]" />
+                <span>{isDe ? 'Übung wiederholen' : 'Repeat exercise'}</span>
+              </button>
+            </div>
           )}
         </div>
 
-        {/* 5. ANCHORED RESULTS & STATUS DECK (Ultra-compact, all on one screen) */}
-        <div className="min-h-[72px] sm:min-h-[84px] flex items-center justify-center">
-          {state === 'SUMMARY' && detectedBpm !== null && precisionScore !== null ? (
-            /* Sleek, Compact Results Card Fitting Seamlessly on Mobile Screen */
-            <div className="w-full p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-[#0b0f1a] border border-[#c49750]/50 text-center animate-fade-in shadow-xl">
-              <div className="flex flex-row items-center justify-between gap-1.5 sm:gap-4">
-                {/* Rhythmic Accuracy Metric */}
-                <div className="flex flex-col items-center flex-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-[#8c887d] truncate">
-                    {isDe ? 'Präzision' : 'Accuracy'}
-                  </span>
-                  <span className={`text-2xl sm:text-4xl font-black font-mono tracking-tight drop-shadow-md ${
-                    precisionScore >= 80 ? 'text-emerald-400' : precisionScore >= 65 ? 'text-amber-400' : 'text-rose-400'
-                  }`}>
-                    {precisionScore}%
-                  </span>
-                </div>
-
-                <div className="w-[1px] h-8 sm:h-10 bg-white/10 shrink-0" />
-
-                {/* Detected Tempo Metric */}
-                <div className="flex flex-col items-center flex-1 min-w-0">
-                  <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-[#8c887d] truncate">
-                    {isDe ? 'Dein Tempo' : 'Tempo'}
-                  </span>
-                  <span className="text-lg sm:text-2xl font-extrabold font-mono text-[#ffd56b] mt-0.5">
-                    {detectedBpm} <span className="text-[10px] sm:text-xs font-normal text-[#8c887d]">BPM</span>
-                  </span>
-                </div>
-
-                <div className="w-[1px] h-8 sm:h-10 bg-white/10 shrink-0" />
-
-                {/* Compact "Repeat exercise" Button */}
-                <div className="flex items-center justify-center flex-1 min-w-0">
-                  <button
-                    type="button"
-                    onClick={handleBeatAgain}
-                    className="w-full py-2 sm:py-2.5 px-2 sm:px-3 rounded-xl bg-[#1a1f2e] hover:bg-[#252c40] border border-[#c49750]/70 hover:border-[#ffd56b] text-xs font-mono font-bold text-[#fbf9f5] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md active:scale-95"
-                    title={isDe ? 'Übung wiederholen' : 'Repeat exercise'}
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-[#c49750] shrink-0" />
-                    <span className="text-[10px] sm:text-xs whitespace-nowrap">
-                      {isDe ? 'Übung wiederholen' : 'Repeat exercise'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Hole tolerance message if a mouse click was dropped */}
-              {holeToleratedMessage && (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-[10px] font-mono text-emerald-300 mt-2">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span className="truncate">{holeToleratedMessage}</span>
-                </div>
-              )}
-
-              {feedbackMessage && (
-                <p className="text-[10px] sm:text-xs text-[#dedacf] font-serif italic mt-1 line-clamp-1 max-w-md mx-auto">
-                  {feedbackMessage}
-                </p>
-              )}
+        {/* 5. Performance Summary Dashboard */}
+        {state === 'SUMMARY' && (
+          <div className="mt-2.5 p-3.5 sm:p-4 rounded-xl bg-[#0b0e17] border border-white/10 space-y-2.5 text-left animate-fade-in">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs font-mono">
+              <span className="text-[#ffd56b] font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{isDe ? 'Rhythmische Analyse' : 'Rhythmic Precision Analysis'}</span>
+              </span>
+              <span className="text-[11px] text-[#8c887d]">
+                {detectedBpm ? `${detectedBpm} BPM` : ''}
+              </span>
             </div>
-          ) : state === 'TAPPING' ? (
-            /* Live Tapping Feedback in the same area */
-            <div className="w-full py-3 px-4 rounded-xl bg-[#0c0f18] border border-white/5 text-center flex flex-col items-center justify-center gap-1.5 animate-fade-in">
-              <div className="flex items-center gap-2 text-xs font-mono text-[#ffd56b]">
-                <span className="w-2 h-2 rounded-full bg-[#ffd56b] animate-ping" />
-                <span className="font-bold">
-                  {isDe ? `Trommle: Schlag ${tapsCount} von ${totalPlayableCount}` : `Beating: Note ${tapsCount} of ${totalPlayableCount}`}
+
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="p-2.5 rounded-lg bg-[#141926] border border-white/5">
+                <span className="text-[10px] font-mono text-[#8c887d] block uppercase tracking-wider">
+                  {isDe ? 'Präzision' : 'Accuracy'}
+                </span>
+                <span className={`text-xl sm:text-2xl font-mono font-extrabold ${
+                  (precisionScore || 0) >= 85 ? 'text-emerald-400' : (precisionScore || 0) >= 70 ? 'text-amber-400' : 'text-rose-400'
+                }`}>
+                  {precisionScore}%
                 </span>
               </div>
-              <p className="text-[11px] font-mono text-[#8c887d]">
-                {isDe ? 'Spiele in deinem eigenen, gleichmäßigen Tempo...' : 'Play at your own steady groove...'}
-              </p>
-            </div>
-          ) : (
-            /* Ready Prompt in the same area */
-            <div className="w-full py-3 px-4 rounded-xl bg-[#0c0f18]/60 border border-white/5 text-center flex flex-col items-center justify-center gap-1">
-              <span className="text-xs font-mono text-[#c49750] font-semibold">
-                {isDe ? 'Startbereit: Schlage den Rhythmus wann immer du willst' : 'Ready: Strike the rhythm whenever you are ready'}
-              </span>
-              <span className="text-[10px] font-mono text-[#8c887d]">
-                {isDe ? `Musterlänge: ${totalPlayableCount} Noten · Die App folgt deinem Tempo` : `Pattern length: ${totalPlayableCount} notes · The app dynamically matches your tempo`}
-              </span>
-            </div>
-          )}
-        </div>
 
-        {/* 6. Top 10 Leaderboard Modal */}
+              <div className="p-2.5 rounded-lg bg-[#141926] border border-white/5">
+                <span className="text-[10px] font-mono text-[#8c887d] block uppercase tracking-wider">
+                  {isDe ? 'Tempo' : 'Tempo'}
+                </span>
+                <span className="text-xl sm:text-2xl font-mono font-extrabold text-[#38bdf8]">
+                  {detectedBpm} <span className="text-xs text-[#8c887d]">BPM</span>
+                </span>
+              </div>
+            </div>
+
+            {holeToleratedMessage && (
+              <p className="text-[11px] font-mono text-amber-300/90 leading-tight bg-amber-950/30 p-2 rounded-lg border border-amber-500/20">
+                {holeToleratedMessage}
+              </p>
+            )}
+
+            {feedbackMessage && (
+              <p className="text-xs font-serif text-[#dedacf] leading-relaxed">
+                {feedbackMessage}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 6. Top 10 High Scores Modal */}
         {showLeaderboard && (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowLeaderboard(false);
             }}
           >
-            <div className="relative w-full max-w-sm rounded-2xl bg-[#121622] border border-[#c49750]/60 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] text-left">
+            <div className="relative w-full max-w-md rounded-2xl bg-[#121622] border border-[#c49750]/50 p-5 shadow-2xl text-left">
               <button
                 type="button"
                 onClick={() => setShowLeaderboard(false)}
@@ -2648,58 +1279,60 @@ export const RhythmStudio: React.FC<RhythmStudioProps> = ({ isDe = false }) => {
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-3">
+              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#c49750] mb-2">
                 <Trophy className="w-4 h-4 text-[#c49750]" />
-                <span>{isDe ? 'Top 10 Rhythmus-Bestenliste' : 'Top 10 Rhythm Scores'}</span>
+                <span>{isDe ? 'Top 10 Rhythmus-Rangliste' : 'Top 10 Rhythm Leaderboard'}</span>
               </div>
 
-              {/* Player Name Input */}
-              <div className="mb-4">
-                <label className="text-[10px] font-mono text-[#8c887d] block mb-1">
-                  {isDe ? 'Dein Name:' : 'Your Name:'}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    maxLength={14}
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-[#0b0d13] border border-white/20 text-xs text-[#fbf9f5] font-mono focus:border-[#c49750] outline-none"
-                    placeholder="Drummer"
-                  />
-                  <button
-                    type="button"
-                    onClick={saveScoreToLeaderboard}
-                    disabled={score <= 0}
-                    className="px-3 py-1.5 rounded-lg bg-[#c49750] text-black font-semibold text-xs uppercase cursor-pointer disabled:opacity-40"
-                  >
-                    {isDe ? 'Speichern' : 'Save'}
-                  </button>
+              {/* Save current score form */}
+              {score > 0 && (
+                <div className="my-3 p-3 rounded-xl bg-[#0a0d14] border border-white/5 space-y-2">
+                  <span className="text-[11px] font-mono text-[#8c887d] block">
+                    {isDe ? `Dein Punktestand: ${score} Punkte (${bestStreak} Serie)` : `Your Score: ${score} pts (${bestStreak} streak)`}
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      placeholder={isDe ? 'Dein Name' : 'Your Name'}
+                      maxLength={18}
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-[#141926] border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-[#c49750]"
+                    />
+                    <button
+                      type="button"
+                      onClick={saveScoreToLeaderboard}
+                      className="px-3 py-1.5 rounded-lg bg-[#c49750] hover:bg-[#ffd56b] text-black font-mono font-bold text-xs cursor-pointer transition-colors"
+                    >
+                      {isDe ? 'Speichern' : 'Save'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Table */}
-              <div className="max-h-60 overflow-y-auto space-y-1.5 thin-scrollbar pr-1">
+              {/* Scores List */}
+              <div className="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar pt-1">
                 {leaderboard.length === 0 ? (
-                  <p className="text-xs font-mono text-[#6e6a60] text-center py-4">
-                    {isDe ? 'Noch keine Einträge. Trommle einen Rhythmus!' : 'No entries yet. Beat a rhythm!'}
+                  <p className="text-xs font-mono text-[#8c887d] text-center py-4">
+                    {isDe ? 'Noch keine Einträge. Trommle deinen ersten Rhythmus!' : 'No entries yet. Strike your first rhythm!'}
                   </p>
                 ) : (
-                  leaderboard.map((item, idx) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-2 rounded-lg bg-[#0d1017] border border-white/5 text-xs font-mono"
+                  leaderboard.map((entry, idx) => (
+                    <div 
+                      key={entry.id} 
+                      className={`flex items-center justify-between p-2 rounded-lg text-xs font-mono ${
+                        idx === 0 
+                          ? 'bg-[#c49750]/15 border border-[#c49750]/40 text-[#ffd56b]' 
+                          : 'bg-[#141926] border border-white/5 text-[#dedacf]'
+                      }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-[#c49750] font-bold w-4">#{idx + 1}</span>
-                        <span className="text-[#fbf9f5]">{item.name}</span>
-                        <span className="text-[10px] text-[#8c887d]">
-                          {item.difficulty === 1 ? 'L1' : item.difficulty === 2 ? 'L2' : 'L3'} ({item.bpm} BPM)
-                        </span>
+                        <span className="w-5 font-bold text-center">{idx + 1}.</span>
+                        <span className="font-semibold">{entry.name}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 font-bold">{item.score} pts</span>
-                        <span className="text-[10px] text-[#6e6a60]">{item.date}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[#38bdf8]">{entry.bpm} BPM</span>
+                        <span className="font-bold text-emerald-400">{entry.score} pts</span>
                       </div>
                     </div>
                   ))

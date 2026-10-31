@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Volume2, VolumeX, RotateCcw, Trophy, Award, Flame, Play, Square, ChevronRight, CheckCircle2, Clock, X } from 'lucide-react';
+import { playRealisticMetronomeClick } from '../utils/metronomeSound';
 
 export type TempoMode = 'GUESS' | 'TAP';
 export type TimeSignature = '2/4' | '3/4' | '4/4' | '6/8';
@@ -104,50 +105,11 @@ export const TempoStudio: React.FC<TempoStudioProps> = ({ isDe }) => {
     return audioContextRef.current;
   }, []);
 
-  // Crisp Woodblock Metronome Click
+  // Realistic Mechanical Woodblock Metronome Click
   const playMetronomeClick = useCallback((isAccent: boolean) => {
     try {
       const ctx = getAudioContext();
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-      const now = ctx.currentTime;
-
-      // Click transient
-      const clickOsc = ctx.createOscillator();
-      const clickGain = ctx.createGain();
-      clickOsc.type = 'triangle';
-      clickOsc.frequency.setValueAtTime(isAccent ? 1400 : 920, now);
-      clickOsc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 380, now + 0.035);
-
-      clickGain.gain.setValueAtTime(isAccent ? 0.75 : 0.45, now);
-      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-
-      // Warm resonance body
-      const bodyOsc = ctx.createOscillator();
-      const bodyGain = ctx.createGain();
-      bodyOsc.type = 'sine';
-      bodyOsc.frequency.setValueAtTime(isAccent ? 520 : 330, now);
-      bodyOsc.frequency.exponentialRampToValueAtTime(140, now + 0.05);
-
-      bodyGain.gain.setValueAtTime(isAccent ? 0.6 : 0.35, now);
-      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-
-      clickOsc.connect(clickGain);
-      bodyOsc.connect(bodyGain);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = isAccent ? 4000 : 2500;
-
-      clickGain.connect(filter);
-      bodyGain.connect(filter);
-      filter.connect(ctx.destination);
-
-      clickOsc.start(now);
-      clickOsc.stop(now + 0.05);
-      bodyOsc.start(now);
-      bodyOsc.stop(now + 0.07);
+      playRealisticMetronomeClick(ctx, isAccent);
     } catch {}
   }, [getAudioContext]);
 
@@ -340,7 +302,18 @@ export const TempoStudio: React.FC<TempoStudioProps> = ({ isDe }) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
 
-      if (e.code === 'Space' || e.code === 'Enter' || e.key === 'k' || e.key === 'j') {
+      const isActionKey = 
+        e.code === 'Space' || 
+        e.code === 'Enter' || 
+        e.key === ' ' || 
+        e.key === 'Enter' || 
+        e.key === 'k' || 
+        e.key === 'K' || 
+        e.key === 'j' || 
+        e.key === 'J' ||
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code);
+
+      if (isActionKey) {
         e.preventDefault();
         if (currentMode === 'TAP') {
           handleUserTap();

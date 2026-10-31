@@ -109,12 +109,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry, onOpenSpiritualit
                 <Mail className="w-3.5 h-3.5 text-[#c49750]" />
                 <span>{isDe ? 'Nachricht senden' : 'Send a Message'}</span>
               </button>
-              <a
-                href="mailto:beeyondmagic@protonmail.com"
-                className="text-[11px] text-[#8c887d] hover:text-[#c49750] transition-colors"
+              <button
+                onClick={() => onOpenInquiry()}
+                className="text-[11px] text-[#8c887d] hover:text-[#c49750] transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                beeyondmagic@protonmail.com
-              </a>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></span>
+                <span>{isDe ? 'Vertrauliches Studio-Formular' : 'Confidential Direct Desk'}</span>
+              </button>
             </div>
           </div>
 

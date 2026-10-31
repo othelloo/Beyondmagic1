@@ -43,6 +43,15 @@
       <input type="text" name="language" />
     </form>
 
+    <form name="admin-password-verification" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="admin-password-verification" />
+      <input type="text" name="bot-field" />
+      <input type="email" name="recipient" />
+      <input type="text" name="subject" />
+      <textarea name="message"></textarea>
+      <input type="text" name="verificationUrl" />
+    </form>
+
     <!-- Instant 0ms Shell: Eliminates the black screen wait on mobile browsers -->
     <div id="pre-shell" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background-color:#0b0c0e;color:#fbf9f5;padding:24px;text-align:center;box-sizing:border-box;">
         <div style="max-width:320px;width:100%;display:flex;flex-direction:column;align-items:center;">
