@@ -357,17 +357,10 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#c49750]/20 text-[#c49750] border border-[#c49750]/30">
                   /admin
                 </span>
-                {isUsingDefaultPassword() ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    <KeyRound className="w-2.5 h-2.5" />
-                    <span>Pass: temporaryadmin</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <ShieldCheck className="w-2.5 h-2.5" />
-                    <span>Verified Password</span>
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#c49750] border border-white/10">
+                  <Lock className="w-2.5 h-2.5" />
+                  <span>Password Protected</span>
+                </span>
               </div>
               <p className="text-[11px] text-[#8e8a7f] mt-0.5">
                 Add, delete & reorder videos and gallery photos without editing code
@@ -434,14 +427,9 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
             )}
 
             {/* Password status hint */}
-            <div className="p-2.5 bg-[#141722] border border-white/5 rounded-lg text-[11px] text-[#9c978b] max-w-xs w-full text-center font-mono">
-              {isUsingDefaultPassword() ? (
-                <span>Access Pass: <strong className="text-[#c49750]">temporaryadmin</strong></span>
-              ) : (
-                <span className="text-emerald-400 flex items-center justify-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Protected with verified password
-                </span>
-              )}
+            <div className="p-2.5 bg-[#141722] border border-white/5 rounded-lg text-[11px] text-[#9c978b] max-w-xs w-full text-center font-mono flex items-center justify-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#c49750]" />
+              <span>Password Protected Area</span>
             </div>
 
             <form onSubmit={handleUnlock} className="w-full max-w-xs space-y-3">
@@ -471,7 +459,7 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
 
               {passwordError && (
                 <p className="text-[11px] text-red-400 font-mono">
-                  Incorrect password. {isUsingDefaultPassword() ? '(Default pass is temporaryadmin)' : ''}
+                  Incorrect password. Please try again.
                 </p>
               )}
 
@@ -1146,15 +1134,15 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                       <div className="p-3 bg-[#11141c] rounded-lg border border-white/5 space-y-1">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">Current Active Password:</span>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#8c887d]">Protection Status:</span>
                         <div className="text-xs">
                           {isUsingDefaultPassword() ? (
                             <span className="text-amber-400 font-mono flex items-center gap-1 font-semibold">
-                              <KeyRound className="w-3.5 h-3.5" /> temporaryadmin
+                              <Lock className="w-3.5 h-3.5" /> Initial Password Active
                             </span>
                           ) : (
                             <span className="text-emerald-400 font-mono flex items-center gap-1 font-semibold">
-                              <ShieldCheck className="w-3.5 h-3.5" /> Verified Custom Password
+                              <ShieldCheck className="w-3.5 h-3.5" /> Custom Verified Password Active
                             </span>
                           )}
                         </div>
@@ -1199,7 +1187,7 @@ export const VIDEOS_COLLECTION: VideoItem[] = ${JSON.stringify(videos, null, 2)}
                           • You simply click the link in your email to validate and activate it on your page.
                         </p>
                         <p className="text-[11px] text-[#b8b5ab]">
-                          • Your current password (<strong>{isUsingDefaultPassword() ? 'temporaryadmin' : 'current password'}</strong>) continues to work until verified.
+                          • Your current administrator password continues to work until the new pass is verified.
                         </p>
                       </div>
 

@@ -333,6 +333,8 @@ export const AssessmentStudio: React.FC<AssessmentStudioProps> = ({ isDe, onSwit
   // Audio Context & Active Sources
   const audioCtxRef = useRef<AudioContext | null>(null);
   const activePianoSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+  const chordMasterGainRef = useRef<GainNode | null>(null);
+  const chordDamperGainRef = useRef<GainNode | null>(null);
 
   const getAudioContext = useCallback(() => {
     const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -394,40 +396,57 @@ export const AssessmentStudio: React.FC<AssessmentStudioProps> = ({ isDe, onSwit
   }, [getAudioContext]);
 
   // High-Fidelity Steinway Grand Piano Chord Voicing Playback
-  // Staggered arpeggiated roll gives total harmonic separation and makes bass notes crystal clear
+  // Matches the exact 20.0s sustain duration, damper pedal, and acoustic air filter of the Harmonics section
   const playChordVoicing = useCallback(async (frequencies: number[], notes?: string[]) => {
     try {
       const ctx = getAudioContext();
       if (ctx.state === 'suspended') await ctx.resume();
       const now = ctx.currentTime;
 
-      // Stop previous active piano chord notes immediately
+      // Cleanly fade and stop previous active piano chord notes immediately to avoid pops
+      if (chordMasterGainRef.current) {
+        try {
+          chordMasterGainRef.current.gain.cancelScheduledValues(now);
+          chordMasterGainRef.current.gain.setValueAtTime(chordMasterGainRef.current.gain.value, now);
+          chordMasterGainRef.current.gain.linearRampToValueAtTime(0.0001, now + 0.05);
+        } catch {}
+      }
+
       activePianoSourcesRef.current.forEach(source => {
         try {
-          source.stop(now);
+          source.stop(now + 0.06);
           source.disconnect();
         } catch {}
       });
       activePianoSourcesRef.current = [];
 
-      // Master Steinway acoustic resonance bus
+      // Master Steinway acoustic resonance bus: matches the Harmonics section with full 20.0s natural decay
       const masterGain = ctx.createGain();
       masterGain.gain.setValueAtTime(0.001, now);
-      masterGain.gain.linearRampToValueAtTime(1.20, now + 0.015);
-      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.6);
+      masterGain.gain.linearRampToValueAtTime(1.30, now + 0.015);
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 20.0);
+      chordMasterGainRef.current = masterGain;
 
-      // Acoustic air presence filter
+      // Full damper pedal lifted for lush acoustic sustain resonance
+      const damperGain = ctx.createGain();
+      damperGain.gain.setValueAtTime(1.0, now);
+      chordDamperGainRef.current = damperGain;
+
+      // Acoustic air presence filter (identical to Harmonics section)
       const airFilter = ctx.createBiquadFilter();
       airFilter.type = 'lowpass';
       airFilter.frequency.setValueAtTime(12000, now);
 
-      // Dynamic compressor for punchy, undistorted chord clarity
+      // Dynamics compressor for punchy, undistorted chord clarity
       const compressor = ctx.createDynamicsCompressor();
       compressor.threshold.setValueAtTime(-2, now);
       compressor.knee.setValueAtTime(6, now);
       compressor.ratio.setValueAtTime(4.0, now);
+      compressor.attack.setValueAtTime(0.003, now);
+      compressor.release.setValueAtTime(0.25, now);
 
-      masterGain.connect(airFilter);
+      masterGain.connect(damperGain);
+      damperGain.connect(airFilter);
       airFilter.connect(compressor);
       compressor.connect(ctx.destination);
 
@@ -658,6 +677,9 @@ export const AssessmentStudio: React.FC<AssessmentStudioProps> = ({ isDe, onSwit
       activePianoSourcesRef.current.forEach(s => {
         try { s.stop(); s.disconnect(); } catch {}
       });
+      if (chordMasterGainRef.current) {
+        try { chordMasterGainRef.current.disconnect(); } catch {}
+      }
     };
   }, []);
 
@@ -930,6 +952,18 @@ export const AssessmentStudio: React.FC<AssessmentStudioProps> = ({ isDe, onSwit
     const chosen = activeChordChallenge.options.find(o => o.id === optionId);
     const isCorrect = chosen?.isCorrect ?? false;
     const score = isCorrect ? 100 : 35;
+
+    // Gracefully fade out sustained Steinway chord before moving to the next round
+    if (chordMasterGainRef.current) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        chordMasterGainRef.current.gain.cancelScheduledValues(now);
+        chordMasterGainRef.current.gain.setValueAtTime(chordMasterGainRef.current.gain.value, now);
+        chordMasterGainRef.current.gain.linearRampToValueAtTime(0.0001, now + 0.35);
+      } catch {}
+    }
+
     setTimeout(() => {
       finishRound(score);
     }, 450);
