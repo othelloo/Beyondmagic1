@@ -164,24 +164,15 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
           </div>
 
-          {/* Action Row */}
+          {/* Action Row - Landing page without booking link */}
           <div className="flex flex-wrap items-center gap-4">
             <button
-              onClick={() => onOpenInquiry('General Lesson Consultation')}
-              className="px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-all shadow-lg cursor-pointer"
+              onClick={onScrollToVideo}
+              className="px-6 py-3.5 text-xs font-medium uppercase tracking-wider text-[#e6e2d8] hover:text-[#c49750] border border-[#2f333c] hover:border-[#c49750]/60 rounded transition-all cursor-pointer flex items-center gap-2 group shadow-md"
             >
-              {t.hero.ctaPrimary}
+              <span>{t.hero.ctaMethod || 'Explore The Atelier'}</span>
+              <ArrowDown className="w-3.5 h-3.5 text-[#c49750] group-hover:translate-y-0.5 transition-transform" />
             </button>
-
-            {onScrollToMethod && (
-              <button
-                onClick={onScrollToMethod}
-                className="px-5 py-3.5 text-xs font-medium uppercase tracking-wider text-[#e6e2d8] hover:text-white border border-[#2f333c] hover:border-[#c49750]/60 rounded transition-all cursor-pointer flex items-center gap-2"
-              >
-                <span>{t.hero.ctaMethod}</span>
-                <ArrowDown className="w-3.5 h-3.5 text-[#c49750]" />
-              </button>
-            )}
           </div>
         </div>
 

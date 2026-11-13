@@ -11,6 +11,7 @@ import { Biography } from './components/Biography';
 import { MediaSection } from './components/MediaSection';
 import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
+import { Card3DProvider } from './context/Card3DContext';
 
 // On-demand lazy modals and heavy overlays
 const InquiryModal = lazy(() => import('./components/InquiryModal').then(m => ({ default: m.InquiryModal })));
@@ -228,7 +229,9 @@ function MainApp() {
 export default function App() {
   return (
     <LanguageProvider>
-      <MainApp />
+      <Card3DProvider>
+        <MainApp />
+      </Card3DProvider>
     </LanguageProvider>
   );
 }

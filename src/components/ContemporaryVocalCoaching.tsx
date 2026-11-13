@@ -11,11 +11,16 @@ import {
   AlertTriangle,
   Flame,
   Layers,
-  Wind
+  Wind,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { resolveAssetUrl } from '../utils/assetPath';
 import pianoStudioMicImg from '../assets/images/piano_studio_mic_1792754629403.jpg';
+import { useMobileSlider } from '../hooks/useMobileSlider';
+import { SlidingCardTrack } from './SlidingCardTrack';
+import { Interactive3DCard } from './Interactive3DCard';
 
 interface ContemporaryVocalCoachingProps {
   onOpenInquiry: (topic: string) => void;
@@ -119,6 +124,165 @@ export const ContemporaryVocalCoaching: React.FC<ContemporaryVocalCoachingProps>
         : 'From intimate whisper-close mic nuance to soaring belts: deliberate command over acoustic colors, straight-tone, and expressive textures.'
     }
   ];
+
+  // Mobile & tablet sliders (< lg) to prevent excessive downward scrolling
+  const airflowSlider = useMobileSlider(3, 1);
+  const retainersSlider = useMobileSlider(pathways.length, 1);
+
+  // Render Airflow Condition Card
+  const renderAirflowCard = (idx: number) => {
+    if (idx === 0) {
+      return (
+        <Interactive3DCard key="insufficient" className="h-full">
+          <div className="p-6 flex flex-col justify-between h-full">
+            <div>
+              <div className="layer-z-36 flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  {isDe ? 'Zu geringer Luftdurchsatz' : 'Insufficient Airflow'}
+                </span>
+                <Wind className="w-4 h-4 text-amber-400" />
+              </div>
+
+              <h4 className="layer-z-26 text-base font-serif text-white font-medium mb-2">
+                {isDe ? 'Weiche Ansätze & Kollabierende Phrasen' : 'Sluggish Onset & Collapsing Phrases'}
+              </h4>
+
+              <p className="layer-z-18 text-xs text-[#a49f92] leading-relaxed mb-4">
+                {isDe 
+                  ? 'Wenn der transglottische Luftdurchsatz oder der subglottische Druck unzureichend unterstützt sind, wird der Stimmeinsatz schwammig und kraftlos. Komplizierte, dynamische Phrasen verlieren ihre akustische Mitte und lassen sich am Phrasenende kaum mehr sauber auflösen.' 
+                  : 'When transglottic airflow or subglottic pressure lacks dynamic support, phonation onset becomes sluggish and diffuse. Demanding melodic phrases lose acoustic core, making complex line endings difficult to sustain and resolve.'}
+              </p>
+            </div>
+
+            <div className="layer-z-10 pt-3 border-t border-white/10 text-[11px] font-mono text-amber-400/90 flex items-center gap-1.5">
+              <span>⚠</span>
+              <span>{isDe ? 'Verlust von Intonation & Projektion' : 'Loss of Pitch Center & Line Control'}</span>
+            </div>
+          </div>
+        </Interactive3DCard>
+      );
+    }
+    if (idx === 1) {
+      return (
+        <Interactive3DCard key="equilibrium" className="h-full">
+          <div className="p-6 relative flex flex-col justify-between h-full">
+            <div className="absolute top-0 inset-x-6 h-[2px] bg-gradient-to-r from-transparent via-[#c49750] to-transparent rounded-full" />
+            <div>
+              <div className="layer-z-36 flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-[#c49750] text-black font-semibold">
+                  {isDe ? 'Das Perfekte Gleichgewicht' : 'Calibrated Equilibrium'}
+                </span>
+                <ShieldCheck className="w-4 h-4 text-[#c49750]" />
+              </div>
+
+              <h4 className="layer-z-26 text-base font-serif text-white font-medium mb-2">
+                {isDe ? 'Aerodynamisch-Myoelastische Balance' : 'Aerodynamic-Myoelastic Balance'}
+              </h4>
+
+              <p className="layer-z-18 text-xs text-[#cfcac0] leading-relaxed mb-4">
+                {isDe 
+                  ? 'Der subglottische Druck und der Luftstrom harmonieren perfekt mit dem Stimmlippenverschluss (akustische Impedanz). Die Stimme spricht blitzschnell und reibungsfrei an. Sie können jede Nuance abrufen – vom intimen Hauch bis zum Arena-Belt – ohne jegliche Kehlkopfanspannung.' 
+                  : 'Subglottic pressure and transglottic airflow sit in perfect acoustic impedance with vocal fold closure. Phonation initiates instantaneously with zero friction. You command every color—from breathy intimacy to stadium belts—with total laryngeal freedom.'}
+              </p>
+            </div>
+
+            <div className="layer-z-10 pt-3 border-t border-[#c49750]/30 text-[11px] font-mono text-[#d8a85c] flex items-center gap-1.5">
+              <span>✦</span>
+              <span>{isDe ? 'Dauerhafte Gesundheit & Unendliche Farben' : 'Lifelong Resilience & Boundless Colors'}</span>
+            </div>
+          </div>
+        </Interactive3DCard>
+      );
+    }
+    return (
+      <Interactive3DCard key="excessive" className="h-full">
+        <div className="p-6 flex flex-col justify-between h-full">
+          <div>
+            <div className="layer-z-36 flex items-center justify-between mb-4">
+              <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">
+                {isDe ? 'Überdruck & Stoßbelastung' : 'Excessive Air Pressure'}
+              </span>
+              <AlertTriangle className="w-4 h-4 text-rose-400" />
+            </div>
+
+            <h4 className="layer-z-26 text-base font-serif text-white font-medium mb-2">
+              {isDe ? 'Gewaltsamer Glottisschlag & Knötchengefahr' : 'Violent Glottal Stops & Nodule Risk'}
+            </h4>
+
+            <p className="layer-z-18 text-xs text-[#a49f92] leading-relaxed mb-4">
+              {isDe 
+                ? 'Wird zu viel unkontrollierte Atemluft gegen verkrampfte Stimmbänder gepresst, schlagen die Ränder mit harter Wucht zusammen (Hyperadduktion). Dies schädigt das Muskelgewebe, erschöpft die Stimme rapide und führt im schlimmsten Fall zu Stimmbandknötchen – dem gefürchteten Karriere-Aus.' 
+                : 'When excessive, uncontrolled air pressure slams against constricted cords, violent glottic collision occurs (hyperadduction). This tears into the vocal fold mucosa, triggers rapid vocal exhaustion, and in the worst case causes vocal fold nodules—a catastrophic threat to a career.'}
+            </p>
+          </div>
+
+          <div className="layer-z-10 pt-3 border-t border-white/10 text-[11px] font-mono text-rose-400/90 flex items-center gap-1.5">
+            <span>✕</span>
+            <span>{isDe ? 'Hohes Phonotrauma- & Knötchenrisiko' : 'Severe Phonotrauma & Career Threat'}</span>
+          </div>
+        </div>
+      </Interactive3DCard>
+    );
+  };
+
+  // Render Retainer Card
+  const renderRetainerCard = (idx: number) => {
+    const path = pathways[idx];
+    return (
+      <Interactive3DCard key={idx} className="h-full">
+        <div className="p-6 flex flex-col justify-between h-full relative">
+          {path.highlight && (
+            <div className="absolute top-0 inset-x-6 h-[2px] bg-gradient-to-r from-transparent via-[#c49750] to-transparent rounded-full" />
+          )}
+          <div>
+            <div className="layer-z-36 flex items-center justify-between mb-3">
+              <span className="text-[10px] font-mono tracking-widest px-2.5 py-1 rounded bg-[#181d2a] text-[#c49750] border border-white/10 uppercase">
+                {path.badge}
+              </span>
+              {path.highlight && (
+                <span className="text-[10px] font-mono bg-[#c49750] text-black font-bold px-2 py-0.5 rounded">
+                  ★ {isDe ? 'EMPFOHLEN' : 'FEATURED'}
+                </span>
+              )}
+            </div>
+
+            <h4 className="layer-z-26 text-lg font-serif text-white font-medium mb-1">
+              {path.title}
+            </h4>
+
+            <p className="layer-z-26 text-xs font-mono text-[#c49750] mb-3">
+              {path.subtitle}
+            </p>
+
+            <p className="layer-z-18 text-xs text-[#a09c91] leading-relaxed mb-5">
+              {path.desc}
+            </p>
+
+            <div className="layer-z-10 space-y-2 mb-6">
+              {path.points.map((pt, pIdx) => (
+                <div key={pIdx} className="flex items-start gap-2 text-xs text-[#dedacf]">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#c49750] shrink-0 mt-0.5" />
+                  <span>{pt}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => onOpenInquiry(path.topic)}
+            className={`layer-z-26 w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              path.highlight
+                ? 'bg-gradient-to-r from-[#c49750] to-[#d8a85c] hover:from-[#d8a85c] hover:to-[#e8ba6e] text-black shadow-lg shadow-[#c49750]/20'
+                : 'bg-[#181c28] hover:bg-[#222838] text-white border border-white/10 hover:border-[#c49750]/50'
+            }`}
+          >
+            <span>{path.cta}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </Interactive3DCard>
+    );
+  };
 
   return (
     <section 
@@ -309,89 +473,27 @@ export const ContemporaryVocalCoaching: React.FC<ContemporaryVocalCoachingProps>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            
-            {/* Condition 1: Insufficient Airflow */}
-            <div className="p-6 rounded-2xl bg-[#12141c] border border-amber-500/20 flex flex-col justify-between shadow-lg">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                    {isDe ? 'Zu geringer Luftdurchsatz' : 'Insufficient Airflow'}
-                  </span>
-                  <Wind className="w-4 h-4 text-amber-400" />
+          {/* Mobile & Tablet View: Smooth hardware-accelerated card sliding (< lg) */}
+          <div className="block lg:hidden">
+            <SlidingCardTrack
+              currentIndex={airflowSlider.currentIndex}
+              totalItems={3}
+              onPrev={airflowSlider.prev}
+              onNext={airflowSlider.next}
+              onSelect={airflowSlider.goTo}
+              touchHandlers={airflowSlider.touchHandlers}
+            >
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} className="h-full select-none">
+                  {renderAirflowCard(idx)}
                 </div>
+              ))}
+            </SlidingCardTrack>
+          </div>
 
-                <h4 className="text-base font-serif text-white font-medium mb-2">
-                  {isDe ? 'Weiche Ansätze & Kollabierende Phrasen' : 'Sluggish Onset & Collapsing Phrases'}
-                </h4>
-
-                <p className="text-xs text-[#a49f92] leading-relaxed mb-4">
-                  {isDe 
-                    ? 'Wenn der transglottische Luftdurchsatz oder der subglottische Druck unzureichend unterstützt sind, wird der Stimmeinsatz schwammig und kraftlos. Komplizierte, dynamische Phrasen verlieren ihre akustische Mitte und lassen sich am Phrasenende kaum mehr sauber auflösen.' 
-                    : 'When transglottic airflow or subglottic pressure lacks dynamic support, phonation onset becomes sluggish and diffuse. Demanding melodic phrases lose acoustic core, making complex line endings difficult to sustain and resolve.'}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-amber-400/90 flex items-center gap-1.5">
-                <span>⚠</span>
-                <span>{isDe ? 'Verlust von Intonation & Projektion' : 'Loss of Pitch Center & Line Control'}</span>
-              </div>
-            </div>
-
-            {/* Condition 2: Calibrated Equilibrium (The Goal) */}
-            <div className="p-6 rounded-2xl bg-gradient-to-b from-[#181d2c] via-[#121624] to-[#0e111a] border-2 border-[#c49750] shadow-2xl relative flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-[#c49750] text-black font-semibold">
-                    {isDe ? 'Das Perfekte Gleichgewicht' : 'Calibrated Equilibrium'}
-                  </span>
-                  <ShieldCheck className="w-4 h-4 text-[#c49750]" />
-                </div>
-
-                <h4 className="text-base font-serif text-white font-medium mb-2">
-                  {isDe ? 'Aerodynamisch-Myoelastische Balance' : 'Aerodynamic-Myoelastic Balance'}
-                </h4>
-
-                <p className="text-xs text-[#cfcac0] leading-relaxed mb-4">
-                  {isDe 
-                    ? 'Der subglottische Druck und der Luftstrom harmonieren perfekt mit dem Stimmlippenverschluss (akustische Impedanz). Die Stimme spricht blitzschnell und reibungsfrei an. Sie können jede Nuance abrufen – vom intimen Hauch bis zum Arena-Belt – ohne jegliche Kehlkopfanspannung.' 
-                    : 'Subglottic pressure and transglottic airflow sit in perfect acoustic impedance with vocal fold closure. Phonation initiates instantaneously with zero friction. You command every color—from breathy intimacy to stadium belts—with total laryngeal freedom.'}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-[#c49750]/30 text-[11px] font-mono text-[#d8a85c] flex items-center gap-1.5">
-                <span>✦</span>
-                <span>{isDe ? 'Dauerhafte Gesundheit & Unendliche Farben' : 'Lifelong Resilience & Boundless Colors'}</span>
-              </div>
-            </div>
-
-            {/* Condition 3: Excessive Pressure */}
-            <div className="p-6 rounded-2xl bg-[#171215] border border-rose-500/30 flex flex-col justify-between shadow-lg">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                    {isDe ? 'Überdruck & Stoßbelastung' : 'Excessive Air Pressure'}
-                  </span>
-                  <AlertTriangle className="w-4 h-4 text-rose-400" />
-                </div>
-
-                <h4 className="text-base font-serif text-white font-medium mb-2">
-                  {isDe ? 'Gewaltsamer Glottisschlag & Knötchengefahr' : 'Violent Glottal Stops & Nodule Risk'}
-                </h4>
-
-                <p className="text-xs text-[#a49f92] leading-relaxed mb-4">
-                  {isDe 
-                    ? 'Wird zu viel unkontrollierte Atemluft gegen verkrampfte Stimmbänder gepresst, schlagen die Ränder mit harter Wucht zusammen (Hyperadduktion). Dies schädigt das Muskelgewebe, erschöpft die Stimme rapide und führt im schlimmsten Fall zu Stimmbandknötchen – dem gefürchteten Karriere-Aus.' 
-                    : 'When excessive, uncontrolled air pressure slams against constricted cords, violent glottic collision occurs (hyperadduction). This tears into the vocal fold mucosa, triggers rapid vocal exhaustion, and in the worst case causes vocal fold nodules—a catastrophic threat to a career.'}
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-white/5 text-[11px] font-mono text-rose-400/90 flex items-center gap-1.5">
-                <span>✕</span>
-                <span>{isDe ? 'Hohes Phonotrauma- & Knötchenrisiko' : 'Severe Phonotrauma & Career Threat'}</span>
-              </div>
-            </div>
-
+          {/* Desktop View: Full 3-Column Grid (lg:grid) */}
+          <div className="hidden lg:grid lg:grid-cols-3 gap-5">
+            {[0, 1, 2].map((idx) => renderAirflowCard(idx))}
           </div>
 
         </div>
@@ -413,63 +515,27 @@ export const ContemporaryVocalCoaching: React.FC<ContemporaryVocalCoachingProps>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {pathways.map((path, idx) => (
-              <div 
-                key={idx}
-                className={`p-6 rounded-2xl flex flex-col justify-between transition-all duration-300 ${
-                  path.highlight
-                    ? 'bg-gradient-to-b from-[#181d2c] via-[#121622] to-[#10121a] border-2 border-[#c49750] shadow-2xl relative'
-                    : 'bg-[#10131d] border border-[#232736] hover:border-[#c49750]/40'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-mono tracking-widest px-2.5 py-1 rounded bg-[#181d2a] text-[#c49750] border border-white/5 uppercase">
-                      {path.badge}
-                    </span>
-                    {path.highlight && (
-                      <span className="text-[10px] font-mono bg-[#c49750] text-black font-bold px-2 py-0.5 rounded">
-                        ★ {isDe ? 'EMPFOHLEN' : 'FEATURED'}
-                      </span>
-                    )}
-                  </div>
-
-                  <h4 className="text-lg font-serif text-white font-medium mb-1">
-                    {path.title}
-                  </h4>
-
-                  <p className="text-xs font-mono text-[#c49750] mb-3">
-                    {path.subtitle}
-                  </p>
-
-                  <p className="text-xs text-[#a09c91] leading-relaxed mb-5">
-                    {path.desc}
-                  </p>
-
-                  <div className="space-y-2 mb-6">
-                    {path.points.map((pt, pIdx) => (
-                      <div key={pIdx} className="flex items-start gap-2 text-xs text-[#dedacf]">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#c49750] shrink-0 mt-0.5" />
-                        <span>{pt}</span>
-                      </div>
-                    ))}
-                  </div>
+          {/* Mobile & Tablet View: Smooth hardware-accelerated card sliding (< lg) */}
+          <div className="block lg:hidden">
+            <SlidingCardTrack
+              currentIndex={retainersSlider.currentIndex}
+              totalItems={pathways.length}
+              onPrev={retainersSlider.prev}
+              onNext={retainersSlider.next}
+              onSelect={retainersSlider.goTo}
+              touchHandlers={retainersSlider.touchHandlers}
+            >
+              {pathways.map((_, idx) => (
+                <div key={idx} className="h-full select-none">
+                  {renderRetainerCard(idx)}
                 </div>
+              ))}
+            </SlidingCardTrack>
+          </div>
 
-                <button
-                  onClick={() => onOpenInquiry(path.topic)}
-                  className={`w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                    path.highlight
-                      ? 'bg-gradient-to-r from-[#c49750] to-[#d8a85c] hover:from-[#d8a85c] hover:to-[#e8ba6e] text-black shadow-lg shadow-[#c49750]/20'
-                      : 'bg-[#181c28] hover:bg-[#222838] text-white border border-white/10 hover:border-[#c49750]/50'
-                  }`}
-                >
-                  <span>{path.cta}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+          {/* Desktop View: Full 3-Column Grid (lg:grid) */}
+          <div className="hidden lg:grid lg:grid-cols-3 gap-5">
+            {pathways.map((_, idx) => renderRetainerCard(idx))}
           </div>
 
         </div>

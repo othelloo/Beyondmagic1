@@ -482,7 +482,7 @@ export const SPECIALIZED_COURSES: CourseDetail[] = [
   },
   {
     id: 'anatomy-ipa-intensive',
-    title: 'The Anatomy of Speech & French Rules (One-Time Intensive)',
+    title: 'The Anatomy of Speech & French Rules',
     subtitle: 'A single, deep workshop to make you completely autonomous for life',
     audience: 'Singers of all levels, vocal teachers, and choral singers',
     format: 'One-Time Comprehensive Intensive (One full day or two half-day sessions)',

@@ -286,8 +286,8 @@ export const InquiryModal: React.FC<InquiryModalProps> = ({
                 <option value="The Method: Emotion-first Learning">
                   {isDe ? 'Die Methode: Emotionsorientiertes Lernen' : 'The Method: Emotion-first Learning'}
                 </option>
-                <option value="The Anatomy of Speech & French Rules (One-Time Intensive)">
-                  {isDe ? 'Anatomie der Sprache & Französische Regeln (Intensivkurs)' : 'The Anatomy of Speech & French Rules (One-Time Intensive)'}
+                <option value="The Anatomy of Speech & French Rules">
+                  {isDe ? 'Anatomie der Sprache & Französische Regeln' : 'The Anatomy of Speech & French Rules'}
                 </option>
                 <option value="French Coaching for Opera Singers">
                   {isDe ? 'Französisches Coaching für Opernsänger' : 'French Coaching for Opera Singers'}

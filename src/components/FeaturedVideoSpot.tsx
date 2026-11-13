@@ -58,19 +58,19 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
   };
 
   return (
-    <section id="studio-spotlight" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0e1014] border-y border-[#1e222a]">
+    <section id="studio-spotlight" className="pt-3 sm:pt-6 lg:pt-10 pb-10 sm:pb-14 lg:pb-20 px-4 sm:px-6 bg-[#0e1014] border-y border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 sm:mb-6 lg:mb-8 gap-3 lg:gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-1.5">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-1">
               <span>{t.featuredVideo.eyebrow}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-serif text-[#f7f5f0] font-normal">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif text-[#f7f5f0] font-normal">
               {t.featuredVideo.title}
             </h2>
-            <p className="text-sm text-[#9f9b8f] mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-[#9f9b8f] mt-0.5 max-w-xl line-clamp-2">
               {t.featuredVideo.subtitle}
             </p>
           </div>
@@ -79,7 +79,7 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={handleShuffle}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium uppercase tracking-wider text-[#dcd7cb] bg-[#171a21] hover:bg-[#202530] border border-[#2b303c] rounded transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-medium uppercase tracking-wider text-[#dcd7cb] bg-[#171a21] hover:bg-[#202530] border border-[#2b303c] rounded transition-colors cursor-pointer"
               title="Pick a random lesson"
             >
               <Shuffle className="w-3.5 h-3.5 text-[#c49750]" />
@@ -88,7 +88,7 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
             
             <a
               href="#gallery"
-              className="text-xs text-[#9f9b8f] hover:text-[#d4af37] transition-colors py-2"
+              className="text-xs text-[#9f9b8f] hover:text-[#d4af37] transition-colors py-1.5"
             >
               {isDe ? `Alle Videos ansehen (${videos.length}) →` : `See all videos (${videos.length}) →`}
             </a>
@@ -96,11 +96,11 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
         </div>
 
         {/* Video Player & Context Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-8 items-stretch">
           
           {/* Main Video Viewport */}
           <div className="lg:col-span-8 flex flex-col">
-            <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-[#272b35] group shadow-2xl">
+            <div className="relative aspect-video lg:aspect-video max-h-[240px] sm:max-h-[340px] lg:max-h-none w-full rounded-xl overflow-hidden bg-black border border-[#272b35] group shadow-2xl">
               
               {/* If playing and has YouTube ID, render actual YouTube player */}
               {isPlaying && youtubeId ? (
@@ -126,15 +126,15 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/40" />
 
                   {/* Top Bar */}
-                  <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-xs text-white/80 z-20">
-                    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1 rounded">
-                      <Youtube className="w-4 h-4 text-red-500" />
-                      <span className="font-medium tracking-wide">
+                  <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 flex items-center justify-between text-xs text-white/80 z-20">
+                    <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded">
+                      <Youtube className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+                      <span className="font-medium tracking-wide text-[11px] sm:text-xs">
                         {activeVideo.duration ? `Stage Recording · ${activeVideo.duration}` : 'YouTube Video'}
                       </span>
                     </div>
                     {activeVideo.tags && (
-                      <div className="flex items-center gap-2">
+                      <div className="hidden sm:flex items-center gap-2">
                         {activeVideo.tags.map((tag) => (
                           <span
                             key={tag}
@@ -151,19 +151,19 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
                   <div className="absolute inset-0 flex items-center justify-center z-20">
                     <button
                       onClick={() => setIsPlaying(true)}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#c49750] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group-hover:bg-[#dfb26b]"
+                      className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[#c49750] text-black flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer group-hover:bg-[#dfb26b]"
                       aria-label="Play video"
                     >
-                      <Play className="w-7 h-7 sm:w-8 sm:h-8 fill-black ml-1" />
+                      <Play className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 fill-black ml-1" />
                     </button>
                   </div>
 
                   {/* Bottom Info Bar inside player */}
-                  <div className="absolute bottom-4 left-4 right-4 z-20">
-                    <div className="text-lg sm:text-xl font-serif text-white font-medium mb-1 drop-shadow-md">
+                  <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-20">
+                    <div className="text-base sm:text-lg lg:text-xl font-serif text-white font-medium mb-0.5 drop-shadow-md line-clamp-1">
                       {activeVideo.title}
                     </div>
-                    <div className="flex items-center justify-between text-xs text-white/70">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs text-white/70">
                       <span className="line-clamp-1">{activeVideo.description}</span>
                     </div>
                   </div>
@@ -172,14 +172,53 @@ export const FeaturedVideoSpot: React.FC<FeaturedVideoSpotProps> = ({
             </div>
           </div>
 
-          {/* Video List */}
+          {/* Video List: Compact scrollable pane on Mobile & Tablet (< lg) so it reaches on one screen; full list on Desktop (lg+) */}
           <div className="lg:col-span-4 flex flex-col justify-start">
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#908c80] mb-3 font-medium">
-                Stage Performances:
+              <div className="flex items-center justify-between mb-2 lg:mb-3">
+                <span className="text-[11px] sm:text-xs uppercase tracking-wider text-[#908c80] font-medium">
+                  {isDe ? 'Bühnenaufnahmen:' : 'Stage Performances:'}
+                </span>
+                <span className="text-[10px] font-mono text-[#c49750]/80 lg:hidden">
+                  {currentIndex + 1} / {videos.length} · {isDe ? 'Scrollen' : 'Scroll'}
+                </span>
               </div>
 
-              <div className="space-y-2.5">
+              {/* Mobile & Tablet (< lg): Compact internally scrollable list of titles reachable in one viewport */}
+              <div className="lg:hidden max-h-[164px] sm:max-h-[192px] overflow-y-auto thin-scrollbar pr-1 space-y-1.5">
+                {videos.map((vid, idx) => {
+                  const isSelected = idx === currentIndex;
+                  return (
+                    <button
+                      type="button"
+                      key={vid.id}
+                      onClick={() => handleSelect(idx)}
+                      className={`w-full px-3 py-2 rounded-lg border cursor-pointer transition-all duration-150 text-left flex items-center justify-between gap-2.5 ${
+                        isSelected
+                          ? 'bg-[#1b1f28] border-[#c49750]/70 shadow-sm'
+                          : 'bg-[#13151b] border-[#22252e] hover:border-[#333744] hover:bg-[#161921]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className={`text-[11px] font-mono shrink-0 ${isSelected ? 'text-[#c49750] font-semibold' : 'text-[#8c887d]'}`}>
+                          0{idx + 1}
+                        </span>
+                        <span className={`text-xs sm:text-sm font-medium truncate ${isSelected ? 'text-[#fbf9f5]' : 'text-[#cfc9bc]'}`}>
+                          {vid.title}
+                        </span>
+                      </div>
+                      {vid.duration && (
+                        <span className="text-[10px] text-[#7d796e] font-mono shrink-0">
+                          {vid.duration}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Desktop (lg+): Full descriptive playlist */}
+              <div className="hidden lg:block space-y-2.5 max-h-[460px] overflow-y-auto thin-scrollbar pr-1">
                 {videos.map((vid, idx) => {
                   const isSelected = idx === currentIndex;
                   return (

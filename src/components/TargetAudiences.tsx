@@ -1,12 +1,15 @@
 import React from 'react';
-import { Music, Mic, Headphones, Check, ArrowRight } from 'lucide-react';
+import { Music, Mic, Headphones, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useMobileSlider } from '../hooks/useMobileSlider';
+import { SlidingCardTrack } from './SlidingCardTrack';
+import { Interactive3DCard } from './Interactive3DCard';
 
 interface TargetAudiencesProps {
-  onOpenInquiry: (topic: string) => void;
+  onOpenInquiry?: (topic: string) => void;
 }
 
-export const TargetAudiences: React.FC<TargetAudiencesProps> = ({ onOpenInquiry }) => {
+export const TargetAudiences: React.FC<TargetAudiencesProps> = () => {
   const { t } = useLanguage();
 
   const audienceCards = [
@@ -42,79 +45,89 @@ export const TargetAudiences: React.FC<TargetAudiencesProps> = ({ onOpenInquiry 
     }
   ];
 
+  const {
+    currentIndex,
+    next,
+    prev,
+    goTo,
+    touchHandlers
+  } = useMobileSlider(audienceCards.length);
+
+  const renderAudienceCard = (aud: typeof audienceCards[number]) => {
+    const IconComponent = aud.icon;
+    return (
+      <Interactive3DCard key={aud.id} className="h-full">
+        <div className="p-6 sm:p-7 flex flex-col justify-between relative h-full select-none">
+          <div className="absolute top-0 inset-x-6 h-[2px] bg-gradient-to-r from-transparent via-[#c49750]/80 to-transparent rounded-full" />
+
+          <div>
+            <div className="layer-z-36 flex items-center justify-between mb-4">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-[#c49750]">
+                {aud.category}
+              </span>
+              <div className="w-10 h-10 rounded-lg bg-[#1a1e28]/90 border border-[#2b303e] flex items-center justify-center text-[#c49750] shadow-inner">
+                <IconComponent className="w-4 h-4" />
+              </div>
+            </div>
+
+            <h3 className="layer-z-26 text-xl sm:text-2xl font-serif text-[#f2eee9] mb-1.5 font-normal">
+              {aud.title}
+            </h3>
+
+            <p className="layer-z-26 text-xs text-[#c49750] font-medium mb-3 italic">
+              {aud.subtitle}
+            </p>
+
+            <p className="layer-z-18 text-xs sm:text-sm text-[#9f9b8f] leading-relaxed mb-6 font-light">
+              {aud.description}
+            </p>
+
+            <div className="layer-z-10 space-y-2.5 pt-4 border-t border-white/10">
+              {aud.points.map((pt, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 text-xs text-[#cfccc3]">
+                  <Check className="w-3.5 h-3.5 text-[#c49750] shrink-0 mt-0.5" />
+                  <span className="font-light">{pt}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Interactive3DCard>
+    );
+  };
+
   return (
     <section id="audiences" className="pt-3 sm:pt-6 lg:pt-10 pb-14 sm:pb-20 px-4 sm:px-6 bg-[#0e1015] border-t border-[#1e222a]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
-          <div className="flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-3">
+        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] text-[#c49750] font-medium mb-2.5">
             <span>{t.audiences.badge}</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-serif text-[#fbf9f5] font-normal mb-3">
+          <h2 className="text-2xl sm:text-4xl font-serif text-[#fbf9f5] font-normal">
             {t.audiences.title}
           </h2>
-          
-          <p className="text-sm sm:text-base text-[#9e9a8e] font-light leading-relaxed">
-            {t.audiences.subtitle}
-          </p>
         </div>
 
-        {/* 3 Audience Cards - Streamlined & Balanced */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {audienceCards.map((aud) => {
-            const IconComponent = aud.icon;
-            return (
-              <div
-                key={aud.id}
-                className="bg-[#12151d] border border-[#232733] rounded-2xl p-7 flex flex-col justify-between hover:border-[#c49750]/50 transition-all duration-300 group shadow-lg"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[11px] font-mono uppercase tracking-widest text-[#c49750]">
-                      {aud.category}
-                    </span>
-                    <div className="w-9 h-9 rounded-lg bg-[#1a1e28] border border-[#2b303e] flex items-center justify-center text-[#c49750] group-hover:bg-[#c49750] group-hover:text-black transition-colors">
-                      <IconComponent className="w-4 h-4" />
-                    </div>
-                  </div>
+        {/* Mobile & Tablet View: Smooth hardware-accelerated card sliding (< lg) */}
+        <div className="block lg:hidden">
+          <SlidingCardTrack
+            currentIndex={currentIndex}
+            totalItems={audienceCards.length}
+            onPrev={prev}
+            onNext={next}
+            onSelect={goTo}
+            touchHandlers={touchHandlers}
+          >
+            {audienceCards.map((aud) => renderAudienceCard(aud))}
+          </SlidingCardTrack>
+        </div>
 
-                  <h3 className="text-xl sm:text-2xl font-serif text-[#f2eee9] mb-1.5 font-normal">
-                    {aud.title}
-                  </h3>
-
-                  <p className="text-xs text-[#c49750] font-medium mb-3 italic">
-                    {aud.subtitle}
-                  </p>
-
-                  <p className="text-xs sm:text-sm text-[#9f9b8f] leading-relaxed mb-6 font-light">
-                    {aud.description}
-                  </p>
-
-                  <div className="space-y-2.5 pt-4 border-t border-[#1e222b]">
-                    {aud.points.map((pt, idx) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs text-[#cfccc3]">
-                        <Check className="w-3.5 h-3.5 text-[#c49750] shrink-0 mt-0.5" />
-                        <span className="font-light">{pt}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-5 border-t border-[#1e222b]">
-                  <button
-                    onClick={() => onOpenInquiry(`Track: ${aud.title}`)}
-                    className="w-full py-3 px-4 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-md"
-                  >
-                    <span>{aud.cta}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-              </div>
-            );
-          })}
+        {/* Desktop View: Full 3-Card Grid without booking buttons (lg:grid) */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-8">
+          {audienceCards.map((aud) => renderAudienceCard(aud))}
         </div>
 
       </div>

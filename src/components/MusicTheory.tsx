@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp, Info, X, Clock, Award } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Waves, ArrowRight, Music, Disc, Mic, Headphones, ChevronUp, Info, X, Clock, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { SomaticResonanceCanvas } from './SomaticResonanceCanvas';
 import { MusicalScoreChord } from './MusicalScoreChord';
+import { useMobileSlider } from '../hooks/useMobileSlider';
+import { SliderNavigationControls } from './SliderNavigationControls';
+import { SlidingCardTrack } from './SlidingCardTrack';
+import { Interactive3DCard } from './Interactive3DCard';
 
 // On-demand code-splitting: studios only load over the wire when user clicks their tab
 const EarTrainingStudio = React.lazy(() => import('./EarTrainingStudio').then(m => ({ default: m.EarTrainingStudio })));
@@ -326,6 +330,10 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
   const [isStudioOpen, setIsStudioOpen] = useState<boolean>(false);
   const [showMobileIntroPopup, setShowMobileIntroPopup] = useState<boolean>(false);
   const [dontShowAgain, setDontShowAgain] = useState<boolean>(false);
+
+  // Mobile & tablet sliders (< lg) to prevent excessive downward scrolling
+  const pillarsSlider = useMobileSlider(2, 0);
+  const learnersSlider = useMobileSlider(3, 0);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
@@ -909,6 +917,271 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
     scrollToInteractive('explore', 60);
   }, [dontShowAgain, scrollToInteractive]);
 
+  // Render Pillar 1: The Secret Garden Card
+  const renderSecretGardenCard = () => (
+    <Interactive3DCard intensity={0.6} className="h-full">
+      <div className="p-7 sm:p-9 relative overflow-hidden flex flex-col justify-between group h-full">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c49750] via-[#e5c17d] to-[#8a7bb8] opacity-80" />
+        
+        <div className="flex-1 flex flex-col justify-start">
+          <div className="layer-z-36 flex items-center justify-between mb-4">
+            <h3 className="text-2xl sm:text-3xl font-serif text-[#c49750] font-medium">
+              {t.musicTheory.secretGardenTitle}
+            </h3>
+            <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#c49750] group-hover:bg-[#c49750] group-hover:text-black transition-colors shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+          </div>
+
+          <p className="layer-z-26 text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
+            {t.musicTheory.secretGardenIntro}
+          </p>
+
+          <div className="layer-z-18 mb-6">
+            <p className="text-xs uppercase tracking-wider text-[#c49750] font-mono font-medium mb-3">
+              {t.musicTheory.secretGardenWaysTitle}
+            </p>
+            <ul className="space-y-3">
+              {t.musicTheory.secretGardenItems.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#dedacf] leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#c49750] mt-2 shrink-0" />
+                  <span>
+                    <strong className="text-[#f5eedf] font-medium">{item.label}:</strong> {item.desc}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Quote Box */}
+        <div className="layer-z-10 mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
+          <p className="text-lg sm:text-xl lg:text-[1.35rem] xl:text-2xl font-serif italic text-[#f3cf8a] font-normal leading-relaxed">
+            “{t.musicTheory.secretGardenClosing}”
+          </p>
+        </div>
+      </div>
+    </Interactive3DCard>
+  );
+
+  // Render Pillar 2: The Music Theory Card
+  const renderMusicTheoryCard = () => (
+    <Interactive3DCard intensity={0.6} className="h-full">
+      <div className="p-7 sm:p-9 relative overflow-hidden flex flex-col justify-between group h-full">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#38bdf8] via-[#818cf8] to-[#c49750] opacity-80" />
+        
+        <div className="flex-1 flex flex-col justify-start">
+          <div className="layer-z-36 flex items-center justify-between mb-4">
+            <h3 className="text-2xl sm:text-3xl font-serif text-[#38bdf8] font-medium">
+              {t.musicTheory.theoryTitle}
+            </h3>
+            <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-colors shrink-0">
+              <Music className="w-4 h-4" />
+            </div>
+          </div>
+
+          <p className="layer-z-26 text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
+            {t.musicTheory.theoryIntro}
+          </p>
+
+          <div className="layer-z-18">
+            <ul className="space-y-3.5">
+              {t.musicTheory.theoryItems.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#dedacf] leading-relaxed">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8] mt-2 shrink-0" />
+                  <span>
+                    <strong className="text-[#f5eedf] font-medium">{item.label}:</strong> {item.desc}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Interactive Keys Launchpad: 4 Modern Atelier Hardware Keys */}
+        <div className="layer-z-26 mt-auto border-t border-[#232838] bg-[#0c0e14]/90 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-4 sm:px-8 py-3.5 sm:py-5 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            {/* Key 1: Chords & Resonance */}
+            <button
+              type="button"
+              onClick={() => {
+                setStudioTab('explore');
+                setIsStudioOpen(true);
+                scrollToInteractive('explore', 60);
+              }}
+              className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#c49750]/60 hover:from-[#1b2132] hover:to-[#0f121c] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(196,151,80,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#c49750] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#c49750]/15 border border-[#c49750]/30 flex items-center justify-center text-[#c49750] group-hover/key:scale-105 transition-transform">
+                  <Waves className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-mono text-[#c49750] uppercase tracking-wider hidden sm:inline">
+                  {isDe ? 'Resonanz' : 'Harmonics'}
+                </span>
+              </div>
+              <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                {isDe ? 'Harmonien' : 'Chords'}
+              </div>
+              <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                {isDe ? 'Akkorde & Resonanz' : 'Voicings & Tension'}
+              </div>
+            </button>
+
+            {/* Key 2: Ear Training & Vocal Memory */}
+            <button
+              type="button"
+              onClick={() => {
+                setStudioTab('ear-training');
+                setIsStudioOpen(true);
+                scrollToInteractive('ear-training', 60);
+              }}
+              className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#a78bfa]/60 hover:from-[#1d1f33] hover:to-[#101220] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(167,139,250,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#a78bfa] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#a78bfa]/15 border border-[#a78bfa]/30 flex items-center justify-center text-[#a78bfa] group-hover/key:scale-105 transition-transform">
+                  <Headphones className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-mono text-[#a78bfa] uppercase tracking-wider hidden sm:inline">
+                  {isDe ? 'Gehör' : 'Aural'}
+                </span>
+              </div>
+              <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                {isDe ? 'Gehör-Training' : 'Ear Training'}
+              </div>
+              <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                {isDe ? 'Akkord-Gehör & Gesang' : 'Aural Pitch & Voice'}
+              </div>
+            </button>
+
+            {/* Key 3: Rhythm & Pulse Ear Testing */}
+            <button
+              type="button"
+              onClick={() => {
+                setStudioTab('rhythm');
+                setIsStudioOpen(true);
+                scrollToInteractive('rhythm', 60);
+              }}
+              className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#38bdf8]/60 hover:from-[#172233] hover:to-[#0c1420] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(56,189,248,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#38bdf8]/15 border border-[#38bdf8]/30 flex items-center justify-center text-[#38bdf8] group-hover/key:scale-105 transition-transform">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-mono text-[#38bdf8] uppercase tracking-wider hidden sm:inline">
+                  {isDe ? 'Puls' : 'Meter'}
+                </span>
+              </div>
+              <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
+                {isDe ? 'Rhythmus & Tempo' : 'Rhythm & Tempo'}
+              </div>
+              <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
+                {isDe ? 'Notensystem & Puls' : 'Staff Score & Pulse'}
+              </div>
+            </button>
+
+            {/* Key 4: Full Assessment Diagnostic */}
+            <button
+              type="button"
+              onClick={() => {
+                setStudioTab('assessment');
+                setIsStudioOpen(true);
+                scrollToInteractive('assessment', 60);
+              }}
+              className="relative group/key p-2.5 sm:p-3 rounded-xl border border-[#c49750]/50 bg-gradient-to-b from-[#1c1920] to-[#100e16] hover:border-[#ffd56b] hover:from-[#25202c] hover:to-[#161320] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(255,213,107,0.2)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
+            >
+              <div className="absolute top-0 inset-x-2 h-[2px] bg-gradient-to-r from-transparent via-[#ffd56b] to-transparent opacity-80 group-hover/key:opacity-100 transition-opacity" />
+              <div className="flex items-center justify-between mb-1">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#ffd56b]/20 border border-[#ffd56b]/40 flex items-center justify-center text-[#ffd56b] group-hover/key:scale-105 transition-transform">
+                  <Award className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[9px] font-mono font-bold text-[#ffd56b] px-1.5 py-0.2 rounded bg-[#ffd56b]/15 uppercase tracking-wider">
+                  {isDe ? '9 Tests' : '9 Tests'}
+                </span>
+              </div>
+              <div className="font-serif sm:font-sans font-bold text-xs sm:text-sm text-[#ffd56b] group-hover/key:text-white truncate">
+                {isDe ? 'Einstufung' : 'Assessment'}
+              </div>
+              <div className="text-[10px] font-mono text-[#c49750] group-hover/key:text-[#dedacf] truncate">
+                {isDe ? 'Vollständige Diagnose' : 'Full Diagnostic'}
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Interactive3DCard>
+  );
+
+  // Render Learner Profiles
+  const renderLearnerProfile = (index: number) => {
+    if (index === 0) {
+      return (
+        <Interactive3DCard key="producer" className="h-full">
+          <div className="p-6 flex flex-col justify-between h-full">
+            <div>
+              <div className="layer-z-36 flex items-center gap-2 mb-3">
+                <Disc className="w-4 h-4 text-[#c49750]" />
+                <span className="text-xs uppercase tracking-wider font-mono text-[#c49750]">
+                  {t.musicTheory.producerBadge}
+                </span>
+              </div>
+              <h4 className="layer-z-26 text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
+                {t.musicTheory.producerTitle}
+              </h4>
+              <p className="layer-z-18 text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
+                {t.musicTheory.producerDesc}
+              </p>
+            </div>
+          </div>
+        </Interactive3DCard>
+      );
+    }
+    if (index === 1) {
+      return (
+        <Interactive3DCard key="singer" className="h-full">
+          <div className="p-6 flex flex-col justify-between h-full">
+            <div>
+              <div className="layer-z-36 flex items-center gap-2 mb-3">
+                <Mic className="w-4 h-4 text-[#a78bfa]" />
+                <span className="text-xs uppercase tracking-wider font-mono text-[#a78bfa]">
+                  {t.musicTheory.singerBadge}
+                </span>
+              </div>
+              <h4 className="layer-z-26 text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
+                {t.musicTheory.singerTitle}
+              </h4>
+              <p className="layer-z-18 text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
+                {t.musicTheory.singerDesc}
+              </p>
+            </div>
+          </div>
+        </Interactive3DCard>
+      );
+    }
+    return (
+      <Interactive3DCard key="classical" className="h-full">
+        <div className="p-6 flex flex-col justify-between h-full">
+          <div>
+            <div className="layer-z-36 flex items-center gap-2 mb-3">
+              <Music className="w-4 h-4 text-[#38bdf8]" />
+              <span className="text-xs uppercase tracking-wider font-mono text-[#38bdf8]">
+                {t.musicTheory.classicalBadge}
+              </span>
+            </div>
+            <h4 className="layer-z-26 text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
+              {t.musicTheory.classicalTitle}
+            </h4>
+            <p className="layer-z-18 text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
+              {t.musicTheory.classicalDesc}
+            </p>
+          </div>
+        </div>
+      </Interactive3DCard>
+    );
+  };
+
   return (
     <section id="music-theory" className="pt-3 sm:pt-6 lg:pt-10 pb-16 sm:pb-20 px-4 sm:px-6 bg-[#090b0f] relative border-t border-[#1e222a] overflow-hidden">
       {/* Somatic Resonance Particle Field (Physical resonance of acoustic sound - active when studio is opened) */}
@@ -985,221 +1258,33 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
                 </p>
               ) : null}
             </div>
-
-            <button
-              onClick={() => onOpenInquiry(isDe ? 'Musiktheorie & Harmonielehre' : 'Music Theory & Harmony Lessons')}
-              className="self-start lg:self-center shrink-0 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-black bg-[#c49750] hover:bg-[#d8a85c] rounded-lg transition-all duration-200 shadow-md flex items-center gap-2 cursor-pointer"
-            >
-              <span>{isDe ? 'Harmonie-Coaching anfragen' : 'Book Theory Coaching'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
 
         {/* 2 Core Pillars: 1. The Secret Garden & 2. The Music Theory */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-          
-          {/* Section 1: The Secret Garden */}
-          <div className="bg-[#12151e] border border-[#212633] rounded-2xl p-7 sm:p-9 hover:border-[#c49750]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group shadow-xl">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#c49750] via-[#e5c17d] to-[#8a7bb8] opacity-80" />
-            
-            <div className="flex-1 flex flex-col justify-start">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl sm:text-3xl font-serif text-[#c49750] font-medium">
-                  {t.musicTheory.secretGardenTitle}
-                </h3>
-                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#c49750] group-hover:bg-[#c49750] group-hover:text-black transition-colors shrink-0">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-              </div>
-
-              <p className="text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
-                {t.musicTheory.secretGardenIntro}
-              </p>
-
-              <div className="mb-6">
-                <p className="text-xs uppercase tracking-wider text-[#c49750] font-mono font-medium mb-3">
-                  {t.musicTheory.secretGardenWaysTitle}
-                </p>
-                <ul className="space-y-3">
-                  {t.musicTheory.secretGardenItems.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#dedacf] leading-relaxed">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#c49750] mt-2 shrink-0" />
-                      <span>
-                        <strong className="text-[#f5eedf] font-medium">{item.label}:</strong> {item.desc}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+        {/* Mobile & Tablet View: Smooth hardware-accelerated card sliding (< lg) */}
+        <div className="block lg:hidden mb-16">
+          <SlidingCardTrack
+            currentIndex={pillarsSlider.currentIndex}
+            totalItems={2}
+            onPrev={pillarsSlider.prev}
+            onNext={pillarsSlider.next}
+            onSelect={pillarsSlider.goTo}
+            touchHandlers={pillarsSlider.touchHandlers}
+          >
+            <div className="h-full select-none">
+              {renderSecretGardenCard()}
             </div>
-
-            {/* Bottom Quote Box: Aligned and sized identically to the right card's launchpad */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/80 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-6 sm:px-8 py-5 sm:py-6 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
-              <p className="text-lg sm:text-xl lg:text-[1.35rem] xl:text-2xl font-serif italic text-[#f3cf8a] font-normal leading-relaxed">
-                “{t.musicTheory.secretGardenClosing}”
-              </p>
+            <div className="h-full select-none">
+              {renderMusicTheoryCard()}
             </div>
-          </div>
+          </SlidingCardTrack>
+        </div>
 
-          {/* Section 2: The Music Theory */}
-          <div className="bg-[#12151e] border border-[#212633] rounded-2xl p-7 sm:p-9 hover:border-[#38bdf8]/50 transition-all duration-300 relative overflow-hidden flex flex-col justify-between group shadow-xl h-full">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#38bdf8] via-[#818cf8] to-[#c49750] opacity-80" />
-            
-            <div className="flex-1 flex flex-col justify-start">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl sm:text-3xl font-serif text-[#38bdf8] font-medium">
-                  {t.musicTheory.theoryTitle}
-                </h3>
-                <div className="w-8 h-8 rounded-lg bg-[#1a1f2c] border border-[#2b3244] flex items-center justify-center text-[#38bdf8] group-hover:bg-[#38bdf8] group-hover:text-black transition-colors shrink-0">
-                  <Music className="w-4 h-4" />
-                </div>
-              </div>
-
-              <p className="text-sm sm:text-base text-[#b8b4a8] font-light leading-relaxed mb-6">
-                {t.musicTheory.theoryIntro}
-              </p>
-
-              <div>
-                <ul className="space-y-3.5">
-                  {t.musicTheory.theoryItems.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#dedacf] leading-relaxed">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#38bdf8] mt-2 shrink-0" />
-                      <span>
-                        <strong className="text-[#f5eedf] font-medium">{item.label}:</strong> {item.desc}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Bottom Interactive Keys Launchpad: 4 Modern Atelier Hardware Keys */}
-            <div className="mt-auto border-t border-[#232838] bg-[#0c0e14]/90 -mx-7 -mb-7 sm:-mx-9 sm:-mb-9 px-4 sm:px-8 py-3.5 sm:py-5 rounded-b-2xl flex flex-col justify-center min-h-[145px] lg:min-h-[160px]">
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {/* Key 1: Chords & Resonance */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStudioTab('explore');
-                    setIsStudioOpen(true);
-                    scrollToInteractive('explore', 60);
-                  }}
-                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#c49750]/60 hover:from-[#1b2132] hover:to-[#0f121c] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(196,151,80,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
-                >
-                  {/* Top Amber LED Strip */}
-                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#c49750] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
-                  
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#c49750]/15 border border-[#c49750]/30 flex items-center justify-center text-[#c49750] group-hover/key:scale-105 transition-transform">
-                      <Waves className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[9px] font-mono text-[#c49750] uppercase tracking-wider hidden sm:inline">
-                      {isDe ? 'Resonanz' : 'Harmonics'}
-                    </span>
-                  </div>
-
-                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
-                    {isDe ? 'Harmonien' : 'Chords'}
-                  </div>
-                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
-                    {isDe ? 'Akkorde & Resonanz' : 'Voicings & Tension'}
-                  </div>
-                </button>
-
-                {/* Key 2: Ear Training & Vocal Memory */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStudioTab('ear-training');
-                    setIsStudioOpen(true);
-                    scrollToInteractive('ear-training', 60);
-                  }}
-                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#a78bfa]/60 hover:from-[#1d1f33] hover:to-[#101220] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(167,139,250,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
-                >
-                  {/* Top Lavender LED Strip */}
-                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#a78bfa] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
-                  
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#a78bfa]/15 border border-[#a78bfa]/30 flex items-center justify-center text-[#a78bfa] group-hover/key:scale-105 transition-transform">
-                      <Headphones className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[9px] font-mono text-[#a78bfa] uppercase tracking-wider hidden sm:inline">
-                      {isDe ? 'Gehör' : 'Aural'}
-                    </span>
-                  </div>
-
-                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
-                    {isDe ? 'Gehör-Training' : 'Ear Training'}
-                  </div>
-                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
-                    {isDe ? 'Akkord-Gehör & Gesang' : 'Aural Pitch & Voice'}
-                  </div>
-                </button>
-
-                {/* Key 3: Rhythm & Pulse Ear Testing */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStudioTab('rhythm');
-                    setIsStudioOpen(true);
-                    scrollToInteractive('rhythm', 60);
-                  }}
-                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-white/10 bg-gradient-to-b from-[#161a27] to-[#0c0f16] hover:border-[#38bdf8]/60 hover:from-[#172233] hover:to-[#0c1420] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(56,189,248,0.15)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
-                >
-                  {/* Top Cyan LED Strip */}
-                  <div className="absolute top-0 inset-x-3 h-[2px] bg-gradient-to-r from-transparent via-[#38bdf8] to-transparent opacity-60 group-hover/key:opacity-100 transition-opacity" />
-                  
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#38bdf8]/15 border border-[#38bdf8]/30 flex items-center justify-center text-[#38bdf8] group-hover/key:scale-105 transition-transform">
-                      <Clock className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[9px] font-mono text-[#38bdf8] uppercase tracking-wider hidden sm:inline">
-                      {isDe ? 'Puls' : 'Meter'}
-                    </span>
-                  </div>
-
-                  <div className="font-serif sm:font-sans font-semibold text-xs sm:text-sm text-[#fbf9f5] group-hover/key:text-white truncate">
-                    {isDe ? 'Rhythmus & Tempo' : 'Rhythm & Tempo'}
-                  </div>
-                  <div className="text-[10px] font-mono text-[#8c887d] group-hover/key:text-[#dedacf] truncate">
-                    {isDe ? 'Notensystem & Puls' : 'Staff Score & Pulse'}
-                  </div>
-                </button>
-
-                {/* Key 4: Full Assessment Diagnostic */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStudioTab('assessment');
-                    setIsStudioOpen(true);
-                    scrollToInteractive('assessment', 60);
-                  }}
-                  className="relative group/key p-2.5 sm:p-3 rounded-xl border border-[#c49750]/50 bg-gradient-to-b from-[#1c1920] to-[#100e16] hover:border-[#ffd56b] hover:from-[#25202c] hover:to-[#161320] text-left transition-all duration-200 cursor-pointer shadow-md hover:shadow-[0_8px_20px_rgba(255,213,107,0.2)] hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] select-none overflow-hidden"
-                >
-                  {/* Top Gold Brilliant Strip */}
-                  <div className="absolute top-0 inset-x-2 h-[2px] bg-gradient-to-r from-transparent via-[#ffd56b] to-transparent opacity-80 group-hover/key:opacity-100 transition-opacity" />
-                  
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#ffd56b]/20 border border-[#ffd56b]/40 flex items-center justify-center text-[#ffd56b] group-hover/key:scale-105 transition-transform">
-                      <Award className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-[9px] font-mono font-bold text-[#ffd56b] px-1.5 py-0.2 rounded bg-[#ffd56b]/15 uppercase tracking-wider">
-                      {isDe ? '9 Tests' : '9 Tests'}
-                    </span>
-                  </div>
-
-                  <div className="font-serif sm:font-sans font-bold text-xs sm:text-sm text-[#ffd56b] group-hover/key:text-white truncate">
-                    {isDe ? 'Einstufung' : 'Assessment'}
-                  </div>
-                  <div className="text-[10px] font-mono text-[#c49750] group-hover/key:text-[#dedacf] truncate">
-                    {isDe ? 'Vollständige Diagnose' : 'Full Diagnostic'}
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
+        {/* Desktop View: Full 2-Column Grid (lg:grid) */}
+        <div className="hidden lg:grid lg:grid-cols-2 gap-8 mb-16">
+          {renderSecretGardenCard()}
+          {renderMusicTheoryCard()}
         </div>
 
         {/* Interactive Harmonic Color & Weight Studio */}
@@ -1664,66 +1749,31 @@ export const MusicTheory: React.FC<MusicTheoryProps> = ({ onOpenInquiry }) => {
 
         {/* 3 Learner Profiles Grid */}
         <div className="mb-14">
-          <h3 className="text-xs uppercase tracking-widest text-[#c49750] font-mono mb-6 text-center">
+          <h3 className="text-xs uppercase tracking-widest text-[#c49750] font-mono mb-4 sm:mb-6 text-center">
             {t.musicTheory.audiencesTitle}
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Profile 1: Producers */}
-            <div className="bg-[#11141c] border border-[#212633] rounded-2xl p-6 flex flex-col justify-between hover:border-[#c49750]/40 transition-colors">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Disc className="w-4 h-4 text-[#c49750]" />
-                  <span className="text-xs uppercase tracking-wider font-mono text-[#c49750]">
-                    {t.musicTheory.producerBadge}
-                  </span>
+          {/* Mobile & Tablet View: Smooth hardware-accelerated card sliding (< lg) */}
+          <div className="block lg:hidden">
+            <SlidingCardTrack
+              currentIndex={learnersSlider.currentIndex}
+              totalItems={3}
+              onPrev={learnersSlider.prev}
+              onNext={learnersSlider.next}
+              onSelect={learnersSlider.goTo}
+              touchHandlers={learnersSlider.touchHandlers}
+            >
+              {[0, 1, 2].map((idx) => (
+                <div key={idx} className="h-full select-none">
+                  {renderLearnerProfile(idx)}
                 </div>
-                <h4 className="text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
-                  {t.musicTheory.producerTitle}
-                </h4>
-                <p className="text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
-                  {t.musicTheory.producerDesc}
-                </p>
-              </div>
-            </div>
+              ))}
+            </SlidingCardTrack>
+          </div>
 
-            {/* Profile 2: Singers */}
-            <div className="bg-[#11141c] border border-[#212633] rounded-2xl p-6 flex flex-col justify-between hover:border-[#a78bfa]/40 transition-colors">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Mic className="w-4 h-4 text-[#a78bfa]" />
-                  <span className="text-xs uppercase tracking-wider font-mono text-[#a78bfa]">
-                    {t.musicTheory.singerBadge}
-                  </span>
-                </div>
-                <h4 className="text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
-                  {t.musicTheory.singerTitle}
-                </h4>
-                <p className="text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
-                  {t.musicTheory.singerDesc}
-                </p>
-              </div>
-            </div>
-
-            {/* Profile 3: Classical & Listeners */}
-            <div className="bg-[#11141c] border border-[#212633] rounded-2xl p-6 flex flex-col justify-between hover:border-[#38bdf8]/40 transition-colors">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Music className="w-4 h-4 text-[#38bdf8]" />
-                  <span className="text-xs uppercase tracking-wider font-mono text-[#38bdf8]">
-                    {t.musicTheory.classicalBadge}
-                  </span>
-                </div>
-                <h4 className="text-lg font-serif text-[#f2eee9] font-medium mb-2.5">
-                  {t.musicTheory.classicalTitle}
-                </h4>
-                <p className="text-xs sm:text-sm text-[#9c988e] font-light leading-relaxed">
-                  {t.musicTheory.classicalDesc}
-                </p>
-              </div>
-            </div>
-
+          {/* Desktop View: Full 3-Column Grid (lg:grid) */}
+          <div className="hidden lg:grid lg:grid-cols-3 gap-6">
+            {[0, 1, 2].map((idx) => renderLearnerProfile(idx))}
           </div>
         </div>
 
